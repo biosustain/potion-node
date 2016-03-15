@@ -1,0 +1,31 @@
+{
+    "name": "potion",
+    "version": "0.0.0",
+    "description": "",
+    "keywords": [],
+    "homepage": "",
+    "license": "MIT",
+    "author": {
+        "name": "Roland Groza",
+        "email": "rolandjitsu@gmail.com "
+    },
+    "main": "",
+    "files": [],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/biosustain/potion-node"
+    },
+    "scripts": {
+        "build": "typings install && rm -rf dist && tsc",
+        "test": "jasmine-node ./dist/ --color --verbose"
+    },
+    "devDependencies": {
+        "jasmine-node": "1.14.x",
+        "typings": "0.7.x",
+        "typescript": "next"
+    },
+	"typings": "",
+    "engines": {
+        "node": "0.5.x"
+    }
+}

@@ -1,7 +1,7 @@
 {
 	"name": "genomediff",
 	"ambientDependencies": {
-		"node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#e850b6ac0d59fee86dd7cb6a1be2caf6400bde14",
-		"jasmine": "github:DefinitelyTyped/DefinitelyTyped/jasmine/jasmine.d.ts#e850b6ac0d59fee86dd7cb6a1be2caf6400bde14"
+		"jasmine": "registry:dt/jasmine#2.2.0+20160308082659",
+		"node": "registry:dt/node#4.0.0+20160311162451"
 	}
 }

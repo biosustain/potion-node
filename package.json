@@ -19,9 +19,13 @@
         "build": "typings install && rm -rf dist && tsc",
         "test": "jasmine-node ./dist/ --color --verbose"
     },
+	"dependencies": {
+		"reflect-metadata": "0.1.x",
+		"rxjs": "5.0.0-beta.2"
+	},
     "devDependencies": {
         "jasmine-node": "1.14.x",
-        "typings": "0.7.x",
+		"typings": "0.7.x",
         "typescript": "next"
     },
 	"typings": "",

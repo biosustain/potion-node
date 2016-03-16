@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"module": "commonjs",
+		"module": "system",
 		"moduleResolution": "node",
 		"noImplicitAny": false,
 		"sourceMap": true,
@@ -10,10 +10,6 @@
 		"outDir": "./dist"
 	},
 	"files": [
-		"./typings/main.d.ts",
-		"./src/potion.ts",
-		"./src/potion.spec.ts",
-		"./src/fetch.ts",
-		"./src/fetch.spec.ts"
+		"./typings/main.d.ts"
 	]
 }

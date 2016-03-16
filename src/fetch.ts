@@ -3,7 +3,7 @@ import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/map';
 import {PotionBase} from "./potion";
 
-require('isomorphic-fetch');
+import 'isomorphic-fetch';
 
 
 export class Potion extends PotionBase {

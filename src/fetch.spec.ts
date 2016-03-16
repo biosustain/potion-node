@@ -3,7 +3,7 @@ import {Item, Route} from "./potion";
 
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
-const fetchMock = require('fetch-mock');
+import fetchMock from 'fetch-mock';
 
 
 describe('Potion (Node)', () => {

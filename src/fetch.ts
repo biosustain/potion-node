@@ -7,6 +7,9 @@ require('isomorphic-fetch');
 
 
 export class Potion extends PotionBase {
+	constructor(options?) {
+		super(Object.assign({prefix: 'http://localhost', options}));
+	}
 	fetch(uri, {method} = {method: 'GET'}): Observable<any> {
 
 		console.log(uri, method);

@@ -35,7 +35,7 @@ interface ParsedURI {
 
 export abstract class PotionBase {
 	resources = {};
-	prefix = 'http://localhost';
+	prefix = '';
 
 	constructor(options?) {
 		Object.assign(this, options);
@@ -60,7 +60,12 @@ export abstract class PotionBase {
 		resource.store = new Store(resource);
 	}
 
-	fetch(uri, options?: RequestInit): any {}
+	abstract fetch(uri, options?: RequestInit): Observable<any>;
+
+	request(uri, options?: RequestInit) {
+		uri = `${this.prefix}${uri}`;
+		return this.fetch(uri, options);
+	}
 }
 
 
@@ -77,11 +82,10 @@ class Store<T extends Item> {
 
 	fetch(id: number): Observable<T> {
 		const uri = `${this._rootURI}/${id}`;
-		const absUri = `${this._potion.prefix}${uri}`;
 
 		return new Observable<T>((observer) => {
 			this._potion
-				.fetch(absUri, {method: 'GET'})
+				.request(uri, {method: 'GET'})
 				.subscribe((resource) => observer.next(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => observer.error(error));
 
 		});
@@ -91,20 +95,19 @@ class Store<T extends Item> {
 
 function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 	return function (options: any = {}) {
+		let potion: PotionBase;
+
 		if (typeof this === 'function') {
-			const uri = <PotionBase>Reflect.getMetadata('potion:uri', this);
-
-			console.log('URI: ', uri);
-
-			return Observable.of(`${method} ${uri}${uri} ${JSON.stringify(options)}`)
+			potion = <PotionBase>Reflect.getMetadata('potion', this);
+			uri = `${Reflect.getMetadata('potion:uri', this)}${uri}`;
 		} else {
-			const potion = Reflect.getMetadata('potion', this.constructor);
-			const absUri = `${potion.prefix}${this.uri}${uri}`;
-
-			return new Observable<any>((observer) => {
-				potion.fetch(absUri, {method}).subscribe((resource) => observer.next(resource), (error) => observer.error(error));
-			});
+			potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
+			uri = `${this.uri}${uri}`;
 		}
+
+		console.log('URI: ', uri);
+
+		return potion.request(uri, {method});
 	}
 }
 

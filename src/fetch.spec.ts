@@ -14,6 +14,8 @@ describe('Potion (Node)', () => {
 			height: 2,
 			weight: 2450
 		});
+
+		fetchMock.mock('http://localhost/animal/names', ['Sloth', 'Panda']);
 	});
 
 	afterEach(() => {
@@ -38,11 +40,19 @@ describe('Potion (Node)', () => {
 
 		});
 	});
+
+	it('should fetch animal name async', (done) => {
+
+		Animal.names().subscribe((names) => {
+			console.log('Animal.names(): ', names);
+
+			done();
+		});
+	});
 });
 
 
 class Animal extends Item {
-	uri: string;
 	readProportions = Route.GET('/proportions');
 	name: string;
 

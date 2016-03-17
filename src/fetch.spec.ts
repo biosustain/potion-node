@@ -1,3 +1,7 @@
+// Needs to be included.
+// Include before we load Potion impl. using fetch.
+import 'isomorphic-fetch';
+
 import {Potion} from './fetch';
 import {Item, Route} from "./potion";
 

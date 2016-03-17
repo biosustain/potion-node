@@ -43,12 +43,12 @@
         "name": "potion",
         "dependencies": {
             "core-js": "npm:core-js@^2.2.0",
-            "isomorphic-fetch": "npm:isomorphic-fetch@^2.2.1",
             "reflect-metadata": "npm:reflect-metadata@^0.1.3",
             "rxjs": "npm:rxjs@^5.0.0-beta.2"
         },
         "devDependencies": {
             "fetch-mock": "npm:fetch-mock@^4.1.1",
+            "isomorphic-fetch": "npm:isomorphic-fetch@^2.2.1",
             "ts": "github:frankwallis/plugin-typescript@^4.0.2"
         },
         "peerDependencies": {

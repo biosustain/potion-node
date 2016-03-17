@@ -44,28 +44,9 @@ SystemJS.config({
 		"zlib": "github:jspm/nodelibs-zlib@0.2.0-alpha"
 	},
 	packages: {
-		"npm:reflect-metadata@0.1.3": {
-			"meta": {
-				"Reflect.js": {
-					"typings": "Reflect.ts"
-				}
-			}
-		},
-		"npm:rxjs@5.0.0-beta.2": {
-			"meta": {
-				"*.js": {
-					"typings": true
-				}
-			}
-		},
-		"npm:fetch-mock@4.1.1": {
-			"map": {
-				"node-fetch": "npm:node-fetch@1.3.3"
-			}
-		},
 		"github:frankwallis/plugin-typescript@4.0.2": {
 			"map": {
-				"typescript": "npm:typescript@1.8.7"
+				"typescript": "npm:typescript@1.8.9"
 			}
 		},
 		"github:jspm/nodelibs-buffer@0.2.0-alpha": {
@@ -114,6 +95,11 @@ SystemJS.config({
 		"npm:encoding@0.1.12": {
 			"map": {
 				"iconv-lite": "npm:iconv-lite@0.4.13"
+			}
+		},
+		"npm:fetch-mock@4.1.1": {
+			"map": {
+				"node-fetch": "npm:node-fetch@1.3.3"
 			}
 		},
 		"npm:isomorphic-fetch@2.2.1": {

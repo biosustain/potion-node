@@ -11,49 +11,55 @@ describe('potion/fetch', () => {
 	beforeEach(() => {
 		fetchMock.mock('http://localhost/ping/1', {pong: 1});
 
-		fetchMock.mock('http://localhost/animal/1', {
-			name: 'Sloth'
+		fetchMock.mock('http://localhost/user/names', ['John Doe']);
+
+		fetchMock.mock('http://localhost/user/1', {
+			name: 'John Doe'
 		});
-		fetchMock.mock('http://localhost/animal/1/proportions', {
-			height: 2,
-			weight: 2450
+		fetchMock.mock('http://localhost/user/1/attributes', {
+			height: 168,
+			weight: 72
 		});
 
-		fetchMock.mock('http://localhost/animal/names', ['Sloth', 'Panda']);
 	});
 
 	afterEach(() => {
 		fetchMock.restore();
 	});
 
-	it('Item.fetch() should make a XHR request', (done) => {
-		Ping.fetch(1).subscribe(() => {
-			expect(fetchMock.called('http://localhost/ping/1')).toBe(true);
-			done();
-		});
-	});
+	describe('Item.fetch()', () => {
 
-	it('should fetch animal async', (done) => {
-
-		Animal.fetch(1).subscribe((animal: Animal) => {
-			console.log('Animal.fetch(1): ', animal);
-
-			animal.readProportions().subscribe((size) => {
-
-				console.log('animal.readProportions(): ', size);
-
+		it('should make a XHR request', (done) => {
+			Ping.fetch(1).subscribe(() => {
+				expect(fetchMock.called('http://localhost/ping/1')).toBe(true);
 				done();
 			});
-
 		});
-	});
 
-	it('should fetch animal name async', (done) => {
+		it('should have an id and other properties', (done) => {
+			User.fetch(1).subscribe((user: User) => {
+				expect(user.id).toEqual(1);
+				expect(user.name).toEqual('John Doe');
+				done();
+			});
+		});
 
-		Animal.names().subscribe((names) => {
-			console.log('Animal.names(): ', names);
+		it('should have a instance route that returns valid JSON', (done) => {
+			User.fetch(1).subscribe((user: User) => {
+				user.attributes().subscribe((attrs) => {
+					expect(attrs.height).toEqual(168);
+					expect(attrs.weight).toEqual(72);
+					done();
+				});
+			});
+		});
 
-			done();
+		it('should have a static route that returns valid JSON', (done) => {
+			User.names().subscribe((names) => {
+				expect(Array.isArray(names)).toBe(true);
+				expect(names[0]).toEqual('John Doe');
+				done();
+			});
 		});
 	});
 });
@@ -64,13 +70,13 @@ const potion = new Potion();
 // Potion resources
 class Ping extends Item {}
 
-class Animal extends Item {
-	readProportions = Route.GET('/proportions');
+class User extends Item {
+	attributes = Route.GET('/attributes');
 	name: string;
 
 	static names = Route.GET('/names');
 }
 
 // Register API resources
-potion.register('/animal', Animal);
 potion.register('/ping', Ping);
+potion.register('/user', User);

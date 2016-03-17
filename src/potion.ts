@@ -1,3 +1,4 @@
+import 'core-js/shim';
 import 'reflect-metadata';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
@@ -104,8 +105,6 @@ function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 			potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
 			uri = `${this.uri}${uri}`;
 		}
-
-		console.log('URI: ', uri);
 
 		return potion.request(uri, {method});
 	}

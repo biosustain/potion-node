@@ -18,7 +18,8 @@ export class Item {
 		}
 
 		const potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-		return parseInt(potion.parseURI(this.uri).params[0]);
+		const {params} = potion.parseURI(this.uri);
+		return parseInt(params[0]);
 	}
 
 	static store: Store<Item>;
@@ -76,7 +77,7 @@ export abstract class PotionBase {
 
 		for (let [resourceURI] of Object.entries(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return {resource: this.resources[resourceURI], params: uri.substring(resourceURI.length + 1).split('/')};
+				return {uri, resource: this.resources[resourceURI], params: uri.substring(resourceURI.length + 1).split('/')};
 			}
 		}
 

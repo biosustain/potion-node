@@ -70,6 +70,10 @@ export abstract class PotionBase {
 	parseURI(uri: string): ParsedURI {
 		uri = decodeURIComponent(uri);
 
+		if (uri.indexOf(this.prefix) === 0) {
+			uri = uri.substring(this.prefix.length);
+		}
+
 		for (let [resourceURI] of Object.entries(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
 				return {resource: this.resources[resourceURI], params: uri.substring(resourceURI.length + 1).split('/')};

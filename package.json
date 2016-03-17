@@ -18,19 +18,17 @@
     "scripts": {
         "clean": "rm -rf dist",
         "build": "tsc",
-        "test": "jasmine-node ./dist/ --color --verbose"
+        "test": "karma start karma.config.js --single-run --log-level debug"
     },
     "dependencies": {
+        "isomorphic-fetch": "2.2.x",
         "reflect-metadata": "0.1.x",
-        "rxjs": "5.0.0-beta.2",
-        "isomorphic-fetch": "2.2.x"
+        "rxjs": "5.0.0-beta.2"
     },
     "devDependencies": {
         "fetch-mock": "4.1.x",
-        "jasmine-node": "1.14.x",
         "jasmine": "2.4.x",
         "jasmine-core": "2.4.x",
-        "jasmine-spec-reporter": "2.4.x",
         "jspm": "beta",
         "karma": "0.13.x",
         "karma-chrome-launcher": "0.2.x",
@@ -38,8 +36,8 @@
         "karma-jasmine": "0.3.x",
         "karma-jspm": "workiva/karma-jspm",
         "karma-spec-reporter": "0.0.x",
-        "typings": "0.7.x",
-        "typescript": "next"
+        "typescript": "next",
+        "typings": "0.7.x"
     },
     "jspm": {
         "name": "potion",

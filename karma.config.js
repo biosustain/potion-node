@@ -1,12 +1,12 @@
-
 module.exports = function (config) {
 	config.set({
 		frameworks: [
 			'jasmine',
 			'jspm'
 		],
-		// singleRun : true,
-		exclude: [],
+		reporters: [
+			'spec'
+		],
 		jspm: {
 			browser: 'jspm.browser.js',
 			config: 'jspm.config.js',
@@ -14,9 +14,10 @@ module.exports = function (config) {
 			loadFiles: ['src/**/*.spec.ts']
 		},
 		plugins: [
+			'karma-chrome-launcher',
 			'karma-jasmine',
 			'karma-jspm',
-			'karma-chrome-launcher'
+			'karma-spec-reporter'
 		],
 		proxies: {
 			'/jspm_packages/': '/base/jspm_packages/',
@@ -24,6 +25,7 @@ module.exports = function (config) {
 			'/tsconfig.json': '/base/tsconfig.json',
 			'/typings/': '/base/typings/'
 		},
+		logLevel: config.LOG_INFO,
 		browsers: [
 			'Chrome'
 		]

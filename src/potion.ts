@@ -13,6 +13,10 @@ export class Item {
 	uri: string;
 
 	get id() {
+		if (!this.uri) {
+			return null;
+		}
+
 		const potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
 		return parseInt(potion.parseURI(this.uri).params[0]);
 	}
@@ -23,8 +27,12 @@ export class Item {
 		return this.store.fetch(id);
 	}
 
-	constructor(object: any = {}) {
-		Object.assign(this, object);
+	static create(attrs: any = {}) {
+		return new this(attrs);
+	}
+
+	constructor(attrs: any = {}) {
+		Object.assign(this, attrs);
 	}
 }
 
@@ -38,8 +46,12 @@ export abstract class PotionBase {
 	resources = {};
 	prefix = '';
 
-	constructor(options?) {
-		Object.assign(this, options);
+	static create() {
+		return Reflect.construct(this, arguments);
+	}
+
+	constructor({prefix = ''} = {}) {
+		Object.assign(this, {prefix});
 	}
 
 	parseURI(uri: string): ParsedURI {
@@ -52,6 +64,13 @@ export abstract class PotionBase {
 		}
 
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
+	}
+
+	registerAs(uri: string): ClassDecorator {
+		return (target: ItemConstructor) => {
+			this.register(uri, target);
+			return target;
+		}
 	}
 
 	register(uri: string, resource: ItemConstructor) {

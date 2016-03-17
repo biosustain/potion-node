@@ -1,6 +1,5 @@
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/operator/map';
 import {PotionBase} from "./potion";
 
 import 'isomorphic-fetch';

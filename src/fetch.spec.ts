@@ -3,7 +3,7 @@
 import 'isomorphic-fetch';
 
 import {Potion} from './fetch';
-import {Item, Route} from "./potion";
+import {Item, Route, Cache} from "./potion";
 
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
@@ -18,6 +18,7 @@ describe('potion/fetch', () => {
 		fetchMock.mock('http://localhost/user/names', ['John Doe']);
 
 		fetchMock.mock('http://localhost/user/1', {
+			uri: '/user/1',
 			name: 'John Doe'
 		});
 		fetchMock.mock('http://localhost/user/1/attributes', {
@@ -65,11 +66,31 @@ describe('potion/fetch', () => {
 				done();
 			});
 		});
+
+
+		it('should retrieve from cache', (done) => {
+			done();
+		});
 	});
 });
 
+
+// In memory cache
+class JSCache implements Cache {
+	private _store = {};
+
+	get(id: string) {
+		return this._store[id];
+	}
+
+	set(id, item) {
+		return this._store[id] = item;
+	}
+}
+
+
 // Create Potion API
-const potion = new Potion();
+const potion = new Potion({prefix: 'http://localhost', cache: new JSCache()});
 
 // Potion resources
 class Ping extends Item {}

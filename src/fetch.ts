@@ -11,8 +11,6 @@ export class Potion extends PotionBase {
 		super(Object.assign({prefix: 'http://localhost', options}));
 	}
 	fetch(uri, {method} = {method: 'GET'}): Observable<any> {
-
-		console.log(uri, method);
 		// Use isomorphic fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// https://www.npmjs.com/package/isomorphic-fetch

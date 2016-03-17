@@ -6,13 +6,15 @@ import {Item, Route} from "./potion";
 import fetchMock from 'fetch-mock';
 
 
-describe('Potion (Node)', () => {
+describe('potion/fetch', () => {
 
 	beforeEach(() => {
-		fetchMock.mock('http://localhost/animal/123', {
+		fetchMock.mock('http://localhost/ping/1', {pong: 1});
+
+		fetchMock.mock('http://localhost/animal/1', {
 			name: 'Sloth'
 		});
-		fetchMock.mock('http://localhost/animal/123/proportions', {
+		fetchMock.mock('http://localhost/animal/1/proportions', {
 			height: 2,
 			weight: 2450
 		});
@@ -24,14 +26,17 @@ describe('Potion (Node)', () => {
 		fetchMock.restore();
 	});
 
-	it('should pass sanity check', () => {
-		expect(true).toBe(true);
+	it('Item.fetch() should make a XHR request', (done) => {
+		Ping.fetch(1).subscribe(() => {
+			expect(fetchMock.called('http://localhost/ping/1')).toBe(true);
+			done();
+		});
 	});
 
 	it('should fetch animal async', (done) => {
 
-		Animal.fetch(123).subscribe((animal: Animal) => {
-			console.log('Animal.fetch(123): ', animal);
+		Animal.fetch(1).subscribe((animal: Animal) => {
+			console.log('Animal.fetch(1): ', animal);
 
 			animal.readProportions().subscribe((size) => {
 
@@ -53,6 +58,11 @@ describe('Potion (Node)', () => {
 	});
 });
 
+// Create Potion API
+const potion = new Potion();
+
+// Potion resources
+class Ping extends Item {}
 
 class Animal extends Item {
 	readProportions = Route.GET('/proportions');
@@ -61,5 +71,6 @@ class Animal extends Item {
 	static names = Route.GET('/names');
 }
 
-const potion = new Potion();
+// Register API resources
 potion.register('/animal', Animal);
+potion.register('/ping', Ping);

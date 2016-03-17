@@ -40,6 +40,10 @@ node_modules
 typings
 
 
+## JSPM
+jspm_packages
+
+
 ## Direnv
 .envrc
 

@@ -48,6 +48,12 @@ describe('potion', () => {
 		it('should have the same attributes it was initialized with', () => {
 			expect(user.name).toEqual('John Doe');
 		});
+
+		it('should return a JSON repr. of itself via .toJSON() method', () => {
+			expect(user.toJSON()).toEqual({
+				name: 'John Doe'
+			});
+		});
 	});
 
 	describe('Item.fetch()', () => {

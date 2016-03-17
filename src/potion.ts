@@ -34,6 +34,19 @@ export class Item {
 	constructor(attrs: any = {}) {
 		Object.assign(this, attrs);
 	}
+
+	toJSON() {
+		const attrs = {};
+
+		Object.keys(this)
+			.filter((key) => key !== 'uri')
+			.forEach((key) => {
+				attrs[key] = this[key];
+			});
+
+		return attrs;
+	}
+
 }
 
 

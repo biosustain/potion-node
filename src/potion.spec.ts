@@ -60,6 +60,13 @@ describe('potion', () => {
 				done();
 			});
 		});
+
+		it('should convert snake case keys to camel case keys', (done) => {
+			User.fetch(1).subscribe((user: User) => {
+				expect(user.camelCase).not.toBeUndefined();
+				done();
+			});
+		});
 	});
 });
 
@@ -70,10 +77,11 @@ export class Potion extends PotionBase {
 	}
 
 	fetch(uri, {method} = {method: 'GET'}): Observable<any> {
-		return new Observable((observer) => observer.next({}));
+		return new Observable((observer) => observer.next({camel_case: true}));
 	}
 }
 
 class User extends Item {
 	name: string;
+	camelCase: any;
 }

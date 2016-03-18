@@ -5,6 +5,7 @@ import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/toPromise';
+import {toCamelCase, tupleToObject} from './utils';
 
 
 export interface Cache<T extends Item> {
@@ -68,20 +69,6 @@ export class Item {
 }
 
 
-// Snake case to camel case
-function _toCamelCase(string) {
-	return string.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
-}
-
-function tupleToObject(tuple: any[]) {
-	let obj = {};
-	for (let [key, value] of tuple) {
-		console.log(key, value);
-		obj[key] = value;
-	}
-	return obj;
-}
-
 interface ParsedURI {
 	resource: Item;
 	params: string[];
@@ -139,7 +126,7 @@ export abstract class PotionBase {
 						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
 					} else {
 						promises.push(this._fromPotionJSON(json[key]).then((result) => {
-							return [_toCamelCase(key), result]
+							return [toCamelCase(key), result]
 						}));
 					}
 				}
@@ -175,7 +162,7 @@ export abstract class PotionBase {
 
 			for (const key of Object.keys(json)) {
 				promises.push(this._fromPotionJSON(json[key]).then((result) => {
-					return [_toCamelCase(key), result]
+					return [toCamelCase(key), result]
 				}));
 			}
 

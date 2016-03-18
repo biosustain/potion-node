@@ -116,10 +116,6 @@ export abstract class PotionBase {
 			if (json instanceof Array) {
 				return Promise.all(json.map((item) => this._fromPotionJSON(item)));
 			} else if (typeof json.$uri == 'string') {
-
-				// TODO: it's an uri, try to resolve from cache
-				console.log('IS URI');
-
 				const {resource, uri} = this.parseURI(json.$uri);
 				const promises = [];
 

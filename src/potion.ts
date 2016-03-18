@@ -80,6 +80,11 @@ interface ParsedURI {
 	uri: string;
 }
 
+interface PotionOptions {
+	prefix?: string;
+	cache?: Cache;
+}
+
 export abstract class PotionBase {
 	resources = {};
 	private _prefix: string;
@@ -90,7 +95,7 @@ export abstract class PotionBase {
 		return Reflect.construct(this, arguments);
 	}
 
-	constructor({prefix = '', cache = {}} = {}) {
+	constructor({prefix = '', cache = {}}: PotionOptions = {}) {
 		this._prefix = prefix;
 		this._cache = cache;
 	}

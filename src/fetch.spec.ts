@@ -119,7 +119,6 @@ describe('potion/fetch', () => {
 		it('should retrieve all instances of the Item', (done) => {
 			User.query().subscribe((users: User[]) => {
 				expect(users.length).toEqual(2);
-				console.log(users);
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
 				}

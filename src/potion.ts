@@ -24,7 +24,7 @@ export class Item {
 	get uri() {
 		return this._uri;
 	}
-	
+
 	set uri(uri) {
 		this._uri = uri;
 	}
@@ -73,12 +73,12 @@ function _toCamelCase(string) {
 	return string.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
 }
 
-// String Map to Object
-// http://www.2ality.com/2015/08/es6-map-json.html
-function _strMapToObj(map: Map) {
+function tupleToObject(tuple: any[]) {
 	let obj = {};
-	// TODO: investigate why for..of does not work
-	map.forEach((v, k) => obj[k] = v);
+	for (let [key, value] of tuple) {
+		console.log(key, value);
+		obj[key] = value;
+	}
 	return obj;
 }
 
@@ -145,7 +145,7 @@ export abstract class PotionBase {
 				}
 
 				return Promise.all(promises).then((results) => {
-					results = _strMapToObj(new Map(results));
+					results = tupleToObject(results);
 
 					let instance;
 					if (this._cache.get && !(instance = this._cache.get(uri))) {
@@ -180,7 +180,7 @@ export abstract class PotionBase {
 			}
 
 			return Promise.all(promises).then((results) => {
-				return _strMapToObj(new Map(results));
+				return tupleToObject(results);
 			});
 
 		} else {

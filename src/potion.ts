@@ -156,7 +156,7 @@ export abstract class PotionBase {
 				if (typeof json.$ref === 'string') {
 					let {uri} = this.parseURI(json.$ref);
 					return new Promise((resolve) => {
-						this.request(uri).subscribe((item) => {
+						this.get(uri).subscribe((item) => {
 							resolve(item);
 						});
 					});
@@ -185,8 +185,7 @@ export abstract class PotionBase {
 	abstract fetch(uri, options?: any): Observable<any>;
 
 	// TODO: request should return promise
-	// TODO: we must only cache GET requests
-	request(uri, options?: any): Observable<any> {
+	get(uri, options?: any): Observable<any> {
 		let instance;
 
 		// Try to get from cache
@@ -204,7 +203,8 @@ export abstract class PotionBase {
 		// Register a pending request,
 		// get the data,
 		// and parse it.
-		obs = this._observables[uri] = this.fetch(`${this._prefix}${uri}`, options).mergeMap((json) => {
+		// Enforce GET method
+		obs = this._observables[uri] = this.fetch(`${this._prefix}${uri}`, Object.assign({}, options, {method: 'GET'})).mergeMap((json) => {
 			delete this._observables[uri]; // Remove pending request
 			return Observable.fromPromise(this._fromPotionJSON(json));
 		});
@@ -244,7 +244,7 @@ class Store<T extends Item> {
 
 		return new Observable<T>((observer) => {
 			this._potion
-				.request(uri, Object.assign({method: 'GET'}, options))
+				.get(uri, options)
 				.subscribe((resource) => observer.next(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => observer.error(error));
 
 		});
@@ -253,7 +253,7 @@ class Store<T extends Item> {
 	query(options?: any): Observable<T> {
 		return new Observable<T>((observer) => {
 			this._potion
-				.request(this._rootURI, Object.assign({method: 'GET'}, options))
+				.get(this._rootURI, options)
 				.subscribe((resources) => observer.next(resources.map((resource) => new this._itemConstructor(resource))), (error) => observer.error(error));
 
 		});
@@ -273,7 +273,7 @@ export function route(uri: string, {method = 'GET'} = {}): (any?) => Observable<
 			uri = `${this.uri}${uri}`;
 		}
 
-		return potion.request(uri, Object.assign({method}, options));
+		return potion.get(uri, Object.assign({method}, options));
 	}
 }
 

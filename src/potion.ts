@@ -49,24 +49,24 @@ export class Item {
 		return this.store.query(options);
 	}
 
-	static create(attrs: any = {}) {
-		return new this(attrs);
+	static create(properties: any = {}) {
+		return new this(properties);
 	}
 
-	constructor(attrs: any = {}) {
-		Object.assign(this, attrs);
+	constructor(properties: any = {}) {
+		Object.assign(this, properties);
 	}
 
 	toJSON() {
-		const attrs = {};
+		const properties = {};
 
 		Object.keys(this)
 			.filter((key) => key !== '_uri')
 			.forEach((key) => {
-				attrs[key] = this[key];
+				properties[key] = this[key];
 			});
 
-		return attrs;
+		return properties;
 	}
 
 }
@@ -135,17 +135,16 @@ export abstract class PotionBase {
 					}
 				}
 
-				// TODO: rename `attrs` to `properties`
-				return Promise.all(promises).then((attrs) => {
-					attrs = pairsToObject(attrs); // `attrs` is a collection of [key, value] pairs
+				return Promise.all(promises).then((propertyValuePairs) => {
+					const properties = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
 					const obj = {};
 
 					Object
-						.keys(attrs)
+						.keys(properties)
 						.filter((key) => key !== '$uri')
-						.forEach((key) => obj[key] = attrs[key]);
+						.forEach((key) => obj[key] = properties[key]);
 
-					Object.assign(obj, {uri: attrs.$uri});
+					Object.assign(obj, {uri: properties.$uri});
 
 					let instance;
 					if (this._cache.get && !(instance = this._cache.get(uri))) {
@@ -178,8 +177,8 @@ export abstract class PotionBase {
 				}));
 			}
 
-			return Promise.all(promises).then((attrs) => {
-				return pairsToObject(attrs);
+			return Promise.all(promises).then((propertyValuePairs) => {
+				return pairsToObject(propertyValuePairs);
 			});
 		} else {
 			return Promise.resolve(json);

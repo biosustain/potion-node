@@ -160,11 +160,9 @@ export abstract class PotionBase {
 							resolve(item);
 						});
 					});
+				} else if (typeof json.$date !== 'undefined') {
+					return Promise.resolve(new Date(json.$date));
 				}
-				// TODO: implement date deserialize
-				// } else if (typeof json.$date !== 'undefined') {
-				// 	return Promise.resolve(new Date(json.$date));
-				// }
 			}
 
 			const promises = [];

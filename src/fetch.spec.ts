@@ -23,7 +23,8 @@ describe('potion/fetch', () => {
 		fetchMock.mock('http://localhost/user/names', ['John Doe']);
 		fetchMock.mock('http://localhost/user/1', {
 			$uri: '/user/1',
-			name: 'John Doe'
+			name: 'John Doe',
+			created_at: {$date: 1451060269000}
 		});
 		fetchMock.mock('http://localhost/user/1/attributes', {
 			height: 168,
@@ -50,10 +51,11 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		it('should have an id and other properties', (done) => {
+		it('should correctly deserialize Potion server response', (done) => {
 			User.fetch(1).subscribe((user: User) => {
 				expect(user.id).toEqual(1);
 				expect(user.name).toEqual('John Doe');
+				expect(user.createdAt instanceof Date).toBe(true);
 				done();
 			});
 		});
@@ -99,9 +101,6 @@ describe('potion/fetch', () => {
 
 		it('should automatically resolve references', (done) => {
 			Car.fetch(1).subscribe((car: Car) => {
-
-				console.log(car.user);
-
 				expect(car.model).toEqual('Audi A3');
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
@@ -141,6 +140,7 @@ class Ping extends Item {
 class User extends Item {
 	attributes = Route.GET('/attributes');
 	name: string;
+	createdAt: Date;
 
 	static names = Route.GET('/names');
 }

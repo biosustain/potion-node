@@ -5,7 +5,7 @@ import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/toPromise';
-import {toCamelCase, tuplesToObject} from './utils';
+import {toCamelCase, pairsToObject} from './utils';
 
 
 export interface Cache<T extends Item> {
@@ -132,7 +132,7 @@ export abstract class PotionBase {
 				}
 
 				return Promise.all(promises).then((attrs) => {
-					attrs = tuplesToObject(attrs); // `attrs` is a collection of [key, value] tuples
+					attrs = pairsToObject(attrs); // `attrs` is a collection of [key, value] pairs
 					const obj = {};
 
 					Object
@@ -174,7 +174,7 @@ export abstract class PotionBase {
 			}
 
 			return Promise.all(promises).then((attrs) => {
-				return tuplesToObject(attrs);
+				return pairsToObject(attrs);
 			});
 		} else {
 			return Promise.resolve(json);

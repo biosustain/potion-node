@@ -33,8 +33,8 @@ export class Item {
 
 	static store: Store<Item>;
 
-	static fetch(id): Observable<Item> {
-		return this.store.fetch(id);
+	static fetch(id, options?: any): Observable<Item> {
+		return this.store.fetch(id, options);
 	}
 
 	static create(attrs: any = {}) {
@@ -180,9 +180,9 @@ export abstract class PotionBase {
 		}
 	}
 
-	abstract fetch(uri, options?: RequestInit): Observable<any>;
+	abstract fetch(uri, options?: any): Observable<any>;
 
-	request(uri, options?: RequestInit): Observable<any> {
+	request(uri, options?: any): Observable<any> {
 		let instance;
 
 		// Try to get from cache
@@ -235,12 +235,12 @@ class Store<T extends Item> {
 		this._rootURI = Reflect.getMetadata('potion:uri', itemConstructor);
 	}
 
-	fetch(id: number): Observable<T> {
+	fetch(id: number, options?: any): Observable<T> {
 		const uri = `${this._rootURI}/${id}`;
 
 		return new Observable<T>((observer) => {
 			this._potion
-				.request(uri, {method: 'GET'})
+				.request(uri, Object.assign({method: 'GET'}, options))
 				.subscribe((resource) => observer.next(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => observer.error(error));
 
 		});
@@ -249,7 +249,7 @@ class Store<T extends Item> {
 
 
 function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
-	return function (options: any = {}) {
+	return function (options?: any) {
 		let potion: PotionBase;
 
 		if (typeof this === 'function') {
@@ -260,7 +260,7 @@ function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 			uri = `${this.$uri}${uri}`;
 		}
 
-		return potion.request(uri, {method});
+		return potion.request(uri, Object.assign({method}, options));
 	}
 }
 

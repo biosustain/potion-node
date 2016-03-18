@@ -19,15 +19,15 @@ interface ItemConstructor {
 }
 
 export class Item {
-	uri: string;
+	$uri: string;
 
 	get id() {
-		if (!this.uri) {
+		if (!this.$uri) {
 			return null;
 		}
 
 		const potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-		const {params} = potion.parseURI(this.uri);
+		const {params} = potion.parseURI(this.$uri);
 		return parseInt(params[0]);
 	}
 
@@ -49,7 +49,7 @@ export class Item {
 		const attrs = {};
 
 		Object.keys(this)
-			.filter((key) => key !== 'uri')
+			.filter((key) => key !== '$uri')
 			.forEach((key) => {
 				attrs[key] = this[key];
 			});
@@ -74,8 +74,9 @@ function _strMapToObj(map: Map) {
 }
 
 interface ParsedURI {
-	resource: Item,
-	params: string[]
+	resource: Item;
+	params: string[];
+	uri: string;
 }
 
 export abstract class PotionBase {
@@ -116,7 +117,6 @@ export abstract class PotionBase {
 
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
-				console.log('IS ARRAY');
 				return Promise.all(json.map((item) => this._fromPotionJSON(item)));
 			} else if (typeof json.$uri == 'string') {
 
@@ -259,7 +259,7 @@ function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 			uri = `${Reflect.getMetadata('potion:uri', this)}${uri}`;
 		} else {
 			potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-			uri = `${this.uri}${uri}`;
+			uri = `${this.$uri}${uri}`;
 		}
 
 		return potion.request(uri, {method});

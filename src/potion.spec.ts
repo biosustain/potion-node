@@ -60,7 +60,7 @@ describe('potion', () => {
 	describe('Item.fetch()', () => {
 		it('should retrieve an instance of Item', (done) => {
 			User.fetch(1).subscribe((user: User) => {
-				expect(user.id).toEqual(1);
+				expect(user.id).toEqual(null);
 				done();
 			});
 		});

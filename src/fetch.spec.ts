@@ -18,7 +18,7 @@ describe('potion/fetch', () => {
 		fetchMock.mock('http://localhost/user/names', ['John Doe']);
 
 		fetchMock.mock('http://localhost/user/1', {
-			uri: '/user/1',
+			$uri: '/user/1',
 			name: 'John Doe'
 		});
 		fetchMock.mock('http://localhost/user/1/attributes', {

@@ -27,7 +27,7 @@ SystemJS.config({
 		"buffer": "github:jspm/nodelibs-buffer@0.2.0-alpha",
 		"core-js": "npm:core-js@2.2.0",
 		"events": "github:jspm/nodelibs-events@0.2.0-alpha",
-		"fetch-mock": "npm:fetch-mock@4.1.1",
+		"fetch-mock": "npm:fetch-mock@4.2.0",
 		"fs": "github:jspm/nodelibs-fs@0.2.0-alpha",
 		"http": "github:jspm/nodelibs-http@0.2.0-alpha",
 		"https": "github:jspm/nodelibs-https@0.2.0-alpha",
@@ -44,6 +44,11 @@ SystemJS.config({
 		"zlib": "github:jspm/nodelibs-zlib@0.2.0-alpha"
 	},
 	packages: {
+		"npm:fetch-mock@4.2.0": {
+			"map": {
+				"node-fetch": "npm:node-fetch@1.3.3"
+			}
+		},
 		"github:frankwallis/plugin-typescript@4.0.2": {
 			"map": {
 				"typescript": "npm:typescript@1.8.9"
@@ -95,11 +100,6 @@ SystemJS.config({
 		"npm:encoding@0.1.12": {
 			"map": {
 				"iconv-lite": "npm:iconv-lite@0.4.13"
-			}
-		},
-		"npm:fetch-mock@4.1.1": {
-			"map": {
-				"node-fetch": "npm:node-fetch@1.3.3"
 			}
 		},
 		"npm:isomorphic-fetch@2.2.1": {

@@ -14,9 +14,11 @@ import 'rxjs/add/observable/merge';
 
 describe('potion/fetch', () => {
 	beforeAll(() => {
-		fetchMock.mock('http://localhost/delayed/1', new Promise((resolve) => {
-			setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 2500);
-		}));
+		const delay = new Promise((resolve) => {
+			setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
+		});
+
+		fetchMock.mock('http://localhost/delayed/1', delay);
 
 		fetchMock.mock('http://localhost/ping/1', {$uri: '/ping/1', pong: 1});
 
@@ -87,9 +89,8 @@ describe('potion/fetch', () => {
 			let count = 1;
 			Observable.merge(Delayed.fetch(1), Delayed.fetch(1)).subscribe((delayed: Delayed) => {
 				if (count === 2) {
-					// TODO: check how many times this resource has been requested
-					// Blocked by https://github.com/wheresrhys/fetch-mock/issues/75
-					// expect(delayed.delay).toEqual(500);
+					expect(fetchMock.calls('http://localhost/delayed/1').length).toEqual(1);
+					expect(delayed.delay).toEqual(500);
 					done();
 				}
 
@@ -145,6 +146,7 @@ class JSCache implements Cache {
 
 // Create Potion API
 const potion = new Potion({prefix: 'http://localhost', cache: new JSCache()});
+const potionNoCache = new Potion({prefix: 'http://localhost'});
 
 // Potion resources
 class Delayed extends Item {
@@ -168,7 +170,7 @@ class Car extends Item {
 }
 
 // Register API resources
-potion.register('/delayed', Delayed);
+potionNoCache.register('/delayed', Delayed);
 potion.register('/ping', Ping);
 potion.register('/user', User);
 potion.register('/car', Car);

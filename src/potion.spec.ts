@@ -16,10 +16,6 @@ describe('potion', () => {
 	});
 
 	describe('Potion.create()', () => {
-		it('should have a prefix attribute', () => {
-			expect(potion.prefix).toEqual('/api');
-		});
-
 		it('should add new resources via .registerAs() decorator', () => {
 			@potion.registerAs('/person')
 			class Person extends Item {

@@ -65,6 +65,7 @@ function _toCamelCase(string) {
 	return string.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
 }
 
+// String Map to Object
 // http://www.2ality.com/2015/08/es6-map-json.html
 function _strMapToObj(map: Map) {
 	let obj = {};
@@ -81,8 +82,8 @@ interface ParsedURI {
 
 export abstract class PotionBase {
 	resources = {};
-	prefix: string;
-	cache: Cache;
+	private _prefix: string;
+	private _cache: Cache;
 	private _observables = [];
 
 	static create() {
@@ -90,14 +91,15 @@ export abstract class PotionBase {
 	}
 
 	constructor({prefix = '', cache = {}} = {}) {
-		Object.assign(this, {prefix, cache});
+		this._prefix = prefix;
+		this._cache = cache;
 	}
 
 	parseURI(uri: string): ParsedURI {
 		uri = decodeURIComponent(uri);
 
-		if (uri.indexOf(this.prefix) === 0) {
-			uri = uri.substring(this.prefix.length);
+		if (uri.indexOf(this._prefix) === 0) {
+			uri = uri.substring(this._prefix.length);
 		}
 
 		for (let [resourceURI] of Object.entries(this.resources)) {
@@ -110,11 +112,6 @@ export abstract class PotionBase {
 	}
 
 	private _fromPotionJSON(json: any): Promise<any> {
-		// TODO: implement custom deserialization
-
-
-		console.log('JSON: ', json);
-
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
 				return Promise.all(json.map((item) => this._fromPotionJSON(item)));
@@ -142,11 +139,11 @@ export abstract class PotionBase {
 					results = _strMapToObj(new Map(results));
 
 					let instance;
-					if (this.cache.get && !(instance = this.cache.get(uri))) {
+					if (this._cache.get && !(instance = this._cache.get(uri))) {
 						instance = new resource(results);
 
-						if (this.cache.set) {
-							this.cache.set(uri, <any>instance);
+						if (this._cache.set) {
+							this._cache.set(uri, <any>instance);
 						}
 					} else {
 						Object.assign(instance, results);
@@ -188,7 +185,7 @@ export abstract class PotionBase {
 		let instance;
 
 		// Try to get from cache
-		if (this.cache.get && (instance = this.cache.get(uri))) {
+		if (this._cache.get && (instance = this._cache.get(uri))) {
 			return Observable.create((observer) => observer.next(instance));
 		}
 
@@ -202,7 +199,7 @@ export abstract class PotionBase {
 		// Register a pending request,
 		// get the data,
 		// and parse it.
-		obs = this._observables[uri] = this.fetch(`${this.prefix}${uri}`, options).mergeMap((json) => {
+		obs = this._observables[uri] = this.fetch(`${this._prefix}${uri}`, options).mergeMap((json) => {
 			delete this._observables[uri]; // Remove pending request
 			return Observable.fromPromise(this._fromPotionJSON(json));
 		});

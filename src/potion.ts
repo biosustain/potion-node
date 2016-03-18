@@ -243,7 +243,7 @@ class Store<T extends Item> {
 }
 
 
-function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
+export function route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 	return function (options?: any) {
 		let potion: PotionBase;
 
@@ -261,22 +261,22 @@ function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 
 export class Route {
 	static GET(uri: string): (any?) => Observable<any> {
-		return _route(uri, {method: 'GET'});
+		return route(uri, {method: 'GET'});
 	}
 
 	static DELETE(uri: string): (any?) => Observable<any> {
-		return _route(uri, {method: 'DELETE'});
+		return route(uri, {method: 'DELETE'});
 	}
 
 	static PATCH(uri: string): (any?) => Observable<any> {
-		return _route(uri, {method: 'PATCH'});
+		return route(uri, {method: 'PATCH'});
 	}
 
 	static POST(uri: string): (any?) => Observable<any> {
-		return _route(uri, {method: 'POST'});
+		return route(uri, {method: 'POST'});
 	}
 
 	static PUT(uri: string): (any?) => Observable<any> {
-		return _route(uri, {method: 'PUT'});
+		return route(uri, {method: 'PUT'});
 	}
 }

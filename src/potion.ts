@@ -4,7 +4,6 @@ import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/toPromise';
 import {toCamelCase, pairsToObject} from './utils';
 
 

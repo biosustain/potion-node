@@ -6,18 +6,18 @@ import 'rxjs/add/operator/mergeMap';
 
 
 export interface Cache<T extends Item> {
-	get(id:string):T;
-	set(id:string, item:T):T;
+	get(id: string): T;
+	set(id: string, item: T): T;
 }
 
 
 interface ItemConstructor {
-	store?:Store<Item>;
-	new (object:any):Item;
+	store?: Store<Item>;
+	new (object: any): Item;
 }
 
 export class Item {
-	uri:string;
+	uri: string;
 
 	get id() {
 		if (!this.uri) {
@@ -29,17 +29,17 @@ export class Item {
 		return parseInt(params[0]);
 	}
 
-	static store:Store<Item>;
+	static store: Store<Item>;
 
-	static fetch(id):Observable<Item> {
+	static fetch(id): Observable<Item> {
 		return this.store.fetch(id);
 	}
 
-	static create(attrs:any = {}) {
+	static create(attrs: any = {}) {
 		return new this(attrs);
 	}
 
-	constructor(attrs:any = {}) {
+	constructor(attrs: any = {}) {
 		Object.assign(this, attrs);
 	}
 
@@ -63,14 +63,14 @@ function toCamelCase(string) {
 }
 
 interface ParsedURI {
-	resource:Item,
-	params:string[]
+	resource: Item,
+	params: string[]
 }
 
 export abstract class PotionBase {
 	resources = {};
-	prefix:string;
-	cache:Cache;
+	prefix: string;
+	cache: Cache;
 	private _observables = [];
 
 	static create() {
@@ -81,7 +81,7 @@ export abstract class PotionBase {
 		Object.assign(this, {prefix, cache});
 	}
 
-	parseURI(uri:string):ParsedURI {
+	parseURI(uri: string): ParsedURI {
 		uri = decodeURIComponent(uri);
 
 		if (uri.indexOf(this.prefix) === 0) {
@@ -101,16 +101,16 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
-	private _fromPotionJSON(json: any):Observable<any> {
+	private _fromPotionJSON(json: any): Observable<any> {
 		// TODO: implement custom deserialization
 		// TODO: implement recursive ref resolve
 
 		return new Observable<any>((observer) => observer.next(json));
 	}
 
-	abstract fetch(uri, options?:RequestInit):Observable<any>;
+	abstract fetch(uri, options?: RequestInit): Observable<any>;
 
-	request(uri, options?:RequestInit) {
+	request(uri, options?: RequestInit) {
 		let instance;
 
 		// Try to get from cache
@@ -136,15 +136,15 @@ export abstract class PotionBase {
 		return obs;
 	}
 
-	register(uri:string, resource:ItemConstructor) {
+	register(uri: string, resource: ItemConstructor) {
 		Reflect.defineMetadata('potion', this, resource);
 		Reflect.defineMetadata('potion:uri', uri, resource);
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);
 	}
 
-	registerAs(uri:string):ClassDecorator {
-		return (target:ItemConstructor) => {
+	registerAs(uri: string): ClassDecorator {
+		return (target: ItemConstructor) => {
 			this.register(uri, target);
 			return target;
 		}
@@ -153,17 +153,17 @@ export abstract class PotionBase {
 
 
 class Store<T extends Item> {
-	private _itemConstructor:ItemConstructor;
-	private _potion:PotionBase;
-	private _rootURI:string;
+	private _itemConstructor: ItemConstructor;
+	private _potion: PotionBase;
+	private _rootURI: string;
 
-	constructor(itemConstructor:ItemConstructor) {
+	constructor(itemConstructor: ItemConstructor) {
 		this._itemConstructor = itemConstructor;
 		this._potion = Reflect.getMetadata('potion', itemConstructor);
 		this._rootURI = Reflect.getMetadata('potion:uri', itemConstructor);
 	}
 
-	fetch(id:number):Observable<T> {
+	fetch(id: number): Observable<T> {
 		const uri = `${this._rootURI}/${id}`;
 
 		return new Observable<T>((observer) => {
@@ -176,9 +176,9 @@ class Store<T extends Item> {
 }
 
 
-function _route(uri:string, {method = 'GET'} = {}):(any?) => Observable<any> {
-	return function (options:any = {}) {
-		let potion:PotionBase;
+function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
+	return function (options: any = {}) {
+		let potion: PotionBase;
 
 		if (typeof this === 'function') {
 			potion = <PotionBase>Reflect.getMetadata('potion', this);
@@ -193,23 +193,23 @@ function _route(uri:string, {method = 'GET'} = {}):(any?) => Observable<any> {
 }
 
 export class Route {
-	static GET(uri:string):(any?) => Observable<any> {
+	static GET(uri: string): (any?) => Observable<any> {
 		return _route(uri, {method: 'GET'});
 	}
 
-	static DELETE(uri:string):(any?) => Observable<any> {
+	static DELETE(uri: string): (any?) => Observable<any> {
 		return _route(uri, {method: 'DELETE'});
 	}
 
-	static PATCH(uri:string):(any?) => Observable<any> {
+	static PATCH(uri: string): (any?) => Observable<any> {
 		return _route(uri, {method: 'PATCH'});
 	}
 
-	static POST(uri:string):(any?) => Observable<any> {
+	static POST(uri: string): (any?) => Observable<any> {
 		return _route(uri, {method: 'POST'});
 	}
 
-	static PUT(uri:string):(any?) => Observable<any> {
+	static PUT(uri: string): (any?) => Observable<any> {
 		return _route(uri, {method: 'PUT'});
 	}
 }

@@ -37,6 +37,7 @@
         "karma-jspm": "workiva/karma-jspm",
         "karma-spec-reporter": "0.0.x",
         "typescript": "next",
+		"tslint": "next",
         "typings": "0.7.x"
     },
     "jspm": {

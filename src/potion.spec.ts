@@ -22,7 +22,8 @@ describe('potion', () => {
 
 		it('should add new resources via .registerAs() decorator', () => {
 			@potion.registerAs('/person')
-			class Person extends Item {}
+			class Person extends Item {
+			}
 
 			expect(Object.keys(potion.resources).length).toEqual(1);
 			expect(potion.resources['/person']).not.toBeUndefined();
@@ -71,6 +72,7 @@ export class Potion extends PotionBase {
 	constructor(options?) {
 		super(Object.assign({prefix: '/api', options}));
 	}
+
 	fetch(uri, {method} = {method: 'GET'}): Observable<any> {
 		return new Observable((observer) => observer.next({}));
 	}

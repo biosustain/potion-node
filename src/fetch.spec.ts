@@ -93,7 +93,8 @@ class JSCache implements Cache {
 const potion = new Potion({prefix: 'http://localhost', cache: new JSCache()});
 
 // Potion resources
-class Ping extends Item {}
+class Ping extends Item {
+}
 
 class User extends Item {
 	attributes = Route.GET('/attributes');

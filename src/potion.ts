@@ -2,7 +2,9 @@ import 'core-js/shim';
 import 'reflect-metadata';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/observable/concat';
+import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/toPromise';
 
 
 export interface Cache<T extends Item> {
@@ -58,8 +60,17 @@ export class Item {
 }
 
 
-function toCamelCase(string) {
+// Snake case to camel case
+function _toCamelCase(string) {
 	return string.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
+}
+
+// http://www.2ality.com/2015/08/es6-map-json.html
+function _strMapToObj(map: Map) {
+	let obj = {};
+	// TODO: investigate why for..of does not work
+	map.forEach((v, k) => obj[k] = v);
+	return obj;
 }
 
 interface ParsedURI {
@@ -90,32 +101,95 @@ export abstract class PotionBase {
 
 		for (let [resourceURI] of Object.entries(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return {
-					uri,
-					resource: this.resources[resourceURI],
-					params: uri.substring(resourceURI.length + 1).split('/')
-				};
+				return {uri, resource: this.resources[resourceURI], params: uri.substring(resourceURI.length + 1).split('/')};
 			}
 		}
 
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
-	private _fromPotionJSON(json: any): Observable<any> {
+	private _fromPotionJSON(json: any): Promise<any> {
 		// TODO: implement custom deserialization
-		// TODO: implement recursive ref resolve
 
-		return new Observable<any>((observer) => observer.next(json));
+
+		console.log('JSON: ', json);
+
+		if (typeof json === 'object' && json !== null) {
+			if (json instanceof Array) {
+				console.log('IS ARRAY');
+				return Promise.all(json.map((item) => this._fromPotionJSON(item)));
+			} else if (typeof json.$uri == 'string') {
+
+				// TODO: it's an uri, try to resolve from cache
+				console.log('IS URI');
+
+				const {resource, uri} = this.parseURI(json.$uri);
+				const promises = [];
+
+				for (const key of Object.keys(json)) {
+					if (key == '$uri') {
+						promises.push(Promise.resolve([key, uri]));
+						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
+						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
+					} else {
+						promises.push(this._fromPotionJSON(json[key]).then((result) => {
+							return [_toCamelCase(key), result]
+						}));
+					}
+				}
+
+				return Promise.all(promises).then((results) => {
+					results = _strMapToObj(new Map(results));
+
+					let instance;
+					if (this.cache.get && !(instance = this.cache.get(uri))) {
+						instance = new resource(results);
+
+						if (this.cache.set) {
+							this.cache.set(uri, <any>instance);
+						}
+					} else {
+						Object.assign(instance, results);
+					}
+
+					return json;
+				});
+			} else if (Object.keys(json).length === 1) {
+				// TODO: implement recursive ref resolve
+				// TODO: implement date deserialize
+				// if (typeof json.$ref === 'string') {
+				// 	let {uri} = this.parseURI(json.$ref);
+				// 	return this.request(uri).toPromise();
+				// } else if (typeof json.$date !== 'undefined') {
+				// 	return Promise.resolve(new Date(json.$date));
+				// }
+			}
+
+			const promises = [];
+
+			for (const key of Object.keys(json)) {
+				promises.push(this._fromPotionJSON(json[key]).then((result) => {
+					return [_toCamelCase(key), result]
+				}));
+			}
+
+			return Promise.all(promises).then((results) => {
+				return _strMapToObj(new Map(results));
+			});
+
+		} else {
+			return Promise.resolve(json);
+		}
 	}
 
 	abstract fetch(uri, options?: RequestInit): Observable<any>;
 
-	request(uri, options?: RequestInit) {
+	request(uri, options?: RequestInit): Observable<any> {
 		let instance;
 
 		// Try to get from cache
 		if (this.cache.get && (instance = this.cache.get(uri))) {
-			return instance;
+			return Observable.create((observer) => observer.next(instance));
 		}
 
 		// If we already asked for the resource,
@@ -130,7 +204,7 @@ export abstract class PotionBase {
 		// and parse it.
 		obs = this._observables[uri] = this.fetch(`${this.prefix}${uri}`, options).mergeMap((json) => {
 			delete this._observables[uri]; // Remove pending request
-			return this._fromPotionJSON(json);
+			return Observable.fromPromise(this._fromPotionJSON(json));
 		});
 
 		return obs;

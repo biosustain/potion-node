@@ -147,12 +147,12 @@ export abstract class PotionBase {
 					Object.assign(obj, {uri: properties.$uri});
 
 					let instance;
-					if (this._cache.get && !(instance = this._cache.get(uri))) {
-						instance = new resource(obj);
-						if (this._cache.set) {
-							this._cache.set(uri, <any>instance);
-						}
-					}
+					// if (this._cache.get && !(instance = this._cache.get(uri))) {
+					// 	instance = new resource(obj);
+					// 	if (this._cache.set) {
+					// 		this._cache.set(uri, <any>instance);
+					// 	}
+					// }
 
 					return obj;
 				});
@@ -193,10 +193,11 @@ export abstract class PotionBase {
 	request(uri, options?: any): Observable<any> {
 		let instance;
 
+		// TODO: fix items cache
 		// Try to get from cache
-		if (this._cache.get && (instance = this._cache.get(uri))) {
-			return Observable.create((observer) => observer.next(instance));
-		}
+		// if (this._cache.get && (instance = this._cache.get(uri))) {
+		// 	return Observable.create((observer) => observer.next(instance));
+		// }
 
 		// If we already asked for the resource,
 		// return the exiting observable.
@@ -255,7 +256,12 @@ class Store<T extends Item> {
 	}
 
 	query(options?: any): Observable<T> {
-		return this._potion.request(this._rootURI, Object.assign({method: 'GET'}, options));
+		return new Observable<T>((observer) => {
+			this._potion
+				.request(this._rootURI, Object.assign({method: 'GET'}, options))
+				.subscribe((resources) => observer.next(resources.map((resource) => new this._itemConstructor(resource))), (error) => observer.error(error));
+
+		});
 	}
 }
 

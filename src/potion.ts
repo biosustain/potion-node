@@ -5,7 +5,7 @@ import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/toPromise';
-import {toCamelCase, tupleToObject} from './utils';
+import {toCamelCase, tuplesToObject} from './utils';
 
 
 export interface Cache<T extends Item> {
@@ -125,22 +125,22 @@ export abstract class PotionBase {
 						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
 						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
 					} else {
-						promises.push(this._fromPotionJSON(json[key]).then((result) => {
-							return [toCamelCase(key), result]
+						promises.push(this._fromPotionJSON(json[key]).then((value) => {
+							return [toCamelCase(key), value]
 						}));
 					}
 				}
 
-				return Promise.all(promises).then((results) => {
-					results = tupleToObject(results);
+				return Promise.all(promises).then((attrs) => {
+					attrs = tuplesToObject(attrs); // `attrs` is a collection of [key, value] tuples
 					const obj = {};
 
 					Object
-						.keys(results)
+						.keys(attrs)
 						.filter((key) => key !== '$uri')
-						.forEach((key) => obj[key] = results[key]);
+						.forEach((key) => obj[key] = attrs[key]);
 
-					Object.assign(obj, {uri: results.$uri});
+					Object.assign(obj, {uri: attrs.$uri});
 
 					let instance;
 					if (this._cache.get && !(instance = this._cache.get(uri))) {
@@ -148,18 +148,16 @@ export abstract class PotionBase {
 						if (this._cache.set) {
 							this._cache.set(uri, <any>instance);
 						}
-					} else {
-						Object.assign(instance, obj);
 					}
 
-					return instance;
+					return obj;
 				});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					let {uri} = this.parseURI(json.$ref);
 					return new Promise((resolve) => {
-						this.request(uri).subscribe((result) => {
-							resolve(result);
+						this.request(uri).subscribe((item) => {
+							resolve(item);
 						});
 					});
 				}
@@ -172,15 +170,14 @@ export abstract class PotionBase {
 			const promises = [];
 
 			for (const key of Object.keys(json)) {
-				promises.push(this._fromPotionJSON(json[key]).then((result) => {
-					return [toCamelCase(key), result]
+				promises.push(this._fromPotionJSON(json[key]).then((value) => {
+					return [toCamelCase(key), value]
 				}));
 			}
 
-			return Promise.all(promises).then((results) => {
-				return tupleToObject(results);
+			return Promise.all(promises).then((attrs) => {
+				return tuplesToObject(attrs);
 			});
-
 		} else {
 			return Promise.resolve(json);
 		}

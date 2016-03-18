@@ -7,7 +7,6 @@ export function toCamelCase(string) {
 export function tupleToObject(tuple: any[]) {
 	let obj = {};
 	for (let [key, value] of tuple) {
-		console.log(key, value);
 		obj[key] = value;
 	}
 	return obj;

@@ -39,10 +39,14 @@ export class Item {
 		return parseInt(params[0]);
 	}
 
-	static store: Store<Item>;
+	static store: Store<any>;
 
 	static fetch(id, options?: any): Observable<Item> {
 		return this.store.fetch(id, options);
+	}
+
+	static query(options?: any): Observable<Item[]> {
+		return this.store.query(options);
 	}
 
 	static create(attrs: any = {}) {
@@ -113,6 +117,7 @@ export abstract class PotionBase {
 	private _fromPotionJSON(json: any): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
+				console.log(json)
 				return Promise.all(json.map((item) => this._fromPotionJSON(item)));
 			} else if (typeof json.$uri == 'string') {
 				const {resource, uri} = this.parseURI(json.$uri);
@@ -130,6 +135,7 @@ export abstract class PotionBase {
 					}
 				}
 
+				// TODO: rename `attrs` to `properties`
 				return Promise.all(promises).then((attrs) => {
 					attrs = pairsToObject(attrs); // `attrs` is a collection of [key, value] pairs
 					const obj = {};
@@ -180,8 +186,11 @@ export abstract class PotionBase {
 		}
 	}
 
+	// TODO: fetch should return promise
 	abstract fetch(uri, options?: any): Observable<any>;
 
+	// TODO: request should return promise
+	// TODO: we must only cache GET requests
 	request(uri, options?: any): Observable<any> {
 		let instance;
 
@@ -244,6 +253,10 @@ class Store<T extends Item> {
 				.subscribe((resource) => observer.next(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => observer.error(error));
 
 		});
+	}
+
+	query(options?: any): Observable<T> {
+		return this._potion.request(this._rootURI, Object.assign({method: 'GET'}, options));
 	}
 }
 

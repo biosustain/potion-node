@@ -20,6 +20,7 @@ describe('potion/fetch', () => {
 
 		fetchMock.mock('http://localhost/ping/1', {$uri: '/ping/1', pong: 1});
 
+		fetchMock.mock('http://localhost/user', [{$ref: '/user/1'}, {$ref: '/user/2'}]);
 		fetchMock.mock('http://localhost/user/names', ['John Doe']);
 		fetchMock.mock('http://localhost/user/1', {
 			$uri: '/user/1',
@@ -29,6 +30,10 @@ describe('potion/fetch', () => {
 		fetchMock.mock('http://localhost/user/1/attributes', {
 			height: 168,
 			weight: 72
+		});
+		fetchMock.mock('http://localhost/user/2', {
+			$uri: '/user/2',
+			name: 'Jane Doe'
 		});
 
 		fetchMock.mock('http://localhost/car/1', {
@@ -105,6 +110,16 @@ describe('potion/fetch', () => {
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
 				expect(car.user.name).toEqual('John Doe');
+				done();
+			});
+		});
+	});
+
+	describe('Item.query()', () => {
+		it('should retrieve all instances of the Item', (done) => {
+			User.query().subscribe((users: User[]) => {
+				expect(users.length).toEqual(2);
+				console.log(users);
 				done();
 			});
 		});

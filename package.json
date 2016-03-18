@@ -19,7 +19,7 @@
         "clean": "rm -rf dist",
         "build": "tsc",
         "test": "karma start karma.config.js --single-run --log-level debug",
-		"lint": "tslint -c ./tslint.json src/*.ts"
+		"lint": "tslint src/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish"
     },
     "dependencies": {
         "isomorphic-fetch": "2.2.x",
@@ -39,6 +39,7 @@
         "karma-spec-reporter": "0.0.x",
         "typescript": "next",
 		"tslint": "next",
+		"tslint-stylish": "2.1.0-beta",
         "typings": "0.7.x"
     },
     "jspm": {

@@ -133,26 +133,37 @@ export abstract class PotionBase {
 
 				return Promise.all(promises).then((results) => {
 					results = tupleToObject(results);
+					const obj = {};
+
+					Object
+						.keys(results)
+						.filter((key) => key !== '$uri')
+						.forEach((key) => obj[key] = results[key]);
+
+					Object.assign(obj, {uri: results.$uri});
 
 					let instance;
 					if (this._cache.get && !(instance = this._cache.get(uri))) {
-						instance = new resource(results);
-
+						instance = new resource(obj);
 						if (this._cache.set) {
 							this._cache.set(uri, <any>instance);
 						}
 					} else {
-						Object.assign(instance, results);
+						Object.assign(instance, obj);
 					}
 
-					return json;
+					return instance;
 				});
 			} else if (Object.keys(json).length === 1) {
-				// TODO: implement recursive ref resolve
+				if (typeof json.$ref === 'string') {
+					let {uri} = this.parseURI(json.$ref);
+					return new Promise((resolve) => {
+						this.request(uri).subscribe((result) => {
+							resolve(result);
+						});
+					});
+				}
 				// TODO: implement date deserialize
-				// if (typeof json.$ref === 'string') {
-				// 	let {uri} = this.parseURI(json.$ref);
-				// 	return this.request(uri).toPromise();
 				// } else if (typeof json.$date !== 'undefined') {
 				// 	return Promise.resolve(new Date(json.$date));
 				// }

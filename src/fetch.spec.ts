@@ -30,6 +30,11 @@ describe('potion/fetch', () => {
 			weight: 72
 		});
 
+		fetchMock.mock('http://localhost/car/1', {
+			$uri: '/car/1',
+			model: 'Audi A3',
+			user: {$ref: '/user/1'}
+		});
 	});
 
 	afterAll(() => {
@@ -90,7 +95,19 @@ describe('potion/fetch', () => {
 				expect(fetchMock.calls('http://localhost/ping/1').length).toEqual(1);
 				done();
 			});
-			done();
+		});
+
+		it('should automatically resolve references', (done) => {
+			Car.fetch(1).subscribe((car: Car) => {
+
+				console.log(car.user);
+
+				expect(car.model).toEqual('Audi A3');
+				expect(car.user instanceof User).toBe(true);
+				expect(car.user.id).toEqual(1);
+				expect(car.user.name).toEqual('John Doe');
+				done();
+			});
 		});
 	});
 });
@@ -128,7 +145,13 @@ class User extends Item {
 	static names = Route.GET('/names');
 }
 
+class Car extends Item {
+	model: string;
+	user: User;
+}
+
 // Register API resources
 potion.register('/delayed', Delayed);
 potion.register('/ping', Ping);
 potion.register('/user', User);
+potion.register('/car', Car);

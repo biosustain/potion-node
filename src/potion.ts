@@ -146,15 +146,12 @@ export abstract class PotionBase {
 
 					Object.assign(obj, {uri: properties.$uri});
 
-					let instance;
-					// if (this._cache.get && !(instance = this._cache.get(uri))) {
-					// 	instance = new resource(obj);
-					// 	if (this._cache.set) {
-					// 		this._cache.set(uri, <any>instance);
-					// 	}
-					// }
+					let instance = new resource(obj);
+					if (this._cache.get && !this._cache.get(uri) && this._cache.set) {
+						this._cache.set(uri, <any>instance);
+					}
 
-					return obj;
+					return instance;
 				});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
@@ -193,11 +190,10 @@ export abstract class PotionBase {
 	request(uri, options?: any): Observable<any> {
 		let instance;
 
-		// TODO: fix items cache
 		// Try to get from cache
-		// if (this._cache.get && (instance = this._cache.get(uri))) {
-		// 	return Observable.create((observer) => observer.next(instance));
-		// }
+		if (this._cache.get && (instance = this._cache.get(uri))) {
+			return Observable.create((observer) => observer.next(instance));
+		}
 
 		// If we already asked for the resource,
 		// return the exiting observable.

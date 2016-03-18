@@ -19,15 +19,23 @@ interface ItemConstructor {
 }
 
 export class Item {
-	$uri: string;
+	protected _uri: string;
+
+	get uri() {
+		return this._uri;
+	}
+	
+	set uri(uri) {
+		this._uri = uri;
+	}
 
 	get id() {
-		if (!this.$uri) {
+		if (!this.uri) {
 			return null;
 		}
 
 		const potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-		const {params} = potion.parseURI(this.$uri);
+		const {params} = potion.parseURI(this.uri);
 		return parseInt(params[0]);
 	}
 
@@ -49,7 +57,7 @@ export class Item {
 		const attrs = {};
 
 		Object.keys(this)
-			.filter((key) => key !== '$uri')
+			.filter((key) => key !== '_uri')
 			.forEach((key) => {
 				attrs[key] = this[key];
 			});
@@ -257,7 +265,7 @@ function _route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
 			uri = `${Reflect.getMetadata('potion:uri', this)}${uri}`;
 		} else {
 			potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-			uri = `${this.$uri}${uri}`;
+			uri = `${this.uri}${uri}`;
 		}
 
 		return potion.request(uri, Object.assign({method}, options));

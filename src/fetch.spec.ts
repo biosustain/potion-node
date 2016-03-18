@@ -8,15 +8,19 @@ import {Item, Route, Cache} from "./potion";
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
 import fetchMock from 'fetch-mock';
+import {Observable} from "rxjs/Observable";
+import 'rxjs/add/observable/merge';
 
 
 describe('potion/fetch', () => {
+	beforeAll(() => {
+		fetchMock.mock('http://localhost/delayed/1', new Promise((resolve) => {
+			setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 2500);
+		}));
 
-	beforeEach(() => {
-		fetchMock.mock('http://localhost/ping/1', {pong: 1});
+		fetchMock.mock('http://localhost/ping/1', {$uri: '/ping/1', pong: 1});
 
 		fetchMock.mock('http://localhost/user/names', ['John Doe']);
-
 		fetchMock.mock('http://localhost/user/1', {
 			$uri: '/user/1',
 			name: 'John Doe'
@@ -28,7 +32,7 @@ describe('potion/fetch', () => {
 
 	});
 
-	afterEach(() => {
+	afterAll(() => {
 		fetchMock.restore();
 	});
 
@@ -67,8 +71,25 @@ describe('potion/fetch', () => {
 			});
 		});
 
+		it('should not trigger more requests for consequent requests for the same resource, if the first request is still pending', (done) => {
+			let count = 1;
+			Observable.merge(Delayed.fetch(1), Delayed.fetch(1)).subscribe((delayed: Delayed) => {
+				if (count === 2) {
+					// TODO: check how many times this resource has been requested
+					// Blocked by https://github.com/wheresrhys/fetch-mock/issues/75
+					// expect(delayed.delay).toEqual(500);
+					done();
+				}
 
-		it('should retrieve from cache', (done) => {
+				count++;
+			});
+		});
+
+		it('should retrieve from cache (given that a cache was provided)', (done) => {
+			Ping.fetch(1).subscribe(() => {
+				expect(fetchMock.calls('http://localhost/ping/1').length).toEqual(1);
+				done();
+			});
 			done();
 		});
 	});
@@ -93,6 +114,10 @@ class JSCache implements Cache {
 const potion = new Potion({prefix: 'http://localhost', cache: new JSCache()});
 
 // Potion resources
+class Delayed extends Item {
+	delay: number;
+}
+
 class Ping extends Item {
 }
 
@@ -104,5 +129,6 @@ class User extends Item {
 }
 
 // Register API resources
+potion.register('/delayed', Delayed);
 potion.register('/ping', Ping);
 potion.register('/user', User);

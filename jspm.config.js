@@ -35,7 +35,6 @@ SystemJS.config({
 		"path": "github:jspm/nodelibs-path@0.2.0-alpha",
 		"process": "github:jspm/nodelibs-process@0.2.0-alpha",
 		"reflect-metadata": "npm:reflect-metadata@0.1.3",
-		"rxjs": "npm:rxjs@5.0.0-beta.2",
 		"stream": "github:jspm/nodelibs-stream@0.2.0-alpha",
 		"string_decoder": "github:jspm/nodelibs-string_decoder@0.2.0-alpha",
 		"ts": "github:frankwallis/plugin-typescript@4.0.2",

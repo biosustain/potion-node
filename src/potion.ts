@@ -16,6 +16,7 @@ interface ItemConstructor {
 
 export class Item {
 	protected _uri: string;
+	protected _potion: PotionBase;
 
 	get uri() {
 		return this._uri;
@@ -30,18 +31,17 @@ export class Item {
 			return null;
 		}
 
-		const potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-		const {params} = potion.parseURI(this.uri);
+		const {params} = this._potion.parseURI(this.uri);
 		return parseInt(params[0]);
 	}
 
 	static store: Store<any>;
 
-	static fetch(id, options?: any): Promise<Item> {
+	static fetch(id, options?: PotionFetchOptions): Promise<Item> {
 		return this.store.fetch(id, options);
 	}
 
-	static query(options?: any): Promise<Item[]> {
+	static query(options?: PotionFetchOptions): Promise<Item[]> {
 		return this.store.query(options);
 	}
 
@@ -51,11 +51,11 @@ export class Item {
 
 	constructor(properties: any = {}) {
 		Object.assign(this, properties);
+		this._potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
 	}
 
-	// TODO: implement
-	update(): Promise<Item> {
-		return Promise.resolve(this);
+	update(properties?: any = {}): Promise<Item> {
+		return this._potion.update(this, properties);
 	}
 
 	// TODO: implement
@@ -68,12 +68,11 @@ export class Item {
 		return Promise.resolve(this);
 	}
 
-
 	toJSON() {
 		const properties = {};
 
 		Object.keys(this)
-			.filter((key) => key !== '_uri')
+			.filter((key) => key !== '_uri' && key !== '_potion')
 			.forEach((key) => {
 				properties[key] = this[key];
 			});
@@ -89,9 +88,14 @@ interface ParsedURI {
 	uri: string;
 }
 
-interface PotionOptions {
+export interface PotionOptions {
 	prefix?: string;
 	cache?: Cache;
+}
+
+export interface PotionFetchOptions {
+	method?: 'GET' | 'PUT';
+	data?: any;
 }
 
 export abstract class PotionBase {
@@ -157,7 +161,7 @@ export abstract class PotionBase {
 					Object.assign(obj, {uri: properties.$uri});
 
 					let instance = new resource(obj);
-					if (this._cache.get && !this._cache.get(uri) && this._cache.set) {
+					if (this._cache.set) {
 						this._cache.set(uri, <any>instance);
 					}
 
@@ -192,11 +196,18 @@ export abstract class PotionBase {
 		}
 	}
 
-	// TODO: fetch should return promise
-	abstract fetch(uri, options?: any): Promise<any>;
+	abstract fetch(uri, options?: PotionFetchOptions): Promise<any>;
 
-	// TODO: request should return promise
-	get(uri, options?: any): Promise<any> {
+	request(uri, options?: PotionFetchOptions): Promise<any> {
+		// Add the API prefix if not present
+		if (uri.indexOf(this._prefix) === -1) {
+			uri = `${this._prefix}${uri}`;
+		}
+
+		return this.fetch(uri, options);
+	}
+
+	get(uri, options?: PotionFetchOptions): Promise<any> {
 		let instance;
 
 		// Try to get from cache
@@ -215,12 +226,16 @@ export abstract class PotionBase {
 		// get the data,
 		// and parse it.
 		// Enforce GET method
-		promise = this._promises[uri] = this.fetch(`${this._prefix}${uri}`, Object.assign({}, options, {method: 'GET'})).then((json) => {
+		promise = this._promises[uri] = this.request(uri, Object.assign({}, options, {method: 'GET'})).then((json) => {
 			delete this._promises[uri]; // Remove pending request
 			return this._fromPotionJSON(json);
 		});
 
 		return promise;
+	}
+
+	update(resource: Item, data?: any = {}): Promise<any> {
+		return this.request(resource.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
 	}
 
 	register(uri: string, resource: ItemConstructor) {
@@ -250,7 +265,7 @@ class Store<T extends Item> {
 		this._rootURI = Reflect.getMetadata('potion:uri', itemConstructor);
 	}
 
-	fetch(id: number, options?: any): Promise<T> {
+	fetch(id: number, options?: PotionFetchOptions): Promise<T> {
 		const uri = `${this._rootURI}/${id}`;
 
 		return new Promise<T>((resolve, reject) => {
@@ -260,7 +275,7 @@ class Store<T extends Item> {
 		});
 	}
 
-	query(options?: any): Promise<T> {
+	query(options?: PotionFetchOptions): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			this._potion
 				.get(this._rootURI, options)
@@ -271,7 +286,7 @@ class Store<T extends Item> {
 
 
 export function route(uri: string, {method = 'GET'} = {}): (any?) => Promise<any> {
-	return function (options?: any) {
+	return function (options?: PotionFetchOptions) {
 		let potion: PotionBase;
 
 		if (typeof this === 'function') {

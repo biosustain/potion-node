@@ -14,36 +14,87 @@ import {
 import fetchMock from 'fetch-mock';
 
 
+const john = {
+	$uri: '/user/1',
+	name: 'John Doe',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+const jane = {
+	$uri: '/user/2',
+	name: 'Jone Doe',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+
 describe('potion/fetch', () => {
 	beforeAll(() => {
 		const delay = new Promise((resolve) => {
 			setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
 		});
 
-		fetchMock.mock('http://localhost/delayed/1', delay);
-
-		fetchMock.mock('http://localhost/ping/1', {$uri: '/ping/1', pong: 1});
-
-		fetchMock.mock('http://localhost/user', [{$ref: '/user/1'}, {$ref: '/user/2'}]);
-		fetchMock.mock('http://localhost/user/names', ['John Doe']);
-		fetchMock.mock('http://localhost/user/1', {
-			$uri: '/user/1',
-			name: 'John Doe',
-			created_at: {$date: 1451060269000}
-		});
-		fetchMock.mock('http://localhost/user/1/attributes', {
-			height: 168,
-			weight: 72
-		});
-		fetchMock.mock('http://localhost/user/2', {
-			$uri: '/user/2',
-			name: 'Jane Doe'
-		});
-
-		fetchMock.mock('http://localhost/car/1', {
-			$uri: '/car/1',
-			model: 'Audi A3',
-			user: {$ref: '/user/1'}
+		fetchMock.mock({
+			greed: 'bad',
+			routes: [
+				{
+					matcher: 'http://localhost/delayed/1',
+					method: 'GET',
+					response: delay
+				},
+				{
+					matcher: 'http://localhost/ping/1',
+					method: 'GET',
+					response: {$uri: '/ping/1', pong: 1}
+				},
+				{
+					matcher: 'http://localhost/user',
+					method: 'GET',
+					response: [{$ref: john.$uri}, {$ref: jane.$uri}]
+				},
+				{
+					matcher: 'http://localhost/user/names',
+					method: 'GET',
+					response: ['John Doe', 'Jane Doe']
+				},
+				{
+					matcher: 'http://localhost/user/1',
+					method: 'GET',
+					response: () => john // A fn will always return the update object
+				},
+				{
+					matcher: 'http://localhost/user/1',
+					method: 'PUT',
+					response: (url, opts) => {
+						return Object.assign(john, {}, opts.body);
+					}
+				},
+				{
+					matcher: 'http://localhost/user/1/attributes',
+					method: 'GET',
+					response: {
+						height: 168,
+						weight: 72
+					}
+				},
+				{
+					matcher: 'http://localhost/user/2',
+					method: 'GET',
+					response: () => jane
+				},
+				{
+					matcher: 'http://localhost/car/1',
+					method: 'GET',
+					response: {
+						$uri: '/car/1',
+						model: 'Audi A3',
+						user: {$ref: '/user/1'}
+					}
+				}
+			]
 		});
 	});
 

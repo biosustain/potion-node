@@ -1,9 +1,5 @@
 import 'core-js/shim';
 import 'reflect-metadata';
-import {Observable} from 'rxjs/Observable';
-import 'rxjs/add/observable/concat';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/operator/mergeMap';
 import {toCamelCase, pairsToObject} from './utils';
 
 
@@ -41,11 +37,11 @@ export class Item {
 
 	static store: Store<any>;
 
-	static fetch(id, options?: any): Observable<Item> {
+	static fetch(id, options?: any): Promise<Item> {
 		return this.store.fetch(id, options);
 	}
 
-	static query(options?: any): Observable<Item[]> {
+	static query(options?: any): Promise<Item[]> {
 		return this.store.query(options);
 	}
 
@@ -87,7 +83,7 @@ export abstract class PotionBase {
 	resources = {};
 	private _prefix: string;
 	private _cache: Cache;
-	private _observables = [];
+	private _promises = [];
 
 	static create() {
 		return Reflect.construct(this, arguments);
@@ -156,7 +152,7 @@ export abstract class PotionBase {
 				if (typeof json.$ref === 'string') {
 					let {uri} = this.parseURI(json.$ref);
 					return new Promise((resolve) => {
-						this.get(uri).subscribe((item) => {
+						this.get(uri).then((item) => {
 							resolve(item);
 						});
 					});
@@ -182,34 +178,34 @@ export abstract class PotionBase {
 	}
 
 	// TODO: fetch should return promise
-	abstract fetch(uri, options?: any): Observable<any>;
+	abstract fetch(uri, options?: any): Promise<any>;
 
 	// TODO: request should return promise
-	get(uri, options?: any): Observable<any> {
+	get(uri, options?: any): Promise<any> {
 		let instance;
 
 		// Try to get from cache
 		if (this._cache.get && (instance = this._cache.get(uri))) {
-			return Observable.create((observer) => observer.next(instance));
+			return Promise.resolve(instance);
 		}
 
 		// If we already asked for the resource,
-		// return the exiting observable.
-		let obs = this._observables[uri];
-		if (obs) {
-			return obs;
+		// return the exiting promise.
+		let promise = this._promises[uri];
+		if (promise) {
+			return promise;
 		}
 
 		// Register a pending request,
 		// get the data,
 		// and parse it.
 		// Enforce GET method
-		obs = this._observables[uri] = this.fetch(`${this._prefix}${uri}`, Object.assign({}, options, {method: 'GET'})).mergeMap((json) => {
-			delete this._observables[uri]; // Remove pending request
-			return Observable.fromPromise(this._fromPotionJSON(json));
+		promise = this._promises[uri] = this.fetch(`${this._prefix}${uri}`, Object.assign({}, options, {method: 'GET'})).then((json) => {
+			delete this._promises[uri]; // Remove pending request
+			return this._fromPotionJSON(json);
 		});
 
-		return obs;
+		return promise;
 	}
 
 	register(uri: string, resource: ItemConstructor) {
@@ -239,29 +235,27 @@ class Store<T extends Item> {
 		this._rootURI = Reflect.getMetadata('potion:uri', itemConstructor);
 	}
 
-	fetch(id: number, options?: any): Observable<T> {
+	fetch(id: number, options?: any): Promise<T> {
 		const uri = `${this._rootURI}/${id}`;
 
-		return new Observable<T>((observer) => {
+		return new Promise<T>((resolve, reject) => {
 			this._potion
 				.get(uri, options)
-				.subscribe((resource) => observer.next(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => observer.error(error));
-
+				.then((resource) => resolve(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => reject(error));
 		});
 	}
 
-	query(options?: any): Observable<T> {
-		return new Observable<T>((observer) => {
+	query(options?: any): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
 			this._potion
 				.get(this._rootURI, options)
-				.subscribe((resources) => observer.next(resources.map((resource) => new this._itemConstructor(resource))), (error) => observer.error(error));
-
+				.then((resources) => resolve(resources.map((resource) => new this._itemConstructor(resource))), (error) => reject(error));
 		});
 	}
 }
 
 
-export function route(uri: string, {method = 'GET'} = {}): (any?) => Observable<any> {
+export function route(uri: string, {method = 'GET'} = {}): (any?) => Promise<any> {
 	return function (options?: any) {
 		let potion: PotionBase;
 
@@ -278,23 +272,23 @@ export function route(uri: string, {method = 'GET'} = {}): (any?) => Observable<
 }
 
 export class Route {
-	static GET(uri: string): (any?) => Observable<any> {
+	static GET(uri: string): (any?) => Promise<any> {
 		return route(uri, {method: 'GET'});
 	}
 
-	static DELETE(uri: string): (any?) => Observable<any> {
+	static DELETE(uri: string): (any?) => Promise<any> {
 		return route(uri, {method: 'DELETE'});
 	}
 
-	static PATCH(uri: string): (any?) => Observable<any> {
+	static PATCH(uri: string): (any?) => Promise<any> {
 		return route(uri, {method: 'PATCH'});
 	}
 
-	static POST(uri: string): (any?) => Observable<any> {
+	static POST(uri: string): (any?) => Promise<any> {
 		return route(uri, {method: 'POST'});
 	}
 
-	static PUT(uri: string): (any?) => Observable<any> {
+	static PUT(uri: string): (any?) => Promise<any> {
 		return route(uri, {method: 'PUT'});
 	}
 }

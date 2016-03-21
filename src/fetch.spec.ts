@@ -3,13 +3,15 @@
 import 'isomorphic-fetch';
 
 import {Potion} from './fetch';
-import {Item, Route, Cache} from "./potion";
+import {
+	Item,
+	Route,
+	Cache
+} from "./potion";
 
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
 import fetchMock from 'fetch-mock';
-import {Observable} from "rxjs/Observable";
-import 'rxjs/add/observable/merge';
 
 
 describe('potion/fetch', () => {
@@ -52,14 +54,14 @@ describe('potion/fetch', () => {
 	describe('Item.fetch()', () => {
 
 		it('should make a XHR request', (done) => {
-			Ping.fetch(1).subscribe(() => {
+			Ping.fetch(1).then(() => {
 				expect(fetchMock.called('http://localhost/ping/1')).toBe(true);
 				done();
 			});
 		});
 
 		it('should correctly deserialize Potion server response', (done) => {
-			User.fetch(1).subscribe((user: User) => {
+			User.fetch(1).then((user: User) => {
 				expect(user.id).toEqual(1);
 				expect(user.name).toEqual('John Doe');
 				expect(user.createdAt instanceof Date).toBe(true);
@@ -68,8 +70,8 @@ describe('potion/fetch', () => {
 		});
 
 		it('should have a instance route that returns valid JSON', (done) => {
-			User.fetch(1).subscribe((user: User) => {
-				user.attributes().subscribe((attrs) => {
+			User.fetch(1).then((user: User) => {
+				user.attributes().then((attrs) => {
 					expect(attrs.height).toEqual(168);
 					expect(attrs.weight).toEqual(72);
 					done();
@@ -78,7 +80,7 @@ describe('potion/fetch', () => {
 		});
 
 		it('should have a static route that returns valid JSON', (done) => {
-			User.names().subscribe((names) => {
+			User.names().then((names) => {
 				expect(Array.isArray(names)).toBe(true);
 				expect(names[0]).toEqual('John Doe');
 				done();
@@ -86,27 +88,21 @@ describe('potion/fetch', () => {
 		});
 
 		it('should not trigger more requests for consequent requests for the same resource, if the first request is still pending', (done) => {
-			let count = 1;
-			Observable.merge(Delayed.fetch(1), Delayed.fetch(1)).subscribe((delayed: Delayed) => {
-				if (count === 2) {
-					expect(fetchMock.calls('http://localhost/delayed/1').length).toEqual(1);
-					expect(delayed.delay).toEqual(500);
-					done();
-				}
-
-				count++;
+			Promise.all([Delayed.fetch(1), Delayed.fetch(1)]).then(() => {
+				expect(fetchMock.calls('http://localhost/delayed/1').length).toEqual(1);
+				done();
 			});
 		});
 
 		it('should retrieve from cache (given that a cache was provided)', (done) => {
-			Ping.fetch(1).subscribe(() => {
+			Ping.fetch(1).then(() => {
 				expect(fetchMock.calls('http://localhost/ping/1').length).toEqual(1);
 				done();
 			});
 		});
 
 		it('should automatically resolve references', (done) => {
-			Car.fetch(1).subscribe((car: Car) => {
+			Car.fetch(1).then((car: Car) => {
 				expect(car.model).toEqual('Audi A3');
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
@@ -118,7 +114,7 @@ describe('potion/fetch', () => {
 
 	describe('Item.query()', () => {
 		it('should retrieve all instances of the Item', (done) => {
-			User.query().subscribe((users: User[]) => {
+			User.query().then((users: User[]) => {
 				expect(users.length).toEqual(2);
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);

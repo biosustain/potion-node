@@ -1,5 +1,7 @@
-import {Observable} from "rxjs/Observable";
-import {PotionBase, Item} from "./potion";
+import {
+	PotionBase,
+	Item
+} from "./potion";
 
 
 describe('potion', () => {
@@ -55,14 +57,14 @@ describe('potion', () => {
 
 	describe('Item.fetch()', () => {
 		it('should retrieve an instance of Item', (done) => {
-			User.fetch(1).subscribe((user: User) => {
+			User.fetch(1).then((user: User) => {
 				expect(user.id).toEqual(1);
 				done();
 			});
 		});
 
 		it('should convert snake case keys to camel case keys', (done) => {
-			User.fetch(1).subscribe((user: User) => {
+			User.fetch(1).then((user: User) => {
 				expect(user.camelCase).not.toBeUndefined();
 				done();
 			});
@@ -76,8 +78,8 @@ export class Potion extends PotionBase {
 		super(Object.assign({prefix: '/api', options}));
 	}
 
-	fetch(uri, {method} = {method: 'GET'}): Observable<any> {
-		return new Observable((observer) => observer.next({camel_case: true}));
+	fetch(uri, {method} = {method: 'GET'}): Promise<any> {
+		return Promise.resolve({camel_case: true});
 	}
 }
 

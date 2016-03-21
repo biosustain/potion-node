@@ -53,6 +53,22 @@ export class Item {
 		Object.assign(this, properties);
 	}
 
+	// TODO: implement
+	update(): Promise<Item> {
+		return Promise.resolve(this);
+	}
+
+	// TODO: implement
+	['delete'](): Promise<Item> {
+		return Promise.resolve(this);
+	}
+
+	// TODO: implement
+	save(): Promise<Item> {
+		return Promise.resolve(this);
+	}
+
+
 	toJSON() {
 		const properties = {};
 
@@ -64,7 +80,6 @@ export class Item {
 
 		return properties;
 	}
-
 }
 
 

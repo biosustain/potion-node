@@ -52,7 +52,6 @@ describe('potion/fetch', () => {
 	});
 
 	describe('Item.fetch()', () => {
-
 		it('should make a XHR request', (done) => {
 			Ping.fetch(1).then(() => {
 				expect(fetchMock.called('http://localhost/ping/1')).toBe(true);
@@ -120,6 +119,48 @@ describe('potion/fetch', () => {
 					expect(user instanceof User).toBe(true);
 				}
 				done();
+			});
+		});
+	});
+
+	describe('Item instance', () => {
+		describe('.update()', () => {
+			it('should update the Item', (done) => {
+				User.fetch(1).then((user: User) => {
+					user.update({name: 'John Foo Doe'}).then(() => {
+						User.fetch(1).then((user: User) => {
+							expect(user.name).toEqual('John Foo Doe');
+							done();
+						});
+					});
+				});
+			});
+		});
+
+		describe('.delete()', () => {
+			it('should delete the Item', (done) => {
+				User.fetch(2).then((user: User) => {
+					user.delete().then(() => {
+						User.fetch(2).then(null, (error) => {
+							expect(error).not.toBeUndefined();
+							done();
+						});
+					});
+				});
+			});
+		});
+
+		describe('.save()', () => {
+			it('should save the Item', (done) => {
+				const user = User.create({name: 'Foo Bar'});
+
+				user.save().then(() => {
+					User.fetch(3).then((user: User) => {
+						expect(user.id).toEqual(3);
+						expect(user.name).toEqual('Foo Bar');
+						done();
+					});
+				});
 			});
 		});
 	});

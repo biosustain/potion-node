@@ -188,32 +188,32 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		describe('.delete()', () => {
-			it('should delete the Item', (done) => {
-				User.fetch(2).then((user: User) => {
-					user.delete().then(() => {
-						User.fetch(2).then(null, (error) => {
-							expect(error).not.toBeUndefined();
-							done();
-						});
-					});
-				});
-			});
-		});
-
-		describe('.save()', () => {
-			it('should save the Item', (done) => {
-				const user = User.create({name: 'Foo Bar'});
-
-				user.save().then(() => {
-					User.fetch(3).then((user: User) => {
-						expect(user.id).toEqual(3);
-						expect(user.name).toEqual('Foo Bar');
-						done();
-					});
-				});
-			});
-		});
+		// describe('.delete()', () => {
+		// 	it('should delete the Item', (done) => {
+		// 		User.fetch(2).then((user: User) => {
+		// 			user.delete().then(() => {
+		// 				User.fetch(2).then(null, (error) => {
+		// 					expect(error).not.toBeUndefined();
+		// 					done();
+		// 				});
+		// 			});
+		// 		});
+		// 	});
+		// });
+        //
+		// describe('.save()', () => {
+		// 	it('should save the Item', (done) => {
+		// 		const user = User.create({name: 'Foo Bar'});
+        //
+		// 		user.save().then(() => {
+		// 			User.fetch(3).then((user: User) => {
+		// 				expect(user.id).toEqual(3);
+		// 				expect(user.name).toEqual('Foo Bar');
+		// 				done();
+		// 			});
+		// 		});
+		// 	});
+		// });
 	});
 });
 

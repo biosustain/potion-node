@@ -56,13 +56,6 @@ describe('potion', () => {
 	});
 
 	describe('Item.fetch()', () => {
-		it('should retrieve an instance of Item', (done) => {
-			User.fetch(1).then((user: User) => {
-				expect(user.id).toEqual(1);
-				done();
-			});
-		});
-
 		it('should convert snake case keys to camel case keys', (done) => {
 			User.fetch(1).then((user: User) => {
 				expect(user.camelCase).not.toBeUndefined();

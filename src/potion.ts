@@ -255,32 +255,20 @@ export abstract class PotionBase {
 
 
 class Store<T extends Item> {
-	private _itemConstructor: ItemConstructor;
 	private _potion: PotionBase;
 	private _rootURI: string;
 
-	constructor(itemConstructor: ItemConstructor) {
-		this._itemConstructor = itemConstructor;
-		this._potion = Reflect.getMetadata('potion', itemConstructor);
-		this._rootURI = Reflect.getMetadata('potion:uri', itemConstructor);
+	constructor(ctor: ItemConstructor) {
+		this._potion = Reflect.getMetadata('potion', ctor);
+		this._rootURI = Reflect.getMetadata('potion:uri', ctor);
 	}
 
 	fetch(id: number, options?: PotionFetchOptions): Promise<T> {
-		const uri = `${this._rootURI}/${id}`;
-
-		return new Promise<T>((resolve, reject) => {
-			this._potion
-				.get(uri, options)
-				.then((resource) => resolve(new this._itemConstructor(Object.assign({}, {uri}, resource))), (error) => reject(error));
-		});
+		return this._potion.get(`${this._rootURI}/${id}`, options);
 	}
 
 	query(options?: PotionFetchOptions): Promise<T> {
-		return new Promise<T>((resolve, reject) => {
-			this._potion
-				.get(this._rootURI, options)
-				.then((resources) => resolve(resources.map((resource) => new this._itemConstructor(resource))), (error) => reject(error));
-		});
+		return this._potion.get(this._rootURI, options);
 	}
 }
 

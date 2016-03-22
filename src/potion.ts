@@ -14,24 +14,24 @@ export interface Cache<T extends Item> {
 }
 
 
-const potionMetadataKey = Symbol('potion');
-const potionUriMetadataKey = Symbol('potion:uri');
+const _potionMetadataKey = Symbol('potion');
+const _potionUriMetadataKey = Symbol('potion:uri');
 
 
-interface ItemConstructor {
+export interface ItemConstructor {
 	store?: Store<Item>;
 	new (object: any): Item;
 }
 
-interface ItemOptions {
+export interface ItemOptions {
 	'readonly': string[];
 }
 
-const readonlyMetadataKey = Symbol('readonly');
+const _readonlyMetadataKey = Symbol('readonly');
 
 export function readonly(target, property) {
-	const metadata = Reflect.getMetadata(readonlyMetadataKey, target.constructor);
-	Reflect.defineMetadata(readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
+	const metadata = Reflect.getMetadata(_readonlyMetadataKey, target.constructor);
+	Reflect.defineMetadata(_readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
 }
 
 export class Item {
@@ -72,8 +72,8 @@ export class Item {
 
 	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
-		this._potion = <PotionBase>Reflect.getMetadata(potionMetadataKey, this.constructor);
-		this._rootUri = Reflect.getMetadata(potionUriMetadataKey, this.constructor);
+		this._potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this.constructor);
+		this._rootUri = Reflect.getMetadata(_potionUriMetadataKey, this.constructor);
 
 		if (options && options.readonly) {
 			options.readonly.forEach((property) => readonly(this, property))
@@ -97,7 +97,7 @@ export class Item {
 
 		Object.keys(this)
 			.filter((key) => {
-				const metadata = Reflect.getMetadata(readonlyMetadataKey, this.constructor);
+				const metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
 				return key !== '_uri' && key !== '_potion' && key !== '_rootUri' && (!metadata || (metadata && !metadata[key]))
 			})
 			.forEach((key) => {
@@ -290,8 +290,8 @@ export abstract class PotionBase {
 	}
 
 	register(uri: string, resource: ItemConstructor) {
-		Reflect.defineMetadata(potionMetadataKey, this, resource);
-		Reflect.defineMetadata(potionUriMetadataKey, uri, resource);
+		Reflect.defineMetadata(_potionMetadataKey, this, resource);
+		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);
 	}
@@ -310,8 +310,8 @@ class Store<T extends Item> {
 	private _rootURI: string;
 
 	constructor(ctor: ItemConstructor) {
-		this._potion = Reflect.getMetadata(potionMetadataKey, ctor);
-		this._rootURI = Reflect.getMetadata(potionUriMetadataKey, ctor);
+		this._potion = Reflect.getMetadata(_potionMetadataKey, ctor);
+		this._rootURI = Reflect.getMetadata(_potionUriMetadataKey, ctor);
 	}
 
 	fetch(id: number, options?: PotionFetchOptions): Promise<T> {
@@ -329,10 +329,10 @@ export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (
 		let potion: PotionBase;
 
 		if (typeof this === 'function') {
-			potion = <PotionBase>Reflect.getMetadata(potionMetadataKey, this);
-			uri = `${Reflect.getMetadata(potionUriMetadataKey, this)}${uri}`;
+			potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this);
+			uri = `${Reflect.getMetadata(_potionUriMetadataKey, this)}${uri}`;
 		} else {
-			potion = <PotionBase>Reflect.getMetadata(potionMetadataKey, this.constructor);
+			potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this.constructor);
 			uri = `${this.uri}${uri}`;
 		}
 

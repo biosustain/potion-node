@@ -70,7 +70,7 @@ export class Item {
 	}
 
 	['delete'](): Promise<Item> {
-		return this._potion.delete(this);
+		return this._potion['delete'](this);
 	}
 
 	toJSON() {
@@ -155,7 +155,7 @@ export abstract class PotionBase {
 				}
 
 				return Promise.all(promises).then((propertyValuePairs) => {
-					const properties = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
+					const properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
 					const obj = {};
 
 					Object
@@ -275,7 +275,7 @@ export abstract class PotionBase {
 	}
 
 	registerAs(uri: string): ClassDecorator {
-		return (target: ItemConstructor) => {
+		return <ItemConstructor>(target: ItemConstructor) => {
 			this.register(uri, target);
 			return target;
 		}

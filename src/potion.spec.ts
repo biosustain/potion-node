@@ -1,6 +1,7 @@
 import {
 	PotionBase,
-	Item
+	Item,
+	readonly
 } from "./potion";
 
 
@@ -10,7 +11,7 @@ describe('potion', () => {
 
 	beforeEach(() => {
 		potion = Potion.create({prefix: '/api'});
-		user = User.create({name: 'John Doe'});
+		user = User.create({name: 'John Doe', age: 24});
 	});
 	afterEach(() => {
 		potion = null;
@@ -47,12 +48,6 @@ describe('potion', () => {
 		it('should have the same attributes it was initialized with', () => {
 			expect(user.name).toEqual('John Doe');
 		});
-
-		it('should return a JSON repr. of itself via .toJSON() method', () => {
-			expect(user.toJSON()).toEqual({
-				name: 'John Doe'
-			});
-		});
 	});
 
 	describe('Item.fetch()', () => {
@@ -60,6 +55,22 @@ describe('potion', () => {
 			User.fetch(1).then((user: User) => {
 				expect(user.camelCase).not.toBeUndefined();
 				done();
+			});
+		});
+	});
+
+	describe('Item instance', () => {
+		describe('.toJSON()', () => {
+			it('should return a JSON repr. of the Item', () => {
+				expect(user.toJSON()).toEqual({
+					name: 'John Doe'
+				});
+			});
+
+			it('should omit @readonly properties', () => {
+				expect(user.toJSON()).toEqual({
+					name: 'John Doe'
+				});
 			});
 		});
 	});
@@ -79,4 +90,7 @@ export class Potion extends PotionBase {
 class User extends Item {
 	name: string;
 	camelCase: any;
+
+	@readonly()
+	age: number
 }

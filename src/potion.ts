@@ -19,6 +19,12 @@ interface ItemConstructor {
 	new (object: any): Item;
 }
 
+const readonlyMetadataKey = Symbol('readonly');
+
+export function readonly() {
+	return Reflect.metadata(readonlyMetadataKey, true);
+}
+
 export class Item {
 	protected _uri: string;
 	protected _potion: PotionBase;
@@ -77,7 +83,7 @@ export class Item {
 		const properties = {};
 
 		Object.keys(this)
-			.filter((key) => key !== '_uri' && key !== '_potion' && key !== '_rootUri')
+			.filter((key) => key !== '_uri' && key !== '_potion' && key !== '_rootUri' && !Reflect.getMetadata(readonlyMetadataKey, this, key))
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
 			});

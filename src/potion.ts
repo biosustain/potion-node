@@ -302,7 +302,7 @@ class Store<T extends Item> {
 }
 
 
-export function route(uri: string, {method = 'GET'} = {}): (any?) => Promise<any> {
+export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (any?) => Promise<any> {
 	return function (options?: PotionFetchOptions) {
 		let potion: PotionBase;
 
@@ -325,10 +325,6 @@ export class Route {
 
 	static DELETE(uri: string): (any?) => Promise<any> {
 		return route(uri, {method: 'DELETE'});
-	}
-
-	static PATCH(uri: string): (any?) => Promise<any> {
-		return route(uri, {method: 'PATCH'});
 	}
 
 	static POST(uri: string): (any?) => Promise<any> {

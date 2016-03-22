@@ -8,7 +8,7 @@ export class Potion extends PotionBase {
 		// Use isomorphic fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// https://www.npmjs.com/package/isomorphic-fetch
-		
+
 		const {method, data} = options || {};
 		const init: RequestInit = {method};
 
@@ -16,6 +16,15 @@ export class Potion extends PotionBase {
 			init.body = options.data
 		}
 
-		return fetch(uri, init).then((response) => response.json());
+		return new Promise((resolve, reject) => {
+			fetch(uri, init)
+				.then((response: any) => {
+					if (response.body) {
+						return response.json().then(resolve);
+					} else {
+						resolve();
+					}
+				}, reject)
+		});
 	}
 }

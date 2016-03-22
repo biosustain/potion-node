@@ -30,72 +30,100 @@ const jane = {
 	}
 };
 
+let anonymous = {
+	$uri: '/user/3',
+	name: 'Anonymous',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+const delay = new Promise((resolve) => {
+	setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
+});
+
+const routes = [
+	{
+		matcher: 'http://localhost/delayed/1',
+		method: 'GET',
+		response: delay
+	},
+	{
+		matcher: 'http://localhost/ping/1',
+		method: 'GET',
+		response: {$uri: '/ping/1', pong: 1}
+	},
+	{
+		matcher: 'http://localhost/user',
+		method: 'GET',
+		response: [{$ref: john.$uri}, {$ref: jane.$uri}]
+	},
+	{
+		matcher: 'http://localhost/user/names',
+		method: 'GET',
+		response: ['John Doe', 'Jane Doe']
+	},
+	{
+		matcher: 'http://localhost/user/1',
+		method: 'GET',
+		response: () => john // A fn will always return the update object
+	},
+	{
+		matcher: 'http://localhost/user/1',
+		method: 'PUT',
+		response: (url, opts) => {
+			return Object.assign(john, {}, opts.body);
+		}
+	},
+	{
+		matcher: 'http://localhost/user/1/attributes',
+		method: 'GET',
+		response: {
+			height: 168,
+			weight: 72
+		}
+	},
+	{
+		matcher: 'http://localhost/user/2',
+		method: 'GET',
+		response: () => jane
+	},
+	{
+		matcher: 'http://localhost/user/3',
+		method: 'GET',
+		response: () => {
+			if (anonymous !== null) {
+				return anonymous;
+			} else {
+				return {
+					status: 400,
+					throws: {}
+				};
+			}
+		}
+	},
+	{
+		matcher: 'http://localhost/user/3',
+		method: 'DELETE',
+		response: () => {
+			anonymous = null;
+			return 200;
+		}
+	},
+	{
+		matcher: 'http://localhost/car/1',
+		method: 'GET',
+		response: {
+			$uri: '/car/1',
+			model: 'Audi A3',
+			user: {$ref: '/user/1'}
+		}
+	}
+];
 
 describe('potion/fetch', () => {
 	beforeAll(() => {
-		const delay = new Promise((resolve) => {
-			setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
-		});
-
-		fetchMock.mock({
-			greed: 'bad',
-			routes: [
-				{
-					matcher: 'http://localhost/delayed/1',
-					method: 'GET',
-					response: delay
-				},
-				{
-					matcher: 'http://localhost/ping/1',
-					method: 'GET',
-					response: {$uri: '/ping/1', pong: 1}
-				},
-				{
-					matcher: 'http://localhost/user',
-					method: 'GET',
-					response: [{$ref: john.$uri}, {$ref: jane.$uri}]
-				},
-				{
-					matcher: 'http://localhost/user/names',
-					method: 'GET',
-					response: ['John Doe', 'Jane Doe']
-				},
-				{
-					matcher: 'http://localhost/user/1',
-					method: 'GET',
-					response: () => john // A fn will always return the update object
-				},
-				{
-					matcher: 'http://localhost/user/1',
-					method: 'PUT',
-					response: (url, opts) => {
-						return Object.assign(john, {}, opts.body);
-					}
-				},
-				{
-					matcher: 'http://localhost/user/1/attributes',
-					method: 'GET',
-					response: {
-						height: 168,
-						weight: 72
-					}
-				},
-				{
-					matcher: 'http://localhost/user/2',
-					method: 'GET',
-					response: () => jane
-				},
-				{
-					matcher: 'http://localhost/car/1',
-					method: 'GET',
-					response: {
-						$uri: '/car/1',
-						model: 'Audi A3',
-						user: {$ref: '/user/1'}
-					}
-				}
-			]
-		});
+		fetchMock.mock({routes, greed: 'bad'});
 	});
 
 	afterAll(() => {
@@ -188,19 +216,19 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		// describe('.delete()', () => {
-		// 	it('should delete the Item', (done) => {
-		// 		User.fetch(2).then((user: User) => {
-		// 			user.delete().then(() => {
-		// 				User.fetch(2).then(null, (error) => {
-		// 					expect(error).not.toBeUndefined();
-		// 					done();
-		// 				});
-		// 			});
-		// 		});
-		// 	});
-		// });
-        //
+		describe('.delete()', () => {
+			it('should delete the Item', (done) => {
+				User.fetch(3).then((user: User) => {
+					user.delete().then(() => {
+						User.fetch(3).then(null, (error) => {
+							expect(error).not.toBeUndefined();
+							done();
+						});
+					});
+				});
+			});
+		});
+
 		// describe('.save()', () => {
 		// 	it('should save the Item', (done) => {
 		// 		const user = User.create({name: 'Foo Bar'});
@@ -220,14 +248,18 @@ describe('potion/fetch', () => {
 
 // In memory cache
 class JSCache implements Cache {
-	private _store = {};
+	private _memcache = {};
 
 	get(id: string) {
-		return this._store[id];
+		return this._memcache[id];
 	}
 
 	set(id, item) {
-		return this._store[id] = item;
+		return this._memcache[id] = item;
+	}
+
+	clear(id: string) {
+		delete this._memcache[id];
 	}
 }
 

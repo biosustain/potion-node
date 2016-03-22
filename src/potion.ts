@@ -6,6 +6,7 @@ import {toCamelCase, pairsToObject} from './utils';
 export interface Cache<T extends Item> {
 	get(id: string): T;
 	set(id: string, item: T): T;
+	clear(id: string): void;
 }
 
 
@@ -60,7 +61,7 @@ export class Item {
 
 	// TODO: implement
 	['delete'](): Promise<Item> {
-		return Promise.resolve(this);
+		return this._potion.delete(this);
 	}
 
 	// TODO: implement
@@ -94,7 +95,7 @@ export interface PotionOptions {
 }
 
 export interface PotionFetchOptions {
-	method?: 'GET' | 'PUT';
+	method?: 'GET' | 'PUT' | 'DELETE';
 	data?: any;
 }
 
@@ -226,16 +227,36 @@ export abstract class PotionBase {
 		// get the data,
 		// and parse it.
 		// Enforce GET method
-		promise = this._promises[uri] = this.request(uri, Object.assign({}, options, {method: 'GET'})).then((json) => {
-			delete this._promises[uri]; // Remove pending request
-			return this._fromPotionJSON(json);
+		promise = this._promises[uri] = new Promise((resolve, reject) => {
+			this.request(uri, Object.assign({}, options, {method: 'GET'})).then(
+				(json) => {
+					delete this._promises[uri]; // Remove pending request
+					resolve(this._fromPotionJSON(json));
+				},
+				reject
+			)
 		});
 
 		return promise;
 	}
 
-	update(resource: Item, data?: any = {}): Promise<any> {
-		return this.request(resource.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+	update(item: Item, data?: any = {}): Promise<any> {
+		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+	}
+
+	['delete'](item: Item): Promise<any> {
+		const {uri} = item;
+
+		return new Promise<>((resolve, reject) => {
+			this.request(uri, {method: 'DELETE'}).then(() => {
+				// Clear the item from cache if exists
+				if (this._cache.get && this._cache.get(uri)) {
+					this._cache.clear(uri);
+				}
+
+				resolve();
+			}, reject)
+		});
 	}
 
 	register(uri: string, resource: ItemConstructor) {

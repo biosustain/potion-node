@@ -1,5 +1,6 @@
 // Needs to be included.
 // Include before we load Potion impl. using fetch.
+// FIXME: it looks like we need to somehow attach fetch-mock to the imported fetch
 // import 'whatwg-fetch';
 
 import {Potion} from './fetch';

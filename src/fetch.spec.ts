@@ -13,7 +13,6 @@ import {
 // https://www.npmjs.com/package/fetch-mock
 import fetchMock from 'fetch-mock';
 
-
 const john = {
 	$uri: '/user/1',
 	name: 'John Doe',
@@ -29,6 +28,8 @@ const jane = {
 		$date: 1451060269000
 	}
 };
+
+let foo = null;
 
 let anonymous = {
 	$uri: '/user/3',
@@ -57,6 +58,19 @@ const routes = [
 		matcher: 'http://localhost/user',
 		method: 'GET',
 		response: [{$ref: john.$uri}, {$ref: jane.$uri}]
+	},
+	{
+		matcher: 'http://localhost/user',
+		method: 'POST',
+		response: (url, opts) => {
+			// TODO: we need to properly create a way to generate ids based on how many users there are
+			return foo = Object.assign({}, opts.body, {
+				$uri: '/user/4',
+				created_at: {
+					$date: Date.now()
+				}
+			});
+		}
 	},
 	{
 		matcher: 'http://localhost/user/names',
@@ -108,6 +122,20 @@ const routes = [
 		response: () => {
 			anonymous = null;
 			return 200;
+		}
+	},
+	{
+		matcher: 'http://localhost/user/4',
+		method: 'GET',
+		response: () => {
+			if (foo !== null) {
+				return foo;
+			} else {
+				return {
+					status: 400,
+					throws: {}
+				};
+			}
 		}
 	},
 	{
@@ -229,19 +257,19 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		// describe('.save()', () => {
-		// 	it('should save the Item', (done) => {
-		// 		const user = User.create({name: 'Foo Bar'});
-        //
-		// 		user.save().then(() => {
-		// 			User.fetch(3).then((user: User) => {
-		// 				expect(user.id).toEqual(3);
-		// 				expect(user.name).toEqual('Foo Bar');
-		// 				done();
-		// 			});
-		// 		});
-		// 	});
-		// });
+		describe('.save()', () => {
+			it('should save the Item', (done) => {
+				const user = User.create({name: 'Foo Bar'});
+
+				user.save().then(() => {
+					User.fetch(4).then((user: User) => {
+						expect(user.id).toEqual(4);
+						expect(user.name).toEqual('Foo Bar');
+						done();
+					});
+				});
+			});
+		});
 	});
 });
 

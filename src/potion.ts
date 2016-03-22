@@ -18,6 +18,7 @@ interface ItemConstructor {
 export class Item {
 	protected _uri: string;
 	protected _potion: PotionBase;
+	protected _rootUri: string;
 
 	get uri() {
 		return this._uri;
@@ -53,26 +54,26 @@ export class Item {
 	constructor(properties: any = {}) {
 		Object.assign(this, properties);
 		this._potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
+		this._rootUri = Reflect.getMetadata('potion:uri', this.constructor);
 	}
 
 	update(properties?: any = {}): Promise<Item> {
 		return this._potion.update(this, properties);
 	}
-	
-	['delete'](): Promise<Item> {
-		return this._potion.delete(this);
+
+	save(): Promise<Item> {
+		return this._potion.save(this._rootUri, this.toJSON());
 	}
 
-	// TODO: implement
-	save(): Promise<Item> {
-		return Promise.resolve(this);
+	['delete'](): Promise<Item> {
+		return this._potion.delete(this);
 	}
 
 	toJSON() {
 		const properties = {};
 
 		Object.keys(this)
-			.filter((key) => key !== '_uri' && key !== '_potion')
+			.filter((key) => key !== '_uri' && key !== '_potion' && key !== '_rootUri')
 			.forEach((key) => {
 				properties[key] = this[key];
 			});
@@ -94,7 +95,7 @@ export interface PotionOptions {
 }
 
 export interface PotionFetchOptions {
-	method?: 'GET' | 'PUT' | 'DELETE';
+	method?: 'GET' | 'PUT' | 'DELETE' | 'POST';
 	data?: any;
 }
 
@@ -241,6 +242,10 @@ export abstract class PotionBase {
 
 	update(item: Item, data?: any = {}): Promise<any> {
 		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+	}
+
+	save(rootUri: string, data: any = {}): Promise<any> {
+		return this.request(rootUri, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
 	}
 
 	['delete'](item: Item): Promise<any> {

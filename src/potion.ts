@@ -35,9 +35,7 @@ export function readonly(target, property) {
 }
 
 export class Item {
-	protected _uri: string;
-	protected _potion: PotionBase;
-	protected _rootUri: string;
+	static store: Store<any>;
 
 	get uri() {
 		return this._uri;
@@ -53,10 +51,12 @@ export class Item {
 		}
 
 		const {params} = this._potion.parseURI(this.uri);
-		return parseInt(params[0]);
+		return parseInt(params[0], 10);
 	}
 
-	static store: Store<any>;
+	protected _uri: string;
+	protected _potion: PotionBase;
+	protected _rootUri: string;
 
 	static fetch(id, options?: PotionFetchOptions): Promise<Item> {
 		return this.store.fetch(id, options);
@@ -76,7 +76,7 @@ export class Item {
 		this._rootUri = Reflect.getMetadata(_potionUriMetadataKey, this.constructor);
 
 		if (options && Array.isArray(options.readonly)) {
-			options.readonly.forEach((property) => readonly(this, property))
+			options.readonly.forEach((property) => readonly(this, property));
 		}
 	}
 
@@ -98,7 +98,7 @@ export class Item {
 		Object.keys(this)
 			.filter((key) => {
 				const metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
-				return key !== '_uri' && key !== '_potion' && key !== '_rootUri' && (!metadata || (metadata && !metadata[key]))
+				return key !== '_uri' && key !== '_potion' && key !== '_rootUri' && (!metadata || (metadata && !metadata[key]));
 			})
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
@@ -156,22 +156,106 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
+	abstract fetch(uri, options?: PotionFetchOptions): Promise<any>;
+
+	request(uri, options?: PotionFetchOptions): Promise<any> {
+		// Add the API prefix if not present
+		if (uri.indexOf(this._prefix) === -1) {
+			uri = `${this._prefix}${uri}`;
+		}
+
+		return this.fetch(uri, options);
+	}
+
+	get(uri, options?: PotionFetchOptions): Promise<any> {
+		// Try to get from cache
+		if (this._cache.get) {
+			const instance = this._cache.get(uri);
+			if (instance) {
+				return Promise.resolve(instance);
+			}
+		}
+
+		// If we already asked for the resource,
+		// return the exiting promise.
+		let promise = this._promises[uri];
+		if (promise) {
+			return promise;
+		}
+
+		// Register a pending request,
+		// get the data,
+		// and parse it.
+		// Enforce GET method
+		promise = this._promises[uri] = new Promise((resolve, reject) => {
+			this.request(uri, Object.assign({}, options, {method: 'GET'})).then(
+				(json) => {
+					delete this._promises[uri]; // Remove pending request
+					resolve(this._fromPotionJSON(json));
+				},
+				reject
+			);
+		});
+
+		return promise;
+	}
+
+	update(item: Item, data?: any = {}): Promise<any> {
+		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+	}
+
+	save(rootUri: string, data: any = {}): Promise<any> {
+		return this.request(rootUri, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
+	}
+
+	['delete'](item: Item): Promise<any> {
+		const {uri} = item;
+
+		return new Promise<>((resolve, reject) => {
+			this.request(uri, {method: 'DELETE'}).then(
+				() => {
+					// Clear the item from cache if exists
+					if (this._cache.get && this._cache.get(uri)) {
+						this._cache.clear(uri);
+					}
+
+					resolve();
+				},
+				reject
+			);
+		});
+	}
+
+	register(uri: string, resource: ItemConstructor) {
+		Reflect.defineMetadata(_potionMetadataKey, this, resource);
+		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
+		this.resources[uri] = resource;
+		resource.store = new Store(resource);
+	}
+
+	registerAs(uri: string): ClassDecorator {
+		return <ItemConstructor>(target: ItemConstructor) => {
+			this.register(uri, target);
+			return target;
+		};
+	}
+
 	private _fromPotionJSON(json: any): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
 				return Promise.all(json.map((item) => this._fromPotionJSON(item)));
-			} else if (typeof json.$uri == 'string') {
+			} else if (typeof json.$uri === 'string') {
 				const {resource, uri} = this.parseURI(json.$uri);
 				const promises = [];
 
 				for (const key of Object.keys(json)) {
-					if (key == '$uri') {
+					if (key === '$uri') {
 						promises.push(Promise.resolve([key, uri]));
 						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
 						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
 					} else {
 						promises.push(this._fromPotionJSON(json[key]).then((value) => {
-							return [toCamelCase(key), value]
+							return [toCamelCase(key), value];
 						}));
 					}
 				}
@@ -211,7 +295,7 @@ export abstract class PotionBase {
 
 			for (const key of Object.keys(json)) {
 				promises.push(this._fromPotionJSON(json[key]).then((value) => {
-					return [toCamelCase(key), value]
+					return [toCamelCase(key), value];
 				}));
 			}
 
@@ -220,86 +304,6 @@ export abstract class PotionBase {
 			});
 		} else {
 			return Promise.resolve(json);
-		}
-	}
-
-	abstract fetch(uri, options?: PotionFetchOptions): Promise<any>;
-
-	request(uri, options?: PotionFetchOptions): Promise<any> {
-		// Add the API prefix if not present
-		if (uri.indexOf(this._prefix) === -1) {
-			uri = `${this._prefix}${uri}`;
-		}
-
-		return this.fetch(uri, options);
-	}
-
-	get(uri, options?: PotionFetchOptions): Promise<any> {
-		let instance;
-
-		// Try to get from cache
-		if (this._cache.get && (instance = this._cache.get(uri))) {
-			return Promise.resolve(instance);
-		}
-
-		// If we already asked for the resource,
-		// return the exiting promise.
-		let promise = this._promises[uri];
-		if (promise) {
-			return promise;
-		}
-
-		// Register a pending request,
-		// get the data,
-		// and parse it.
-		// Enforce GET method
-		promise = this._promises[uri] = new Promise((resolve, reject) => {
-			this.request(uri, Object.assign({}, options, {method: 'GET'})).then(
-				(json) => {
-					delete this._promises[uri]; // Remove pending request
-					resolve(this._fromPotionJSON(json));
-				},
-				reject
-			)
-		});
-
-		return promise;
-	}
-
-	update(item: Item, data?: any = {}): Promise<any> {
-		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
-	}
-
-	save(rootUri: string, data: any = {}): Promise<any> {
-		return this.request(rootUri, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
-	}
-
-	['delete'](item: Item): Promise<any> {
-		const {uri} = item;
-
-		return new Promise<>((resolve, reject) => {
-			this.request(uri, {method: 'DELETE'}).then(() => {
-				// Clear the item from cache if exists
-				if (this._cache.get && this._cache.get(uri)) {
-					this._cache.clear(uri);
-				}
-
-				resolve();
-			}, reject)
-		});
-	}
-
-	register(uri: string, resource: ItemConstructor) {
-		Reflect.defineMetadata(_potionMetadataKey, this, resource);
-		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
-		this.resources[uri] = resource;
-		resource.store = new Store(resource);
-	}
-
-	registerAs(uri: string): ClassDecorator {
-		return <ItemConstructor>(target: ItemConstructor) => {
-			this.register(uri, target);
-			return target;
 		}
 	}
 }
@@ -324,7 +328,7 @@ class Store<T extends Item> {
 }
 
 
-export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (any?) => Promise<any> {
+export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (options?) => Promise<any> {
 	return function (options?: PotionFetchOptions) {
 		let potion: PotionBase;
 
@@ -337,23 +341,23 @@ export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (
 		}
 
 		return potion.get(uri, Object.assign({method}, options));
-	}
+	};
 }
 
 export class Route {
-	static GET(uri: string): (any?) => Promise<any> {
+	static GET(uri: string): (options?) => Promise<any> {
 		return route(uri, {method: 'GET'});
 	}
 
-	static DELETE(uri: string): (any?) => Promise<any> {
+	static DELETE(uri: string): (options?) => Promise<any> {
 		return route(uri, {method: 'DELETE'});
 	}
 
-	static POST(uri: string): (any?) => Promise<any> {
+	static POST(uri: string): (options?) => Promise<any> {
 		return route(uri, {method: 'POST'});
 	}
 
-	static PUT(uri: string): (any?) => Promise<any> {
+	static PUT(uri: string): (options?) => Promise<any> {
 		return route(uri, {method: 'PUT'});
 	}
 }

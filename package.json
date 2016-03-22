@@ -18,7 +18,7 @@
     "scripts": {
         "clean": "rm -rf dist",
         "build": "tsc",
-        "test": "karma start karma.config.js --single-run --log-level debug",
+        "test": "karma start karma.config.js --single-run --log-level error",
         "lint": "tslint src/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish"
     },
     "dependencies": {},

@@ -2,7 +2,7 @@ import {
 	PotionBase,
 	Item,
 	readonly
-} from "./potion";
+} from './potion';
 
 
 describe('potion', () => {
@@ -84,7 +84,7 @@ export class Potion extends PotionBase {
 		super(Object.assign({prefix: '/api', options}));
 	}
 
-	fetch(uri, {method} = {method: 'GET'}): Promise<any> {
+	fetch(uri): Promise<any> {
 		return Promise.resolve({camel_case: true});
 	}
 }
@@ -94,5 +94,5 @@ class User extends Item {
 	camelCase: any;
 
 	@readonly
-	age: number
+	age: number;
 }

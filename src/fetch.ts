@@ -1,7 +1,7 @@
 import {
 	PotionFetchOptions,
 	PotionBase
-} from "./potion";
+} from './potion';
 
 export class Potion extends PotionBase {
 	fetch(uri, options?: PotionFetchOptions): Promise<any> {
@@ -13,18 +13,20 @@ export class Potion extends PotionBase {
 		const init: RequestInit = {method};
 
 		if (data) {
-			init.body = options.data
+			init.body = options.data;
 		}
 
 		return new Promise((resolve, reject) => {
-			fetch(uri, init)
-				.then((response: any) => {
+			fetch(uri, init).then(
+				(response: any) => {
 					if (response.body) {
 						return response.json().then(resolve);
 					} else {
 						resolve();
 					}
-				}, reject)
+				},
+				reject
+			);
 		});
 	}
 }

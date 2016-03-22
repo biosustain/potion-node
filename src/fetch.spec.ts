@@ -7,7 +7,7 @@ import {
 	Item,
 	Route,
 	Cache
-} from "./potion";
+} from './potion';
 
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
@@ -309,11 +309,11 @@ class Ping extends Item {
 }
 
 class User extends Item {
+	static names = Route.GET('/names');
+
 	attributes = Route.GET('/attributes');
 	name: string;
 	createdAt: Date;
-
-	static names = Route.GET('/names');
 }
 
 class Car extends Item {

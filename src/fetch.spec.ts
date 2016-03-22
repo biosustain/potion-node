@@ -250,7 +250,7 @@ describe('potion/fetch', () => {
 		describe('.delete()', () => {
 			it('should delete the Item', (done) => {
 				User.fetch(3).then((user: User) => {
-					user.delete().then(() => {
+					user['delete']().then(() => {
 						User.fetch(3).then(null, (error) => {
 							expect(error).not.toBeUndefined();
 							done();

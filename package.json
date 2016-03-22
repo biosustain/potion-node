@@ -16,10 +16,10 @@
         "url": "https://github.com/biosustain/potion-node"
     },
     "scripts": {
-        "clean": "rm -rf dist",
-        "build": "tsc",
         "lint": "tslint src/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish",
-        "test": "karma start karma.config.js --single-run --log-level error"
+        "test": "karma start karma.config.js --single-run --log-level error",
+        "clean": "rm -rf dist",
+        "build": "tsc"
     },
     "dependencies": {},
     "devDependencies": {

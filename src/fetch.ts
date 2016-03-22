@@ -9,7 +9,7 @@ export class Potion extends PotionBase {
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// https://www.npmjs.com/package/isomorphic-fetch
 
-		const {method, data} = options || {};
+		const {method, data} = options || {method: 'GET', data: null};
 		const init: RequestInit = {method};
 
 		if (data) {

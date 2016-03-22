@@ -10,6 +10,9 @@
 		"outDir": "./dist"
 	},
 	"files": [
-		"./typings/main.d.ts"
+		"typings/main.d.ts",
+		"src/utils.ts",
+		"src/potion.ts",
+		"src/fetch.ts"
 	]
 }

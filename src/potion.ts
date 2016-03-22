@@ -80,7 +80,7 @@ export class Item {
 		}
 	}
 
-	update(properties?: any = {}): Promise<Item> {
+	update(properties: any = {}): Promise<Item> {
 		return this._potion.update(this, properties);
 	}
 
@@ -117,7 +117,7 @@ interface PotionEndpoint {
 
 export interface PotionOptions {
 	prefix?: string;
-	cache?: Cache;
+	cache?: Cache<Item>;
 }
 
 export interface PotionFetchOptions {
@@ -128,14 +128,14 @@ export interface PotionFetchOptions {
 export abstract class PotionBase {
 	resources = {};
 	private _prefix: string;
-	private _cache: Cache;
+	private _cache: Cache<Item>;
 	private _promises = [];
 
 	static create() {
 		return Reflect.construct(this, arguments);
 	}
 
-	constructor({prefix = '', cache = {}}: PotionOptions = {}) {
+	constructor({prefix = '', cache}: PotionOptions = {}) {
 		this._prefix = prefix;
 		this._cache = cache;
 	}
@@ -169,7 +169,7 @@ export abstract class PotionBase {
 
 	get(uri, options?: PotionFetchOptions): Promise<any> {
 		// Try to get from cache
-		if (this._cache.get) {
+		if (this._cache && this._cache.get) {
 			const instance = this._cache.get(uri);
 			if (instance) {
 				return Promise.resolve(instance);
@@ -200,7 +200,7 @@ export abstract class PotionBase {
 		return promise;
 	}
 
-	update(item: Item, data?: any = {}): Promise<any> {
+	update(item: Item, data: any = {}): Promise<any> {
 		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
 	}
 
@@ -211,11 +211,11 @@ export abstract class PotionBase {
 	['delete'](item: Item): Promise<any> {
 		const {uri} = item;
 
-		return new Promise<>((resolve, reject) => {
+		return new Promise<any>((resolve, reject) => {
 			this.request(uri, {method: 'DELETE'}).then(
 				() => {
 					// Clear the item from cache if exists
-					if (this._cache.get && this._cache.get(uri)) {
+					if (this._cache && this._cache.get && this._cache.get(uri)) {
 						this._cache.clear(uri);
 					}
 
@@ -234,7 +234,7 @@ export abstract class PotionBase {
 	}
 
 	registerAs(uri: string): ClassDecorator {
-		return <ItemConstructor>(target: ItemConstructor) => {
+		return (target: any) => {
 			this.register(uri, target);
 			return target;
 		};
@@ -271,8 +271,8 @@ export abstract class PotionBase {
 
 					Object.assign(obj, {uri: properties.$uri});
 
-					let instance = new resource(obj);
-					if (this._cache.set) {
+					let instance = Reflect.construct(<any>resource, [obj]);
+					if (this._cache && this._cache.set) {
 						this._cache.set(uri, <any>instance);
 					}
 

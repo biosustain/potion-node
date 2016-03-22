@@ -18,6 +18,7 @@
     "scripts": {
         "lint": "tslint src/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish",
         "test": "karma start karma.config.js --single-run --log-level error",
+		"test:ci": "karma start karma.config.js --browsers Firefox --single-run --log-level error",
         "clean": "rm -rf dist",
         "build": "tsc"
     },
@@ -30,6 +31,7 @@
         "karma": "0.13.x",
         "karma-chrome-launcher": "0.2.x",
         "karma-cli": "0.1.x",
+		"karma-firefox-launcher": "0.1.x",
         "karma-jasmine": "0.3.x",
         "karma-jspm": "workiva/karma-jspm",
         "karma-spec-reporter": "0.0.x",

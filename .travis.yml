@@ -1,13 +1,9 @@
 language: node_js
 node_js:
-  - "5.2"
-  - "5.1"
-  - "5.0"
-  - "4.1"
-  - "4.0"
+  - "5.6"
+  - "4.4"
 
 addons:
-  sauce_connect: true
   # Node 5 requires a C++11 standard compliant compiler, so we'll use gcc.
   # See more info at https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements.
   apt:
@@ -24,13 +20,13 @@ before_install:
   - export CHROME_BIN=chromium-browser
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
+  - sleep 5 # Give xvfb some time to start
 
 install:
   - npm install --loglevel silent
   - $(npm bin)/typings install
-
-before_script: rm -rf dist
+  - $(npm bin)/jspm install
 
 script:
-  - $(npm bin)/tsc
-  - npm test
+  - npm lint
+  - npm run test:ci

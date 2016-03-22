@@ -58,8 +58,7 @@ export class Item {
 	update(properties?: any = {}): Promise<Item> {
 		return this._potion.update(this, properties);
 	}
-
-	// TODO: implement
+	
 	['delete'](): Promise<Item> {
 		return this._potion.delete(this);
 	}

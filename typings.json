@@ -1,8 +1,7 @@
 {
 	"name": "potion",
 	"ambientDependencies": {
-		"jasmine": "registry:dt/jasmine#2.2.0+20160308082659",
-		"node": "registry:dt/node#4.0.0+20160311162451",
+		"jasmine": "registry:dt/jasmine#2.2.0+20160317120654",
 		"whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160301001032"
 	}
 }

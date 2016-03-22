@@ -18,6 +18,17 @@ const _potionMetadataKey = Symbol('potion');
 const _potionUriMetadataKey = Symbol('potion:uri');
 
 
+/**
+ * @readonly decorator
+ */
+
+const _readonlyMetadataKey = Symbol('potion:readonly');
+export function readonly(target, property) {
+	const metadata = Reflect.getMetadata(_readonlyMetadataKey, target.constructor);
+	Reflect.defineMetadata(_readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
+}
+
+
 export interface ItemConstructor {
 	store?: Store<Item>;
 	new (object: any): Item;
@@ -25,13 +36,6 @@ export interface ItemConstructor {
 
 export interface ItemOptions {
 	'readonly': string[];
-}
-
-const _readonlyMetadataKey = Symbol('readonly');
-
-export function readonly(target, property) {
-	const metadata = Reflect.getMetadata(_readonlyMetadataKey, target.constructor);
-	Reflect.defineMetadata(_readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
 }
 
 export class Item {

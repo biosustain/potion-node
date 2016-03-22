@@ -1,6 +1,10 @@
 import 'core-js/shim';
 import 'reflect-metadata';
-import {toCamelCase, pairsToObject} from './utils';
+import {
+	fromCamelCase,
+	pairsToObject,
+	toCamelCase
+} from './utils';
 
 
 export interface Cache<T extends Item> {
@@ -75,7 +79,7 @@ export class Item {
 		Object.keys(this)
 			.filter((key) => key !== '_uri' && key !== '_potion' && key !== '_rootUri')
 			.forEach((key) => {
-				properties[key] = this[key];
+				properties[fromCamelCase(key)] = this[key];
 			});
 
 		return properties;

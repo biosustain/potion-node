@@ -32,7 +32,6 @@ SystemJS.config({
 		'fs': 'github:jspm/nodelibs-fs@0.2.0-alpha',
 		'http': 'github:jspm/nodelibs-http@0.2.0-alpha',
 		'https': 'github:jspm/nodelibs-https@0.2.0-alpha',
-		'isomorphic-fetch': 'npm:isomorphic-fetch@2.2.1',
 		'path': 'github:jspm/nodelibs-path@0.2.0-alpha',
 		'process': 'github:jspm/nodelibs-process@0.2.0-alpha',
 		'reflect-metadata': 'npm:reflect-metadata@0.1.3',
@@ -41,6 +40,7 @@ SystemJS.config({
 		'ts': 'github:frankwallis/plugin-typescript@4.0.2',
 		'url': 'github:jspm/nodelibs-url@0.2.0-alpha',
 		'util': 'github:jspm/nodelibs-util@0.2.0-alpha',
+		'whatwg-fetch': 'npm:whatwg-fetch@0.11.0',
 		'zlib': 'github:jspm/nodelibs-zlib@0.2.0-alpha'
 	},
 	packages: {
@@ -100,12 +100,6 @@ SystemJS.config({
 		'npm:fetch-mock@4.3.0': {
 			'map': {
 				'node-fetch': 'npm:node-fetch@1.4.0'
-			}
-		},
-		'npm:isomorphic-fetch@2.2.1': {
-			'map': {
-				'node-fetch': 'npm:node-fetch@1.4.0',
-				'whatwg-fetch': 'npm:whatwg-fetch@0.11.0'
 			}
 		},
 		'npm:node-fetch@1.4.0': {

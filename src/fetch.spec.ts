@@ -39,6 +39,12 @@ let anonymous = {
 	}
 };
 
+const audi = {
+	$uri: '/car/1',
+	user: {$ref: '/user/1'},
+	model: 'Audi A3'
+};
+
 const delay = new Promise((resolve) => {
 	setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
 });
@@ -141,11 +147,7 @@ const routes = [
 	{
 		matcher: 'http://localhost/car/1',
 		method: 'GET',
-		response: {
-			$uri: '/car/1',
-			model: 'Audi A3',
-			user: {$ref: '/user/1'}
-		}
+		response: audi
 	}
 ];
 
@@ -169,7 +171,7 @@ describe('potion/fetch', () => {
 		it('should correctly deserialize Potion server response', (done) => {
 			User.fetch(1).then((user: User) => {
 				expect(user.id).toEqual(1);
-				expect(user.name).toEqual('John Doe');
+				expect(user.name).toEqual(john.name);
 				expect(user.createdAt instanceof Date).toBe(true);
 				done();
 			});
@@ -188,7 +190,7 @@ describe('potion/fetch', () => {
 		it('should have a static route that returns valid JSON', (done) => {
 			User.names().then((names) => {
 				expect(Array.isArray(names)).toBe(true);
-				expect(names[0]).toEqual('John Doe');
+				expect(names[0]).toEqual(john.name);
 				done();
 			});
 		});
@@ -209,10 +211,10 @@ describe('potion/fetch', () => {
 
 		it('should automatically resolve references', (done) => {
 			Car.fetch(1).then((car: Car) => {
-				expect(car.model).toEqual('Audi A3');
+				expect(car.model).toEqual(audi.model);
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
-				expect(car.user.name).toEqual('John Doe');
+				expect(car.user.name).toEqual(john.name);
 				done();
 			});
 		});
@@ -234,9 +236,10 @@ describe('potion/fetch', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
 				User.fetch(1).then((user: User) => {
-					user.update({name: 'John Foo Doe'}).then(() => {
+					const name = 'John Foo Doe';
+					user.update({name}).then(() => {
 						User.fetch(1).then((user: User) => {
-							expect(user.name).toEqual('John Foo Doe');
+							expect(user.name).toEqual(name);
 							done();
 						});
 					});
@@ -259,12 +262,13 @@ describe('potion/fetch', () => {
 
 		describe('.save()', () => {
 			it('should save the Item', (done) => {
-				const user = User.create({name: 'Foo Bar'});
+				const name = 'Foo Bar';
+				const user = User.create({name});
 
 				user.save().then(() => {
 					User.fetch(4).then((user: User) => {
 						expect(user.id).toEqual(4);
-						expect(user.name).toEqual('Foo Bar');
+						expect(user.name).toEqual(name);
 						done();
 					});
 				});

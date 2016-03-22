@@ -14,6 +14,10 @@ export interface Cache<T extends Item> {
 }
 
 
+const potionMetadataKey = Symbol('potion');
+const potionUriMetadataKey = Symbol('potion:uri');
+
+
 interface ItemConstructor {
 	store?: Store<Item>;
 	new (object: any): Item;
@@ -68,8 +72,8 @@ export class Item {
 
 	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
-		this._potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
-		this._rootUri = Reflect.getMetadata('potion:uri', this.constructor);
+		this._potion = <PotionBase>Reflect.getMetadata(potionMetadataKey, this.constructor);
+		this._rootUri = Reflect.getMetadata(potionUriMetadataKey, this.constructor);
 
 		if (options && options.readonly) {
 			options.readonly.forEach((property) => readonly(this, property))
@@ -286,8 +290,8 @@ export abstract class PotionBase {
 	}
 
 	register(uri: string, resource: ItemConstructor) {
-		Reflect.defineMetadata('potion', this, resource);
-		Reflect.defineMetadata('potion:uri', uri, resource);
+		Reflect.defineMetadata(potionMetadataKey, this, resource);
+		Reflect.defineMetadata(potionUriMetadataKey, uri, resource);
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);
 	}
@@ -306,8 +310,8 @@ class Store<T extends Item> {
 	private _rootURI: string;
 
 	constructor(ctor: ItemConstructor) {
-		this._potion = Reflect.getMetadata('potion', ctor);
-		this._rootURI = Reflect.getMetadata('potion:uri', ctor);
+		this._potion = Reflect.getMetadata(potionMetadataKey, ctor);
+		this._rootURI = Reflect.getMetadata(potionUriMetadataKey, ctor);
 	}
 
 	fetch(id: number, options?: PotionFetchOptions): Promise<T> {
@@ -325,10 +329,10 @@ export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (
 		let potion: PotionBase;
 
 		if (typeof this === 'function') {
-			potion = <PotionBase>Reflect.getMetadata('potion', this);
-			uri = `${Reflect.getMetadata('potion:uri', this)}${uri}`;
+			potion = <PotionBase>Reflect.getMetadata(potionMetadataKey, this);
+			uri = `${Reflect.getMetadata(potionUriMetadataKey, this)}${uri}`;
 		} else {
-			potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
+			potion = <PotionBase>Reflect.getMetadata(potionMetadataKey, this.constructor);
 			uri = `${this.uri}${uri}`;
 		}
 

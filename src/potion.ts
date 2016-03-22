@@ -87,7 +87,7 @@ export class Item {
 }
 
 
-interface ParsedURI {
+interface PotionEndpoint {
 	resource: Item;
 	params: string[];
 	uri: string;
@@ -118,7 +118,7 @@ export abstract class PotionBase {
 		this._cache = cache;
 	}
 
-	parseURI(uri: string): ParsedURI {
+	parseURI(uri: string): PotionEndpoint {
 		uri = decodeURIComponent(uri);
 
 		if (uri.indexOf(this._prefix) === 0) {

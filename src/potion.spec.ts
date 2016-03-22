@@ -11,7 +11,9 @@ describe('potion', () => {
 
 	beforeEach(() => {
 		potion = Potion.create({prefix: '/api'});
-		user = User.create({name: 'John Doe', age: 24});
+		user = User.create({name: 'John Doe', age: 24, weight: 72}, {
+			readonly: ['weight']
+		});
 	});
 	afterEach(() => {
 		potion = null;
@@ -91,6 +93,6 @@ class User extends Item {
 	name: string;
 	camelCase: any;
 
-	@readonly()
+	@readonly
 	age: number
 }

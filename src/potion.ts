@@ -19,10 +19,15 @@ interface ItemConstructor {
 	new (object: any): Item;
 }
 
+interface ItemOptions {
+	'readonly': string[];
+}
+
 const readonlyMetadataKey = Symbol('readonly');
 
-export function readonly() {
-	return Reflect.metadata(readonlyMetadataKey, true);
+export function readonly(target, property) {
+	const metadata = Reflect.getMetadata(readonlyMetadataKey, target.constructor);
+	Reflect.defineMetadata(readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
 }
 
 export class Item {
@@ -57,14 +62,18 @@ export class Item {
 		return this.store.query(options);
 	}
 
-	static create(properties: any = {}) {
-		return new this(properties);
+	static create(...args) {
+		return Reflect.construct(this, args);
 	}
 
-	constructor(properties: any = {}) {
+	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
 		this._potion = <PotionBase>Reflect.getMetadata('potion', this.constructor);
 		this._rootUri = Reflect.getMetadata('potion:uri', this.constructor);
+
+		if (options && options.readonly) {
+			options.readonly.forEach((property) => readonly(this, property))
+		}
 	}
 
 	update(properties?: any = {}): Promise<Item> {
@@ -83,7 +92,10 @@ export class Item {
 		const properties = {};
 
 		Object.keys(this)
-			.filter((key) => key !== '_uri' && key !== '_potion' && key !== '_rootUri' && !Reflect.getMetadata(readonlyMetadataKey, this, key))
+			.filter((key) => {
+				const metadata = Reflect.getMetadata(readonlyMetadataKey, this.constructor);
+				return key !== '_uri' && key !== '_potion' && key !== '_rootUri' && (!metadata || (metadata && !metadata[key]))
+			})
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
 			});

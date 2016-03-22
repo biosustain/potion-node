@@ -75,7 +75,7 @@ export class Item {
 		this._potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this.constructor);
 		this._rootUri = Reflect.getMetadata(_potionUriMetadataKey, this.constructor);
 
-		if (options && options.readonly) {
+		if (options && Array.isArray(options.readonly)) {
 			options.readonly.forEach((property) => readonly(this, property))
 		}
 	}

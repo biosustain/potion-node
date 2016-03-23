@@ -14,7 +14,13 @@ export class Potion extends PotionBase {
 		const init: RequestInit = {method, cache};
 
 		if (data) {
-			init.body = options.data;
+			// POST/PUT
+			// https://github.com/github/fetch#post-json
+			init.body = JSON.stringify(options.data);
+			init.headers = {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			};
 		}
 
 		return new Promise((resolve, reject) => {

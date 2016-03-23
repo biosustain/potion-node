@@ -70,7 +70,7 @@ const routes = [
 		method: 'POST',
 		response: (url, opts) => {
 			// TODO: we need to properly create a way to generate ids based on how many users there are
-			return foo = Object.assign({}, opts.body, {
+			return foo = Object.assign({}, JSON.parse(opts.body), {
 				$uri: '/user/4',
 				created_at: {
 					$date: Date.now()
@@ -92,7 +92,7 @@ const routes = [
 		matcher: 'http://localhost/user/1',
 		method: 'PUT',
 		response: (url, opts) => {
-			return Object.assign(john, {}, opts.body);
+			return Object.assign(john, {}, JSON.parse(opts.body));
 		}
 	},
 	{

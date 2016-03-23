@@ -1,8 +1,8 @@
-# Potion ES6
+# Potion
 
 ![Travis CI](https://travis-ci.org/biosustain/potion-node.svg)
 
-> A ES6 client for APIs written in Flask-Potion.
+> A TypeScript client for APIs written in Flask-Potion.
 
 ### Installation
 ----------------

@@ -3,6 +3,7 @@
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"module": "system",
+		"declaration": true,
 		"moduleResolution": "node",
 		"noImplicitAny": false,
 		"sourceMap": true,

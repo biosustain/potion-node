@@ -113,7 +113,7 @@ export class Item {
 }
 
 
-interface PotionEndpoint {
+export interface PotionEndpoint {
 	resource: Item;
 	params: string[];
 	uri: string;
@@ -313,7 +313,7 @@ export abstract class PotionBase {
 }
 
 
-class Store<T extends Item> {
+export class Store<T extends Item> {
 	private _potion: PotionBase;
 	private _rootURI: string;
 

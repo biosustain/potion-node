@@ -115,10 +115,7 @@ const routes = [
 			if (anonymous !== null) {
 				return anonymous;
 			} else {
-				return {
-					status: 400,
-					throws: {}
-				};
+				return 400;
 			}
 		}
 	},
@@ -137,10 +134,7 @@ const routes = [
 			if (foo !== null) {
 				return foo;
 			} else {
-				return {
-					status: 400,
-					throws: {}
-				};
+				return 400;
 			}
 		}
 	},

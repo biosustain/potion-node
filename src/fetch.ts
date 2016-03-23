@@ -3,14 +3,15 @@ import {
 	PotionBase
 } from './potion';
 
+
 export class Potion extends PotionBase {
 	fetch(uri, options?: PotionFetchOptions): Promise<any> {
 		// Use isomorphic fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
-		// https://www.npmjs.com/package/isomorphic-fetch
+		// https://github.com/github/fetch
 
-		const {method, data} = options || {method: 'GET', data: null};
-		const init: RequestInit = {method};
+		const {method, data, cache} = options || {method: 'GET', data: null, cache: 'default'};
+		const init: RequestInit = {method, cache};
 
 		if (data) {
 			init.body = options.data;
@@ -18,7 +19,8 @@ export class Potion extends PotionBase {
 
 		return new Promise((resolve, reject) => {
 			fetch(uri, init)
-				.then((response) => response.text())
+				.then(checkStatus)
+				.then(parseAsText)
 				.then(
 				(text: any) => {
 					let json;
@@ -35,4 +37,19 @@ export class Potion extends PotionBase {
 			);
 		});
 	}
+}
+
+
+function checkStatus(response) {
+	if (response.status >= 200 && response.status < 300) {
+		return response;
+	} else {
+		const error: any = new Error(response.statusText);
+		error.response = response;
+		throw error;
+	}
+}
+
+function parseAsText(response) {
+	return response.text();
 }

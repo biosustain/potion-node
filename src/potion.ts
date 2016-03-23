@@ -7,7 +7,7 @@ import {
 } from './utils';
 
 
-export interface Cache<T extends Item> {
+export interface PotionCache<T extends Item> {
 	get(id: string): T;
 	set(id: string, item: T): T;
 	clear(id: string): void;
@@ -121,10 +121,11 @@ export interface PotionEndpoint {
 
 export interface PotionOptions {
 	prefix?: string;
-	cache?: Cache<Item>;
+	cache?: PotionCache<Item>;
 }
 
 export interface PotionFetchOptions {
+	cache?: any;
 	method?: 'GET' | 'PUT' | 'DELETE' | 'POST';
 	data?: any;
 }
@@ -132,7 +133,7 @@ export interface PotionFetchOptions {
 export abstract class PotionBase {
 	resources = {};
 	private _prefix: string;
-	private _cache: Cache<Item>;
+	private _cache: PotionCache<Item>;
 	private _promises = [];
 
 	static create() {

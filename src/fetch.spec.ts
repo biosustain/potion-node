@@ -6,7 +6,7 @@ import {Potion} from './fetch';
 import {
 	Item,
 	Route,
-	Cache
+	PotionCache
 } from './potion';
 
 // Mock request responses using
@@ -279,7 +279,7 @@ describe('potion/fetch', () => {
 
 
 // In memory cache
-class JSCache implements Cache {
+class JSCache implements PotionCache {
 	private _memcache = {};
 
 	get(id: string) {

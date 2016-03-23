@@ -13,6 +13,10 @@ export class Potion extends PotionBase {
 		const {method, data, cache} = options || {method: 'GET', data: null, cache: 'default'};
 		const init: RequestInit = {method, cache};
 
+		// Make sure cookies are sent
+		// https://github.com/github/fetch#sending-cookies
+		init.credentials = 'include';
+
 		if (data) {
 			// POST/PUT
 			// https://github.com/github/fetch#post-json

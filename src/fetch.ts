@@ -17,13 +17,19 @@ export class Potion extends PotionBase {
 		}
 
 		return new Promise((resolve, reject) => {
-			fetch(uri, init).then(
-				(response: any) => {
-					if (response.body) {
-						return response.json().then(resolve);
-					} else {
-						resolve();
+			fetch(uri, init)
+				.then((response) => response.text())
+				.then(
+				(text: any) => {
+					let json;
+
+					try {
+						json = JSON.parse(text);
+					} catch (e) {
+						json = null;
 					}
+
+					return resolve(json);
 				},
 				reject
 			);

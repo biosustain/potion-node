@@ -27,8 +27,7 @@ export class Potion extends PotionBase {
 			};
 		}
 
-		return new Promise((resolve, reject) => {
-			fetch(uri, init)
+		return fetch(uri, init)
 				.then(checkStatus)
 				.then(parseAsText)
 				.then(
@@ -41,11 +40,8 @@ export class Potion extends PotionBase {
 						json = null;
 					}
 
-					return resolve(json);
-				},
-				reject
-			);
-		});
+					return json;
+				});
 	}
 }
 

@@ -18,6 +18,7 @@ module.exports = function (config) {
 			'karma-firefox-launcher',
 			'karma-jasmine',
 			'karma-jspm',
+			'karma-phantomjs-launcher',
 			'karma-spec-reporter'
 		],
 		proxies: {
@@ -28,7 +29,7 @@ module.exports = function (config) {
 		},
 		logLevel: config.LOG_INFO,
 		browsers: [
-			'Chrome'
+			'PhantomJS'
 		]
 	});
 };

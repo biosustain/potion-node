@@ -241,10 +241,10 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		describe('.delete()', () => {
-			it('should delete the Item', (done) => {
+		describe('.destroy()', () => {
+			it('should destroy the Item', (done) => {
 				User.fetch(3).then((user: User) => {
-					user['delete']().then(() => {
+					user.destroy().then(() => {
 						User.fetch(3).then(null, (error) => {
 							expect(error).not.toBeUndefined();
 							done();

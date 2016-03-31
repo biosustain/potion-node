@@ -92,8 +92,8 @@ export class Item {
 		return this._potion.save(this._rootUri, this.toJSON());
 	}
 
-	['delete'](): Promise<Item> {
-		return this._potion['delete'](this);
+	destroy(): Promise<Item> {
+		return this._potion.destroy(this);
 	}
 
 	toJSON() {
@@ -213,7 +213,7 @@ export abstract class PotionBase {
 		return this.request(rootUri, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
 	}
 
-	['delete'](item: Item): Promise<any> {
+	destroy(item: Item): Promise<any> {
 		const {uri} = item;
 
 		return new Promise<any>((resolve, reject) => {

@@ -7,7 +7,7 @@ import {
 	Item,
 	Route,
 	PotionCache
-} from './potion';
+} from './base';
 
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock

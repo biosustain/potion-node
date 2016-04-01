@@ -1,7 +1,7 @@
 import angular from 'angular';
 import 'angular-mocks';
 
-import {Item, Route} from './potion';
+import {Item, Route} from './base';
 import './angularjs';
 
 const john = {

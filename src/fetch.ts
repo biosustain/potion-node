@@ -1,7 +1,7 @@
 import {
 	PotionFetchOptions,
 	PotionBase
-} from './potion';
+} from './base';
 import {pairsToObject, toCamelCase} from './utils';
 
 

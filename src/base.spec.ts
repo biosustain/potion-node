@@ -2,7 +2,7 @@ import {
 	PotionBase,
 	Item,
 	readonly
-} from './potion';
+} from './base';
 
 
 describe('potion', () => {

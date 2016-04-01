@@ -52,15 +52,6 @@ describe('potion', () => {
 		});
 	});
 
-	describe('Item.fetch()', () => {
-		it('should convert snake case keys to camel case keys', (done) => {
-			User.fetch(1).then((user: User) => {
-				expect(user.camelCase).not.toBeUndefined();
-				done();
-			});
-		});
-	});
-
 	describe('Item instance', () => {
 		describe('.toJSON()', () => {
 			it('should return a JSON repr. of the Item', () => {

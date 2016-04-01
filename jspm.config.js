@@ -24,6 +24,8 @@ SystemJS.config({
 		'npm:*.json'
 	],
 	map: {
+		'angular': 'github:angular/bower-angular@1.5.3',
+		'angular-mocks': 'github:angular/bower-angular-mocks@1.5.3',
 		'assert': 'github:jspm/nodelibs-assert@0.2.0-alpha',
 		'buffer': 'github:jspm/nodelibs-buffer@0.2.0-alpha',
 		'core-js': 'npm:core-js@2.2.1',
@@ -44,6 +46,11 @@ SystemJS.config({
 		'zlib': 'github:jspm/nodelibs-zlib@0.2.0-alpha'
 	},
 	packages: {
+		'github:angular/bower-angular-mocks@1.5.3': {
+			'map': {
+				'angular': 'github:angular/bower-angular@1.5.3'
+			}
+		},
 		'github:frankwallis/plugin-typescript@4.0.2': {
 			'map': {
 				'typescript': 'npm:typescript@1.8.9'

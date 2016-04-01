@@ -81,7 +81,7 @@ const routes = [
 	{
 		matcher: 'http://localhost/user/names',
 		method: 'GET',
-		response: ['John Doe', 'Jane Doe']
+		response: [john.name, jane.name]
 	},
 	{
 		matcher: 'http://localhost/user/1',

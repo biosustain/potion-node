@@ -128,7 +128,7 @@ export abstract class PotionBase {
 	promise = Promise;
 
 	private _prefix: string;
-	private _cache: PotionItemCache<Item>;
+	private _itemCache: PotionItemCache<Item>;
 	private _promises = [];
 
 	static create() {
@@ -137,7 +137,7 @@ export abstract class PotionBase {
 
 	constructor({prefix = '', cache}: PotionOptions = {}) {
 		this._prefix = prefix;
-		this._cache = cache;
+		this._itemCache = cache;
 	}
 
 	parseURI(uri: string) {
@@ -169,8 +169,8 @@ export abstract class PotionBase {
 
 	get(uri, options?: PotionRequestOptions): Promise<any> {
 		// Try to get from cache
-		if (this._cache && this._cache.get) {
-			const instance = this._cache.get(uri);
+		if (this._itemCache && this._itemCache.get) {
+			const instance = this._itemCache.get(uri);
 			if (instance) {
 				return Promise.resolve(instance);
 			}
@@ -208,8 +208,8 @@ export abstract class PotionBase {
 
 		return this.request(uri, {method: 'DELETE'}).then(() => {
 			// Clear the item from cache if exists
-			if (this._cache && this._cache.get && this._cache.get(uri)) {
-				this._cache.clear(uri);
+			if (this._itemCache && this._itemCache.get && this._itemCache.get(uri)) {
+				this._itemCache.clear(uri);
 			}
 		});
 	}
@@ -260,8 +260,8 @@ export abstract class PotionBase {
 
 					// TODO: might make sense to move this logic somewhere else
 					let instance = Reflect.construct(<any>resource, [obj]);
-					if (this._cache && this._cache.put) {
-						this._cache.put(uri, <any>instance);
+					if (this._itemCache && this._itemCache.put) {
+						this._itemCache.put(uri, <any>instance);
 					}
 
 					return instance;

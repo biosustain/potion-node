@@ -23,10 +23,6 @@ function potionForCtor(ctor) {
 }
 
 
-export interface ItemConstructor {
-	new (object: any): Item;
-}
-
 export interface ItemOptions {
 	'readonly'?: string[];
 }
@@ -282,7 +278,7 @@ export abstract class PotionBase {
 		});
 	}
 
-	register(uri: string, resource: ItemConstructor) {
+	register(uri: string, resource: Item) {
 		Reflect.defineMetadata(_potionMetadataKey, this, resource);
 		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
 		this.resources[uri] = resource;

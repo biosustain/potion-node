@@ -13,10 +13,12 @@ $(node bin)/jspm install potion
 
 ### Usage
 ---------
-Before you include the package, make sure you include [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) and a shim for ES6/7 features if you see any complaints in the browsers you target. 
-This package has multiple implementations available. It can be used as:
+Before you include the package, make sure you include [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) and a shim for ES6/7 features if you see any complaints in the browsers you target.
+
+Furthermore, this package has multiple implementations available, it can be used as:
 * [standalone](#standalone) package using [Fetch API](https://developer.mozilla.org/en/docs/Web/API/Fetch_API) (make sure to include a polyfill such as [whatwg-fetch](https://github.com/github/fetch) if you are targeting a browser that does not implement the API);
 * as a [AngularJS](#angularjs) module.
+
 Note that any routes created with `Route.<method>` and the following methods on `Item` return a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise):
 * `.save()`;
 * `.update()`;

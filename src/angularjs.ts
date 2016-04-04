@@ -28,7 +28,7 @@ export default angular.module('potion', []).provider('potion', function () {
 				return cache.get(id);
 			}
 
-			set(id, item) {
+			put(id, item) {
 				return cache.put(id, item);
 			}
 

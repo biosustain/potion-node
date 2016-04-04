@@ -108,7 +108,7 @@ export class Item {
 
 export interface PotionCache<T extends Item> {
 	get(id: string): T;
-	set(id: string, item: T): T;
+	put(id: string, item: T): T;
 	clear(id: string): void;
 }
 
@@ -260,8 +260,8 @@ export abstract class PotionBase {
 
 					// TODO: might make sense to move this logic somewhere else
 					let instance = Reflect.construct(<any>resource, [obj]);
-					if (this.cache && this.cache.set) {
-						this.cache.set(uri, <any>instance);
+					if (this.cache && this.cache.put) {
+						this.cache.put(uri, <any>instance);
 					}
 
 					return instance;

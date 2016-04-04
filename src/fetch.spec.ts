@@ -281,7 +281,7 @@ class JSCache implements PotionCache {
 		return this._memcache[id];
 	}
 
-	set(id, item) {
+	put(id, item) {
 		return this._memcache[id] = item;
 	}
 

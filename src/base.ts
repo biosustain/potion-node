@@ -338,19 +338,19 @@ export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (
 }
 
 export class Route {
-	static GET(uri: string): (options?) => Promise<any> {
+	static GET(uri: string) {
 		return route(uri, {method: 'GET'});
 	}
 
-	static DELETE(uri: string): (options?) => Promise<any> {
+	static DELETE(uri: string) {
 		return route(uri, {method: 'DELETE'});
 	}
 
-	static POST(uri: string): (options?) => Promise<any> {
+	static POST(uri: string) {
 		return route(uri, {method: 'POST'});
 	}
 
-	static PUT(uri: string): (options?) => Promise<any> {
+	static PUT(uri: string) {
 		return route(uri, {method: 'PUT'});
 	}
 }

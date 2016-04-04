@@ -50,7 +50,7 @@ function checkStatus(response) {
 	}
 }
 
-function parseAsText(response) {
+function parseAsText(response: Response) {
 	return response.text();
 }
 

@@ -13,7 +13,87 @@ $(node bin)/jspm install potion
 
 ### Usage
 ---------
-TODO - add usage docs.
+Before you include the package, make sure you include [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) and a shim for ES6/7 features if you see any complaints in the browsers you target. 
+This package has multiple implementations available. It can be used as:
+* [standalone](#standalone) package using [Fetch API](https://developer.mozilla.org/en/docs/Web/API/Fetch_API) (make sure to include a polyfill such as [whatwg-fetch](https://github.com/github/fetch) if you are targeting a browser that does not implement the API);
+* as a [AngularJS](#angularjs) module.
+Note that any routes created with `Route.<method>` and the following methods on `Item` return a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise):
+* `.save()`;
+* `.update()`;
+* `.destroy()`;
+* `.query()`;
+* `.fetch()`;
+
+#### Standalone
+---------------
+TODO
+
+#### AngularJS
+--------------
+If you decide to use this package as a AngularJS module, use the following example:
+```js
+import angular from 'angular';
+
+import 'potion/angularjs';
+// If the bellow import is used,
+// the line above is not necessary.
+// By importing anything from the module,
+// it will implicitly load and register the angularjs module.
+import {Item, Route} from 'potion/angularjs';
+
+angular
+    .module('myApp', ['potion'])
+    // Config the Potion client
+    .config(['potionProvider', (potionProvider) => {
+    	potionProvider.config({prefix: ''});
+    }])
+    // Register a resource
+    .factory('User', ['potion', (potion) => {
+        class User extends Item {
+            static names = Route.GET('/names');
+            attributes = Route.GET('/attributes');
+            name: string;
+        }
+
+        potion.register('/user', User);
+
+        return User;
+    }])
+    .controller('MyAppController', ['User', () => {
+        // Fetch a user by id
+        const user1 = User.fetch(1);
+        
+        // Get all user names using the static route created with `Route.GET('/names')`
+        const names = User.names();
+        
+        // Get the user attributes using the instance route created with `Route.GET('/attributes')`
+        user1.then((user) => {
+        	user.attributes().then((attrs) => {
+        		console.log(attrs);
+        	});
+        });
+        
+        // Get all users
+        const users = User.query();
+        
+        // Update a user
+        user1.then((user) => {
+            const name = 'John Foo Doe';
+        	user.update({name});
+        });
+        
+        // Delete a user
+        user1.then((user) => {
+            user.destroy({name});
+        });
+        
+        // Create and save a new user
+        const name = 'Foo Bar';
+        let user2 = User.create({name});
+        user2.save();
+    }]);
+
+```
 
 
 ### Contributing

@@ -23,7 +23,7 @@ export default angular.module('potion', []).provider('potion', function () {
 	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
 		const cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
-		class CacheFactory implements PotionItemCache {
+		class ItemCache implements PotionItemCache {
 			get(id: string) {
 				return cache.get(id);
 			}
@@ -50,6 +50,8 @@ export default angular.module('potion', []).provider('potion', function () {
 
 		// Use the $cacheFactory.
 		// Allow user to override cache.
-		return Potion.create(Object.assign({cache: new CacheFactory()}, options));
+		return Potion.create(Object.assign({
+			itemCache: new ItemCache()
+		}, options));
 	}];
 });

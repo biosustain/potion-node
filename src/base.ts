@@ -114,7 +114,7 @@ export interface PotionItemCache<T extends Item> {
 
 export interface PotionOptions {
 	prefix?: string;
-	cache?: PotionItemCache<Item>;
+	itemCache?: PotionItemCache<Item>;
 }
 
 export interface PotionRequestOptions {
@@ -135,9 +135,9 @@ export abstract class PotionBase {
 		return Reflect.construct(this, arguments);
 	}
 
-	constructor({prefix = '', cache}: PotionOptions = {}) {
+	constructor({prefix = '', itemCache}: PotionOptions = {}) {
 		this._prefix = prefix;
-		this._itemCache = cache;
+		this._itemCache = itemCache;
 	}
 
 	parseURI(uri: string) {

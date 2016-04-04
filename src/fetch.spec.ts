@@ -274,7 +274,7 @@ describe('potion/fetch', () => {
 
 
 // In memory cache
-class JSCache implements PotionItemCache {
+class ItemCache implements PotionItemCache {
 	private _memcache = {};
 
 	get(id: string) {
@@ -292,8 +292,8 @@ class JSCache implements PotionItemCache {
 
 
 // Create Potion API
-const potion = new Potion({prefix: 'http://localhost', cache: new JSCache()});
-const potionNoCache = new Potion({prefix: 'http://localhost'});
+const potion = new Potion({prefix: 'http://localhost', itemCache: new ItemCache()});
+const potionNoItemCache = new Potion({prefix: 'http://localhost'});
 
 // Potion resources
 class Delayed extends Item {
@@ -317,7 +317,7 @@ class Car extends Item {
 }
 
 // Register API resources
-potionNoCache.register('/delayed', Delayed);
+potionNoItemCache.register('/delayed', Delayed);
 potion.register('/ping', Ping);
 potion.register('/user', User);
 potion.register('/car', Car);

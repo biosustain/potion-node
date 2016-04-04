@@ -28,11 +28,11 @@ module.exports = function (config) {
 			'karma-spec-reporter'
 		],
 		proxies: {
-			'/jspm_packages/': '/base/jspm_packages/',
-			'/src/': '/base/src/',
-			'/tsconfig.json': '/base/tsconfig.json',
 			'/node_modules/': '/base/node_modules/',
-			'/typings/': '/base/typings/'
+			'/jspm_packages/': '/base/jspm_packages/',
+			'/typings/': '/base/typings/',
+			'/tsconfig.json': '/base/tsconfig.json',
+			'/src/': '/base/src/'
 		},
 		logLevel: config.LOG_INFO,
 		browsers: [

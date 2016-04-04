@@ -123,7 +123,7 @@ export interface PotionRequestOptions {
 
 export abstract class PotionBase {
 	resources = {};
-	promise = Promise;
+	promise = (<any>window).Promise;
 
 	private _prefix: string;
 	private _itemCache: PotionItemCache<Item>;
@@ -170,7 +170,7 @@ export abstract class PotionBase {
 		if (this._itemCache && this._itemCache.get) {
 			const item = this._itemCache.get(uri);
 			if (item) {
-				return Promise.resolve(item);
+				return this.promise.resolve(item);
 			}
 		}
 

@@ -321,7 +321,7 @@ export abstract class PotionBase {
 }
 
 
-export function route(uri: string, {method = 'GET'}: PotionFetchOptions = {}): (options?) => Promise<any> {
+export function route(uri: string, {method}: PotionFetchOptions = {}): (options?) => Promise<any> {
 	return function (options?: PotionFetchOptions) {
 		let potion: PotionBase;
 

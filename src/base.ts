@@ -170,9 +170,9 @@ export abstract class PotionBase {
 	get(uri, options?: PotionRequestOptions): Promise<any> {
 		// Try to get from cache
 		if (this._itemCache && this._itemCache.get) {
-			const instance = this._itemCache.get(uri);
-			if (instance) {
-				return Promise.resolve(instance);
+			const item = this._itemCache.get(uri);
+			if (item) {
+				return Promise.resolve(item);
 			}
 		}
 
@@ -259,12 +259,12 @@ export abstract class PotionBase {
 					Object.assign(obj, {uri: properties.$uri});
 
 					// TODO: might make sense to move this logic somewhere else
-					let instance = Reflect.construct(<any>resource, [obj]);
+					let item = Reflect.construct(<any>resource, [obj]);
 					if (this._itemCache && this._itemCache.put) {
-						this._itemCache.put(uri, <any>instance);
+						this._itemCache.put(uri, <any>item);
 					}
 
-					return instance;
+					return item;
 				});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {

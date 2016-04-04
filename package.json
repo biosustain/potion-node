@@ -16,6 +16,7 @@
         "url": "https://github.com/biosustain/potion-node"
     },
     "scripts": {
+		"prepublish": "npm run lint && npm test && npm run build",
         "lint": "tslint src/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish",
         "test": "karma start karma.config.js --single-run --log-level error",
         "test:ci": "karma start karma.config.js --browsers PhantomJS --single-run --log-level error",

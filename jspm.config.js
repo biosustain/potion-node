@@ -1,7 +1,7 @@
 SystemJS.config({
 	transpiler: 'ts',
 	typescriptOptions: {
-		'typeCheck': true,
+		'typeCheck': false,
 		'tsconfig': true,
 		'targetLib': 'es5'
 	},

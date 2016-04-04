@@ -1,5 +1,5 @@
 {
-    "name": "potion",
+    "name": "potion-client",
     "version": "0.0.0",
     "description": "A ES6 client for APIs written in Flask-Potion",
     "keywords": [],
@@ -46,7 +46,7 @@
         "typings": "0.7.x"
     },
     "jspm": {
-        "name": "potion",
+        "name": "potion-client",
         "dependencies": {
             "core-js": "npm:core-js@^2.2.0",
             "reflect-metadata": "npm:reflect-metadata@^0.1.3"

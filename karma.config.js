@@ -10,7 +10,7 @@ module.exports = function (config) {
 		jspm: {
 			browser: 'jspm.browser.js',
 			config: 'jspm.config.js',
-			serveFiles: ['src/**/*!(*.spec).ts', 'tsconfig.json', 'typings/**/*.d.ts'],
+			serveFiles: ['src/**/*!(*.spec).ts', 'tsconfig.json', 'node_modules/typescript/lib/*.d.ts', 'typings/**/*.d.ts'],
 			loadFiles: ['src/**/*.spec.ts']
 		},
 		plugins: [
@@ -25,6 +25,7 @@ module.exports = function (config) {
 			'/jspm_packages/': '/base/jspm_packages/',
 			'/src/': '/base/src/',
 			'/tsconfig.json': '/base/tsconfig.json',
+			'/node_modules/': '/base/node_modules/',
 			'/typings/': '/base/typings/'
 		},
 		logLevel: config.LOG_INFO,

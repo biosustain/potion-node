@@ -22,7 +22,10 @@
         "clean": "rm -rf dist",
         "build": "tsc"
     },
-    "dependencies": {},
+    "dependencies": {
+		"core-js": "2.2.x",
+		"reflect-metadata": "0.1.x"
+	},
     "devDependencies": {
         "fetch-mock": "4.1.x",
         "jasmine": "2.4.x",

@@ -2,16 +2,17 @@
 // Include before we load Potion impl. using fetch.
 import 'whatwg-fetch';
 
-import {Potion} from './fetch';
-import {
-	Item,
-	Route,
-	PotionCache
-} from './base';
-
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
 import fetchMock from 'fetch-mock';
+
+import {
+	Potion,
+	PotionCache,
+	Item,
+	Route
+} from './fetch';
+
 
 const john = {
 	$uri: '/user/1',

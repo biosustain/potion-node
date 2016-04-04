@@ -1,8 +1,7 @@
 import angular from 'angular';
 import 'angular-mocks';
 
-import {Item, Route} from './base';
-import './angularjs';
+import {Item, Route} from './angularjs';
 
 const john = {
 	$uri: '/user/1',

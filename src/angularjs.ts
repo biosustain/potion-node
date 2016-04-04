@@ -1,12 +1,18 @@
 import angular from 'angular';
+import {toCamelCase, pairsToObject} from './utils';
 import {
 	PotionOptions,
 	PotionFetchOptions,
 	PotionBase,
 	PotionCache
 } from './base';
-import {toCamelCase, pairsToObject} from './utils';
 
+
+export {
+	PotionCache,
+	Item,
+	Route
+} from './base';
 
 export default angular.module('potion', []).provider('potion', function () {
 	const options = {prefix: '/api'};

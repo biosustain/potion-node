@@ -1,9 +1,14 @@
+import {pairsToObject, toCamelCase} from './utils';
 import {
 	PotionFetchOptions,
 	PotionBase
 } from './base';
-import {pairsToObject, toCamelCase} from './utils';
 
+export {
+	PotionCache,
+	Item,
+	Route
+} from './base';
 
 export class Potion extends PotionBase {
 	fetch(uri, options?: PotionFetchOptions): Promise<any> {

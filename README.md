@@ -59,7 +59,7 @@ angular
 
         return User;
     }])
-    .controller('MyAppController', ['User', () => {
+    .controller('MyAppController', ['User', (User) => {
         // Fetch a user by id
         const user1 = User.fetch(1);
         

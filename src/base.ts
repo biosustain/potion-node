@@ -44,7 +44,7 @@ export class Item {
 			return null;
 		}
 
-		const {params} = this._potion.parseURI(this.uri);
+		const {params} = this._potion.parseUri(this.uri);
 		return parseInt(params[0], 10);
 	}
 
@@ -140,7 +140,7 @@ export abstract class PotionBase {
 		this._itemCache = itemCache;
 	}
 
-	parseURI(uri: string) {
+	parseUri(uri: string) {
 		uri = decodeURIComponent(uri);
 
 		if (uri.indexOf(this._prefix) === 0) {
@@ -189,18 +189,18 @@ export abstract class PotionBase {
 		// Enforce GET method
 		promise = this._promises[uri] = this.request(uri, Object.assign({}, options, {method: 'GET'})).then((json) => {
 			delete this._promises[uri]; // Remove pending request
-			return this._fromPotionJSON(json);
+			return this._fromPotionJson(json);
 		});
 
 		return promise;
 	}
 
 	update(item: Item, data: any = {}): Promise<any> {
-		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJson(json));
 	}
 
 	save(rootUri: string, data: any = {}): Promise<any> {
-		return this.request(rootUri, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
+		return this.request(rootUri, {data, method: 'POST'}).then((json) => this._fromPotionJson(json));
 	}
 
 	destroy(item: Item): Promise<any> {
@@ -227,12 +227,12 @@ export abstract class PotionBase {
 		};
 	}
 
-	private _fromPotionJSON(json: any): Promise<any> {
+	private _fromPotionJson(json: any): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
-				return this.promise.all(json.map((item) => this._fromPotionJSON(item)));
+				return this.promise.all(json.map((item) => this._fromPotionJson(item)));
 			} else if (typeof json.$uri === 'string') {
-				const {resource, uri} = this.parseURI(json.$uri);
+				const {resource, uri} = this.parseUri(json.$uri);
 				const promises = [];
 
 				for (const key of Object.keys(json)) {
@@ -241,7 +241,7 @@ export abstract class PotionBase {
 						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
 						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
 					} else {
-						promises.push(this._fromPotionJSON(json[key]).then((value) => {
+						promises.push(this._fromPotionJson(json[key]).then((value) => {
 							return [toCamelCase(key), value];
 						}));
 					}
@@ -268,7 +268,7 @@ export abstract class PotionBase {
 				});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
-					let {uri} = this.parseURI(json.$ref);
+					let {uri} = this.parseUri(json.$ref);
 					return this.get(uri);
 				} else if (typeof json.$date !== 'undefined') {
 					return this.promise.resolve(new Date(json.$date));
@@ -278,7 +278,7 @@ export abstract class PotionBase {
 			const promises = [];
 
 			for (const key of Object.keys(json)) {
-				promises.push(this._fromPotionJSON(json[key]).then((value) => {
+				promises.push(this._fromPotionJson(json[key]).then((value) => {
 					return [toCamelCase(key), value];
 				}));
 			}

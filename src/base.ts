@@ -62,11 +62,11 @@ export class Item {
 	protected _potion: PotionBase;
 	protected _rootUri: string;
 
-	static fetch(id, options?: PotionFetchOptions): Promise<Item> {
+	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
 		return this.store.fetch(id, options);
 	}
 
-	static query(options?: PotionFetchOptions): Promise<Item[]> {
+	static query(options?: PotionRequestOptions): Promise<Item[]> {
 		return this.store.query(options);
 	}
 
@@ -122,11 +122,11 @@ export class Store<T extends Item> {
 		this._rootURI = Reflect.getMetadata(_potionUriMetadataKey, ctor);
 	}
 
-	fetch(id: number, options?: PotionFetchOptions): Promise<T> {
+	fetch(id: number, options?: PotionRequestOptions): Promise<T> {
 		return this._potion.get(`${this._rootURI}/${id}`, options);
 	}
 
-	query(options?: PotionFetchOptions): Promise<T> {
+	query(options?: PotionRequestOptions): Promise<T> {
 		return this._potion.get(this._rootURI, options);
 	}
 }
@@ -143,7 +143,7 @@ export interface PotionOptions {
 	cache?: PotionCache<Item>;
 }
 
-export interface PotionFetchOptions {
+export interface PotionRequestOptions {
 	cache?: any;
 	method?: 'GET' | 'PUT' | 'DELETE' | 'POST';
 	data?: any;
@@ -182,7 +182,7 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
-	abstract fetch(uri, options?: PotionFetchOptions): Promise<any>;
+	abstract fetch(uri, options?: PotionRequestOptions): Promise<any>;
 
 	private _fromPotionJSON(json: any): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
@@ -248,7 +248,7 @@ export abstract class PotionBase {
 		}
 	}
 
-	request(uri, options?: PotionFetchOptions): Promise<any> {
+	request(uri, options?: PotionRequestOptions): Promise<any> {
 		// Add the API prefix if not present
 		if (uri.indexOf(this._prefix) === -1) {
 			uri = `${this._prefix}${uri}`;
@@ -257,7 +257,7 @@ export abstract class PotionBase {
 		return this.fetch(uri, options);
 	}
 
-	get(uri, options?: PotionFetchOptions): Promise<any> {
+	get(uri, options?: PotionRequestOptions): Promise<any> {
 		// Try to get from cache
 		if (this.cache && this.cache.get) {
 			const instance = this.cache.get(uri);
@@ -321,8 +321,8 @@ export abstract class PotionBase {
 }
 
 
-export function route(uri: string, {method}: PotionFetchOptions = {}): (options?) => Promise<any> {
-	return function (options?: PotionFetchOptions) {
+export function route(uri: string, {method}: PotionRequestOptions = {}): (options?) => Promise<any> {
+	return function (options?: PotionRequestOptions) {
 		let potion: PotionBase;
 
 		if (typeof this === 'function') {

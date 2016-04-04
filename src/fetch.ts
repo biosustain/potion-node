@@ -1,5 +1,5 @@
 import {
-	PotionFetchOptions,
+	PotionRequestOptions,
 	PotionBase
 } from './base';
 
@@ -10,7 +10,7 @@ export {
 } from './base';
 
 export class Potion extends PotionBase {
-	fetch(uri, options?: PotionFetchOptions): Promise<any> {
+	fetch(uri, options?: PotionRequestOptions): Promise<any> {
 		// Use isomorphic fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// https://github.com/github/fetch

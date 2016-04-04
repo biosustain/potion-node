@@ -1,7 +1,7 @@
 import angular from 'angular';
 import {
 	PotionOptions,
-	PotionFetchOptions,
+	PotionRequestOptions,
 	PotionBase,
 	PotionCache
 } from './base';
@@ -40,7 +40,7 @@ export default angular.module('potion', []).provider('potion', function () {
 		class Potion extends PotionBase {
 			Promise = $q;
 
-			fetch(url, options?: PotionFetchOptions): Promise<any> {
+			fetch(url, options?: PotionRequestOptions): Promise<any> {
 				const {method, data} = options || {method: 'GET'};
 				const config: any = {method, url, data};
 

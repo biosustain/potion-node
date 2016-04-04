@@ -258,7 +258,6 @@ export abstract class PotionBase {
 
 					Object.assign(obj, {uri: properties.$uri});
 
-					// TODO: might make sense to move this logic somewhere else
 					let item = Reflect.construct(<any>resource, [obj]);
 					if (this._itemCache && this._itemCache.put) {
 						this._itemCache.put(uri, <any>item);

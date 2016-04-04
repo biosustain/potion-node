@@ -4,7 +4,7 @@ import {
 } from './base';
 
 export {
-	PotionCache,
+	PotionItemCache,
 	Item,
 	Route
 } from './base';

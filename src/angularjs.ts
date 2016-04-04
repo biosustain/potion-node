@@ -3,12 +3,12 @@ import {
 	PotionOptions,
 	PotionRequestOptions,
 	PotionBase,
-	PotionCache
+	PotionItemCache
 } from './base';
 
 
 export {
-	PotionCache,
+	PotionItemCache,
 	Item,
 	Route
 } from './base';
@@ -23,7 +23,7 @@ export default angular.module('potion', []).provider('potion', function () {
 	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
 		const cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
-		class CacheFactory implements PotionCache {
+		class CacheFactory implements PotionItemCache {
 			get(id: string) {
 				return cache.get(id);
 			}

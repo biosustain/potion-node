@@ -106,7 +106,7 @@ export class Item {
 }
 
 
-export interface PotionCache<T extends Item> {
+export interface PotionItemCache<T extends Item> {
 	get(id: string): T;
 	put(id: string, item: T): T;
 	clear(id: string): void;
@@ -114,7 +114,7 @@ export interface PotionCache<T extends Item> {
 
 export interface PotionOptions {
 	prefix?: string;
-	cache?: PotionCache<Item>;
+	cache?: PotionItemCache<Item>;
 }
 
 export interface PotionRequestOptions {
@@ -125,7 +125,7 @@ export interface PotionRequestOptions {
 
 export abstract class PotionBase {
 	resources = {};
-	cache: PotionCache<Item>;
+	cache: PotionItemCache<Item>;
 	promise = Promise;
 
 	private _prefix: string;

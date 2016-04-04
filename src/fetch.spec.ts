@@ -8,7 +8,7 @@ import fetchMock from 'fetch-mock';
 
 import {
 	Potion,
-	PotionCache,
+	PotionItemCache,
 	Item,
 	Route
 } from './fetch';
@@ -274,7 +274,7 @@ describe('potion/fetch', () => {
 
 
 // In memory cache
-class JSCache implements PotionCache {
+class JSCache implements PotionItemCache {
 	private _memcache = {};
 
 	get(id: string) {

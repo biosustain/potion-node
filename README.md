@@ -32,7 +32,7 @@ TODO
 
 #### AngularJS
 --------------
-If you decide to use this package as a AngularJS module, use the following example:
+If you decide to use this package as a AngularJS module, use the following example as a starting point:
 ```js
 import angular from 'angular';
 

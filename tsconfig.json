@@ -8,12 +8,13 @@
 		"noImplicitAny": false,
 		"noEmitOnError": true,
 		"sourceMap": true,
-		"target": "ES5",
+		"target": "es5",
 		"outDir": "./dist",
 		"noLib": true
 	},
 	"files": [
-		"node_modules/typescript/lib/lib.es6.d.ts",
+		"node_modules/reflect-metadata/reflect-metadata.d.ts",
+		"node_modules/typescript/lib/lib.es7.d.ts",
 		"typings/main.d.ts",
 		"src/angularjs.ts",
 		"src/fetch.ts",

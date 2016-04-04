@@ -1,5 +1,3 @@
-import 'core-js/shim';
-import 'reflect-metadata';
 import {
 	fromCamelCase,
 	toCamelCase,

@@ -10,7 +10,13 @@ module.exports = function (config) {
 		jspm: {
 			browser: 'jspm.browser.js',
 			config: 'jspm.config.js',
-			serveFiles: ['src/**/*!(*.spec).ts', 'tsconfig.json', 'node_modules/typescript/lib/*.d.ts', 'typings/**/*.d.ts'],
+			serveFiles: [
+				'node_modules/typescript/lib/*.d.ts',
+				'node_modules/reflect-metadata/**/*.d.ts',
+				'typings/**/*.d.ts',
+				'src/**/*!(*.spec).ts',
+				'tsconfig.json'
+			],
 			loadFiles: ['src/**/*.spec.ts']
 		},
 		plugins: [

@@ -1,3 +1,6 @@
+import 'core-js/shim';
+import 'reflect-metadata';
+
 // Needs to be included.
 // Include before we load Potion impl. using fetch.
 import 'whatwg-fetch';

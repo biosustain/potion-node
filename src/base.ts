@@ -7,17 +7,6 @@ import {
 } from './utils';
 
 
-export interface PotionCache<T extends Item> {
-	get(id: string): T;
-	set(id: string, item: T): T;
-	clear(id: string): void;
-}
-
-
-const _potionMetadataKey = Symbol('potion');
-const _potionUriMetadataKey = Symbol('potion:uri');
-
-
 /**
  * @readonly decorator
  */
@@ -132,6 +121,12 @@ export class Store<T extends Item> {
 }
 
 
+export interface PotionCache<T extends Item> {
+	get(id: string): T;
+	set(id: string, item: T): T;
+	clear(id: string): void;
+}
+
 export interface PotionOptions {
 	prefix?: string;
 	cache?: PotionCache<Item>;
@@ -142,6 +137,9 @@ export interface PotionRequestOptions {
 	cache?: any;
 	data?: any;
 }
+
+const _potionMetadataKey = Symbol('potion');
+const _potionUriMetadataKey = Symbol('potion:uri');
 
 export abstract class PotionBase {
 	resources = {};

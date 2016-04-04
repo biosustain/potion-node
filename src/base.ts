@@ -24,7 +24,7 @@ export interface ItemConstructor {
 }
 
 export interface ItemOptions {
-	'readonly': string[];
+	'readonly'?: string[];
 }
 
 export class Item {

@@ -18,8 +18,11 @@ export function readonly(target, property) {
 }
 
 
+const _potionMetadataKey = Symbol('potion');
+const _potionUriMetadataKey = Symbol('potion:uri');
+
 function potionForCtor(ctor) {
-	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootUri: Reflect.getMetadata(_potionUriMetadataKey, ctor)}
+	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootUri: Reflect.getMetadata(_potionUriMetadataKey, ctor)};
 }
 
 
@@ -120,13 +123,10 @@ export interface PotionRequestOptions {
 	data?: any;
 }
 
-const _potionMetadataKey = Symbol('potion');
-const _potionUriMetadataKey = Symbol('potion:uri');
-
 export abstract class PotionBase {
 	resources = {};
 	cache: PotionCache<Item>;
-	Promise = Promise;
+	promise = Promise;
 
 	private _prefix: string;
 	private _promises = [];
@@ -157,70 +157,6 @@ export abstract class PotionBase {
 	}
 
 	abstract fetch(uri, options?: PotionRequestOptions): Promise<any>;
-
-	private _fromPotionJSON(json: any): Promise<any> {
-		if (typeof json === 'object' && json !== null) {
-			if (json instanceof Array) {
-				return this.Promise.all(json.map((item) => this._fromPotionJSON(item)));
-			} else if (typeof json.$uri === 'string') {
-				const {resource, uri} = this.parseURI(json.$uri);
-				const promises = [];
-
-				for (const key of Object.keys(json)) {
-					if (key === '$uri') {
-						promises.push(this.Promise.resolve([key, uri]));
-						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
-						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
-					} else {
-						promises.push(this._fromPotionJSON(json[key]).then((value) => {
-							return [toCamelCase(key), value];
-						}));
-					}
-				}
-
-				return this.Promise.all(promises).then((propertyValuePairs) => {
-					const properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
-					const obj = {};
-
-					Object
-						.keys(properties)
-						.filter((key) => key !== '$uri')
-						.forEach((key) => obj[key] = properties[key]);
-
-					Object.assign(obj, {uri: properties.$uri});
-
-					// TODO: might make sense to move this logic somewhere else
-					let instance = Reflect.construct(<any>resource, [obj]);
-					if (this.cache && this.cache.set) {
-						this.cache.set(uri, <any>instance);
-					}
-
-					return instance;
-				});
-			} else if (Object.keys(json).length === 1) {
-				if (typeof json.$ref === 'string') {
-					let {uri} = this.parseURI(json.$ref);
-					return this.get(uri);
-				} else if (typeof json.$date !== 'undefined') {
-					return this.Promise.resolve(new Date(json.$date));
-				}
-			}
-
-			const promises = [];
-
-			for (const key of Object.keys(json)) {
-				promises.push(this._fromPotionJSON(json[key]).then((value) => {
-					return [toCamelCase(key), value];
-				}));
-			}
-
-			return this.Promise.all(promises).then((propertyValuePairs) => {
-				return pairsToObject(propertyValuePairs);
-			});
-		} else {
-			return this.Promise.resolve(json);
-		}
-	}
 
 	request(uri, options?: PotionRequestOptions): Promise<any> {
 		// Add the API prefix if not present
@@ -291,6 +227,69 @@ export abstract class PotionBase {
 		};
 	}
 
+	private _fromPotionJSON(json: any): Promise<any> {
+		if (typeof json === 'object' && json !== null) {
+			if (json instanceof Array) {
+				return this.promise.all(json.map((item) => this._fromPotionJSON(item)));
+			} else if (typeof json.$uri === 'string') {
+				const {resource, uri} = this.parseURI(json.$uri);
+				const promises = [];
+
+				for (const key of Object.keys(json)) {
+					if (key === '$uri') {
+						promises.push(this.promise.resolve([key, uri]));
+						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
+						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
+					} else {
+						promises.push(this._fromPotionJSON(json[key]).then((value) => {
+							return [toCamelCase(key), value];
+						}));
+					}
+				}
+
+				return this.promise.all(promises).then((propertyValuePairs) => {
+					const properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
+					const obj = {};
+
+					Object
+						.keys(properties)
+						.filter((key) => key !== '$uri')
+						.forEach((key) => obj[key] = properties[key]);
+
+					Object.assign(obj, {uri: properties.$uri});
+
+					// TODO: might make sense to move this logic somewhere else
+					let instance = Reflect.construct(<any>resource, [obj]);
+					if (this.cache && this.cache.set) {
+						this.cache.set(uri, <any>instance);
+					}
+
+					return instance;
+				});
+			} else if (Object.keys(json).length === 1) {
+				if (typeof json.$ref === 'string') {
+					let {uri} = this.parseURI(json.$ref);
+					return this.get(uri);
+				} else if (typeof json.$date !== 'undefined') {
+					return this.promise.resolve(new Date(json.$date));
+				}
+			}
+
+			const promises = [];
+
+			for (const key of Object.keys(json)) {
+				promises.push(this._fromPotionJSON(json[key]).then((value) => {
+					return [toCamelCase(key), value];
+				}));
+			}
+
+			return this.promise.all(promises).then((propertyValuePairs) => {
+				return pairsToObject(propertyValuePairs);
+			});
+		} else {
+			return this.promise.resolve(json);
+		}
+	}
 }
 
 

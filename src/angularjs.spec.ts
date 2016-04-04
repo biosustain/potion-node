@@ -39,10 +39,14 @@ describe('potion/angularjs', () => {
 	let $cacheFactory;
 	let $q;
 	let $httpBackend;
+
+	// Make sure tslint does not complain about the var names
+	/* tslint:disable: variable-name */
 	let Delayed;
 	let Ping;
 	let User;
 	let Car;
+	/* tslint:enable: variable-name */
 
 	beforeEach((<angular.IMockStatic>angular.mock).module('test'));
 

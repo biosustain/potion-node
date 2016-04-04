@@ -38,7 +38,7 @@ export default angular.module('potion', []).provider('potion', function () {
 		}
 
 		class Potion extends PotionBase {
-			Promise = $q;
+			promise = $q;
 
 			fetch(url, options?: PotionRequestOptions): Promise<any> {
 				const {method, data} = options || {method: 'GET'};
@@ -50,8 +50,6 @@ export default angular.module('potion', []).provider('potion', function () {
 
 		// Use the $cacheFactory.
 		// Allow user to override cache.
-		return Potion.create(Object.assign({
-			cache: new CacheFactory()
-		}, options));
-	}]
+		return Potion.create(Object.assign({cache: new CacheFactory()}, options));
+	}];
 });

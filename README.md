@@ -1,6 +1,6 @@
 # Potion
 
-![Travis CI](https://travis-ci.org/biosustain/potion-node.svg)
+[![Build Status](https://travis-ci.org/biosustain/potion-node.svg?branch=master)](https://travis-ci.org/biosustain/potion-node)
 
 > A TypeScript client for APIs written in Flask-Potion.
 

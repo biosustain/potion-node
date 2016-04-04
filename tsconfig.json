@@ -12,8 +12,9 @@
 	},
 	"files": [
 		"typings/main.d.ts",
-		"src/utils.ts",
+		"src/angularjs.ts",
+		"src/fetch.ts",
 		"src/base.ts",
-		"src/fetch.ts"
+		"src/utils.ts"
 	]
 }

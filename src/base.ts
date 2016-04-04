@@ -131,8 +131,8 @@ export abstract class PotionBase {
 	private _itemCache: PotionItemCache<Item>;
 	private _promises = [];
 
-	static create() {
-		return Reflect.construct(this, arguments);
+	static create(...args) {
+		return Reflect.construct(this, args);
 	}
 
 	constructor({prefix = '', itemCache}: PotionOptions = {}) {

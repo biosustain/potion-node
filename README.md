@@ -20,11 +20,11 @@ Furthermore, this package has multiple implementations available, it can be used
 * as a [AngularJS](#angularjs) module.
 
 Note that any routes created with `Route.<method>` and the following methods on `Item` return a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise):
-* `.save()`;
-* `.update()`;
-* `.destroy()`;
-* `.query()`;
-* `.fetch()`;
+* `.save()`
+* `.update()`
+* `.destroy()`
+* `.query()`
+* `.fetch()`
 
 #### Standalone
 TODO

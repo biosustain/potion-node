@@ -132,20 +132,14 @@ export class Store<T extends Item> {
 }
 
 
-export interface PotionEndpoint {
-	resource: Item;
-	params: string[];
-	uri: string;
-}
-
 export interface PotionOptions {
 	prefix?: string;
 	cache?: PotionCache<Item>;
 }
 
 export interface PotionRequestOptions {
-	cache?: any;
 	method?: 'GET' | 'PUT' | 'DELETE' | 'POST';
+	cache?: any;
 	data?: any;
 }
 
@@ -166,7 +160,7 @@ export abstract class PotionBase {
 		this.cache = cache;
 	}
 
-	parseURI(uri: string): PotionEndpoint {
+	parseURI(uri: string) {
 		uri = decodeURIComponent(uri);
 
 		if (uri.indexOf(this._prefix) === 0) {

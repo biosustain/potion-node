@@ -18,8 +18,12 @@ export function readonly(target, property) {
 }
 
 
+function potionForCtor(ctor) {
+	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootUri: Reflect.getMetadata(_potionUriMetadataKey, ctor)}
+}
+
+
 export interface ItemConstructor {
-	store?: Store<Item>;
 	new (object: any): Item;
 }
 
@@ -28,8 +32,6 @@ export interface ItemOptions {
 }
 
 export class Item {
-	static store: Store<any>;
-
 	get uri() {
 		return this._uri;
 	}
@@ -47,16 +49,18 @@ export class Item {
 		return parseInt(params[0], 10);
 	}
 
-	protected _uri: string;
 	protected _potion: PotionBase;
 	protected _rootUri: string;
+	protected _uri: string;
 
 	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
-		return this.store.fetch(id, options);
+		const {potion, rootUri} = potionForCtor(this);
+		return potion.get(`${rootUri}/${id}`, options);
 	}
 
 	static query(options?: PotionRequestOptions): Promise<Item[]> {
-		return this.store.query(options);
+		const {potion, rootUri} = potionForCtor(this);
+		return potion.get(rootUri, options);
 	}
 
 	static create(...args) {
@@ -65,24 +69,13 @@ export class Item {
 
 	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
-		this._potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this.constructor);
-		this._rootUri = Reflect.getMetadata(_potionUriMetadataKey, this.constructor);
+		const {potion, rootUri} = potionForCtor(this.constructor);
+		this._potion = potion;
+		this._rootUri = rootUri;
 
 		if (options && Array.isArray(options.readonly)) {
 			options.readonly.forEach((property) => readonly(this, property));
 		}
-	}
-
-	update(properties: any = {}): Promise<Item> {
-		return this._potion.update(this, properties);
-	}
-
-	save(): Promise<Item> {
-		return this._potion.save(this._rootUri, this.toJSON());
-	}
-
-	destroy(): Promise<Item> {
-		return this._potion.destroy(this);
 	}
 
 	toJSON() {
@@ -99,24 +92,17 @@ export class Item {
 
 		return properties;
 	}
-}
 
-
-export class Store<T extends Item> {
-	private _potion: PotionBase;
-	private _rootURI: string;
-
-	constructor(ctor: ItemConstructor) {
-		this._potion = Reflect.getMetadata(_potionMetadataKey, ctor);
-		this._rootURI = Reflect.getMetadata(_potionUriMetadataKey, ctor);
+	save(): Promise<Item> {
+		return this._potion.save(this._rootUri, this.toJSON());
 	}
 
-	fetch(id: number, options?: PotionRequestOptions): Promise<T> {
-		return this._potion.get(`${this._rootURI}/${id}`, options);
+	update(properties: any = {}): Promise<Item> {
+		return this._potion.update(this, properties);
 	}
 
-	query(options?: PotionRequestOptions): Promise<T> {
-		return this._potion.get(this._rootURI, options);
+	destroy(): Promise<Item> {
+		return this._potion.destroy(this);
 	}
 }
 
@@ -300,7 +286,6 @@ export abstract class PotionBase {
 		Reflect.defineMetadata(_potionMetadataKey, this, resource);
 		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
 		this.resources[uri] = resource;
-		resource.store = new Store(resource);
 	}
 
 	registerAs(uri: string): ClassDecorator {
@@ -315,17 +300,13 @@ export abstract class PotionBase {
 
 export function route(uri: string, {method}: PotionRequestOptions = {}): (options?) => Promise<any> {
 	return function (options?: PotionRequestOptions) {
-		let potion: PotionBase;
+		const isCtor = typeof this === 'function';
+		const {potion, rootUri} = potionForCtor(isCtor ? this : this.constructor);
 
-		if (typeof this === 'function') {
-			potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this);
-			uri = `${Reflect.getMetadata(_potionUriMetadataKey, this)}${uri}`;
-		} else {
-			potion = <PotionBase>Reflect.getMetadata(_potionMetadataKey, this.constructor);
-			uri = `${this.uri}${uri}`;
-		}
-
-		return potion.get(uri, Object.assign({method}, options));
+		return potion.get(
+			`${isCtor ? rootUri : this.uri}${uri}`,
+			Object.assign({method}, options)
+		);
 	};
 }
 

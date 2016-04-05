@@ -49,12 +49,16 @@ angular
     }])
     // Register a resource
     .factory('User', ['potion', (potion) => {
+    
+        // Resources can also be registered using `@potion.registerAs('/user')`
         class User extends Item {
             static names = Route.GET('/names');
             attributes = Route.GET('/attributes');
             name: string;
         }
 
+        // If the `@potion.registerAs('/user')` decorator is used,
+        // this is no longer needed.
         potion.register('/user', User);
 
         return User;

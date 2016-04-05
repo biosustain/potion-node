@@ -1,5 +1,3 @@
-// const typescript = require('typescript');
-
 module.exports = function (config) {
 	config.set({
 		frameworks: [

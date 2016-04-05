@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [],
 	"homepage": "",
@@ -8,6 +8,9 @@
 	"author": {
 		"name": "Roland Groza",
 		"email": "rolandjitsu@gmail.com "
+	},
+	"directories": {
+		"lib": "dist"
 	},
 	"main": "dist/fetch.js",
 	"files": [],

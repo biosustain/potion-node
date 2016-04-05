@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [],
 	"homepage": "",
@@ -9,11 +9,13 @@
 		"name": "Roland Groza",
 		"email": "rolandjitsu@gmail.com "
 	},
+	"files": [
+		"dist"
+	],
+	"main": "dist/fetch.js",
 	"directories": {
 		"lib": "dist"
 	},
-	"main": "dist/fetch.js",
-	"files": [],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/biosustain/potion-node"

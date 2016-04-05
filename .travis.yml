@@ -25,7 +25,6 @@ before_install:
 install:
   - npm install --loglevel silent
   - $(npm bin)/typings install
-  - $(npm bin)/jspm install
 
 script:
   - npm run lint

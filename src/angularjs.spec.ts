@@ -1,8 +1,3 @@
-import 'core-js/shim';
-import 'reflect-metadata';
-import angular from 'angular';
-import 'angular-mocks';
-
 import {Item, Route} from './angularjs';
 
 const john = {

@@ -7,7 +7,7 @@
 ### Installation
 ----------------
 ```shell
-$(node bin)/jspm install potion
+$(node bin)/jspm install npm:potion-client
 ```
 
 
@@ -98,7 +98,7 @@ angular
 
 ### Contributing
 ----------------
-Clone the repository `git clone https://github.com/biosustain/potion-node`, install all the deps (`npm install`, `$(npm bin)/typings install`, `$(npm bin)/jspm install`) and start hacking.
+Clone the repository `git clone https://github.com/biosustain/potion-node`, install all the deps (`npm install`, `$(npm bin)/typings install`) and start hacking.
 Make sure that the builds and tests will run successfully, before you make a pull request. Follow the next steps:
 - use `npm run build` to build the `.ts` files and see if any errors have occurred;
 - run the tests using `npm test` (*if you wish to run tests on file change, use `$(npm bin)/karma start karma.config.js`.*);

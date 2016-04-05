@@ -2,18 +2,16 @@
 	"compilerOptions": {
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"module": "system",
+		"module": "commonjs",
 		"declaration": true,
 		"moduleResolution": "node",
 		"noImplicitAny": false,
 		"noEmitOnError": true,
 		"sourceMap": true,
-		"target": "es5",
-		"outDir": "./dist",
-		"noLib": true
+		"target": "es6",
+		"outDir": "./dist"
 	},
 	"files": [
-		"node_modules/reflect-metadata/reflect-metadata.d.ts",
 		"node_modules/typescript/lib/lib.es7.d.ts",
 		"typings/main.d.ts",
 		"src/angularjs.ts",

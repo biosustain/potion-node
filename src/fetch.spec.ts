@@ -1,13 +1,6 @@
-import 'core-js/shim';
-import 'reflect-metadata';
-
-// Needs to be included.
-// Include before we load Potion impl. using fetch.
-import 'whatwg-fetch';
-
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
-import fetchMock from 'fetch-mock';
+import * as fetchMock from 'fetch-mock';
 
 import {
 	Potion,
@@ -115,7 +108,7 @@ const routes = [
 	{
 		matcher: 'http://localhost/user/3',
 		method: 'GET',
-		response: () => {
+		response: (): any => {
 			if (anonymous !== null) {
 				return anonymous;
 			} else {
@@ -151,7 +144,7 @@ const routes = [
 
 describe('potion/fetch', () => {
 	beforeAll(() => {
-		fetchMock.mock({routes, greed: 'bad'});
+		fetchMock.mock(<any>{routes, greed: 'bad'});
 	});
 
 	afterAll(() => {
@@ -277,7 +270,7 @@ describe('potion/fetch', () => {
 
 
 // In memory cache
-class ItemCache implements PotionItemCache {
+class ItemCache implements PotionItemCache<any> {
 	private _memcache = {};
 
 	get(id: string) {

@@ -8,6 +8,7 @@
 		"whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160316155526"
 	},
 	"dependencies": {
-		"fetch-mock": "registry:npm/fetch-mock#4.1.1+20160310030142"
+		"fetch-mock": "registry:npm/fetch-mock#4.1.1+20160310030142",
+		"reflect-metadata": "npm:reflect-metadata/reflect-metadata.d.ts"
 	}
 }

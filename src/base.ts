@@ -5,6 +5,15 @@ import {
 } from './utils';
 
 
+/* tslint:disable: variable-name */
+let Reflect = (<any>window).Reflect || {};
+/* tslint:enable: variable-name */
+
+if (!Reflect.getMetadata) {
+	throw 'reflect-metadata shim is required and is missing';
+}
+
+
 /**
  * @readonly decorator
  */
@@ -212,7 +221,7 @@ export abstract class PotionBase {
 		});
 	}
 
-	register(uri: string, resource: Item) {
+	register(uri: string, resource: any) {
 		Reflect.defineMetadata(_potionMetadataKey, this, resource);
 		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
 		this.resources[uri] = resource;

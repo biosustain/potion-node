@@ -121,3 +121,8 @@ Make sure that the builds and tests will run successfully, before you make a pul
 	"src/utils.ts"
 ]
 ```
+
+If you are a contributor for the package on npm and have publish rights, you can use the following script to publish the package:
+```shell
+sh scripts/npm_publish.sh
+```

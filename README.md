@@ -96,7 +96,6 @@ angular
         let user2 = User.create({name});
         user2.save();
     }]);
-
 ```
 
 

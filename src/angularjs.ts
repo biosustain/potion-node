@@ -22,7 +22,7 @@ export default angular.module('potion', []).provider('potion', function () {
 		const cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
-			promise = $q;
+			protected static promise = $q;
 
 			fetch(url, options?: PotionRequestOptions): Promise<any> {
 				const {method, data} = options || {method: 'GET', data: null};

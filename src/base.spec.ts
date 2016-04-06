@@ -76,7 +76,7 @@ export class Potion extends PotionBase {
 	}
 
 	fetch(uri): Promise<any> {
-		return this.promise.resolve({camel_case: true});
+		return (<typeof PotionBase>this.constructor).promise.resolve({camel_case: true});
 	}
 }
 

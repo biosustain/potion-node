@@ -132,7 +132,7 @@ export interface PotionRequestOptions {
 
 export abstract class PotionBase {
 	resources = {};
-	promise = (<any>window).Promise;
+	protected static promise = (<any>window).Promise;
 
 	private _prefix: string;
 	private _itemCache: PotionItemCache<Item>;
@@ -179,7 +179,7 @@ export abstract class PotionBase {
 		if (this._itemCache && this._itemCache.get) {
 			const item = this._itemCache.get(uri);
 			if (item) {
-				return this.promise.resolve(item);
+				return (<typeof PotionBase>this.constructor).promise.resolve(item);
 			}
 		}
 
@@ -237,14 +237,14 @@ export abstract class PotionBase {
 	private _fromPotionJson(json: any): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
-				return this.promise.all(json.map((item) => this._fromPotionJson(item)));
+				return (<typeof PotionBase>this.constructor).promise.all(json.map((item) => this._fromPotionJson(item)));
 			} else if (typeof json.$uri === 'string') {
 				const {resource, uri} = this.parseUri(json.$uri);
 				const promises = [];
 
 				for (const key of Object.keys(json)) {
 					if (key === '$uri') {
-						promises.push(this.promise.resolve([key, uri]));
+						promises.push((<typeof PotionBase>this.constructor).promise.resolve([key, uri]));
 						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
 						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
 					} else {
@@ -254,7 +254,7 @@ export abstract class PotionBase {
 					}
 				}
 
-				return this.promise.all(promises).then((propertyValuePairs) => {
+				return (<typeof PotionBase>this.constructor).promise.all(promises).then((propertyValuePairs) => {
 					const properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
 					const obj = {};
 
@@ -277,7 +277,7 @@ export abstract class PotionBase {
 					let {uri} = this.parseUri(json.$ref);
 					return this.get(uri);
 				} else if (typeof json.$date !== 'undefined') {
-					return this.promise.resolve(new Date(json.$date));
+					return (<typeof PotionBase>this.constructor).promise.resolve(new Date(json.$date));
 				}
 			}
 
@@ -289,11 +289,11 @@ export abstract class PotionBase {
 				}));
 			}
 
-			return this.promise.all(promises).then((propertyValuePairs) => {
+			return (<typeof PotionBase>this.constructor).promise.all(promises).then((propertyValuePairs) => {
 				return pairsToObject(propertyValuePairs);
 			});
 		} else {
-			return this.promise.resolve(json);
+			return (<typeof PotionBase>this.constructor).promise.resolve(json);
 		}
 	}
 }

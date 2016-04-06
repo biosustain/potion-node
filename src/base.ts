@@ -131,8 +131,8 @@ export interface PotionRequestOptions {
 }
 
 export abstract class PotionBase {
-	resources = {};
 	protected static promise = (<any>window).Promise;
+	resources = {};
 
 	private _prefix: string;
 	private _itemCache: PotionItemCache<Item>;

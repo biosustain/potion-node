@@ -34,12 +34,12 @@ If you decide to use this package as a AngularJS module, use the following examp
 ```js
 import angular from 'angular';
 
-import 'potion/angularjs';
+import 'potion/angular';
 // If the bellow import is used,
 // the line above is not necessary.
 // By importing anything from the module,
 // it will implicitly load and register the angularjs module.
-import {Item, Route} from 'potion/angularjs';
+import {Item, Route} from 'potion/angular';
 
 angular
     .module('myApp', ['potion'])
@@ -114,7 +114,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
 	"node_modules/typescript/lib/lib.es6.d.ts",
 	"typings/main.d.ts",
 	// you can change the bellow as you wish
-	"src/angularjs.ts",
+	"src/angular.ts",
 	"src/fetch.ts",
 	"src/base.ts",
 	"src/utils.ts"

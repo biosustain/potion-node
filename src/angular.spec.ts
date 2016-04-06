@@ -1,4 +1,4 @@
-import {Item, Route} from './angularjs';
+import {Item, Route} from './angular';
 
 const john = {
 	$uri: '/user/1',
@@ -32,7 +32,7 @@ const audi = {
 	model: 'Audi A3'
 };
 
-describe('potion/angularjs', () => {
+describe('potion/angular', () => {
 	let $cacheFactory;
 	let $q;
 	let $httpBackend;

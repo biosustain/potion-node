@@ -56,7 +56,6 @@
 		"angular": "1.5.x",
 		"whatwg-fetch": "0.11.x"
 	},
-	"typings": "",
 	"engines": {
 		"node": "0.5.x"
 	}

@@ -116,7 +116,7 @@ export class Item {
 export interface PotionItemCache<T extends Item> {
 	get(id: string): T;
 	put(id: string, item: T): T;
-	clear(id: string): void;
+	remove(id: string): void;
 }
 
 export interface PotionOptions {
@@ -216,7 +216,7 @@ export abstract class PotionBase {
 		return this.request(uri, {method: 'DELETE'}).then(() => {
 			// Clear the item from cache if exists
 			if (this._itemCache && this._itemCache.get && this._itemCache.get(uri)) {
-				this._itemCache.clear(uri);
+				this._itemCache.remove(uri);
 			}
 		});
 	}

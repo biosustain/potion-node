@@ -281,7 +281,7 @@ class ItemCache implements PotionItemCache<any> {
 		return this._memcache[id] = item;
 	}
 
-	clear(id: string) {
+	remove(id: string) {
 		delete this._memcache[id];
 	}
 }

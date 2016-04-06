@@ -1,8 +1,7 @@
 import {
 	PotionOptions,
 	PotionRequestOptions,
-	PotionBase,
-	PotionItemCache
+	PotionBase
 } from './base';
 
 
@@ -22,20 +21,6 @@ export default angular.module('potion', []).provider('potion', function () {
 	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
 		const cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
-		class ItemCache implements PotionItemCache<any> {
-			get(id: string) {
-				return cache.get(id);
-			}
-
-			put(id, item) {
-				return cache.put(id, item);
-			}
-
-			clear(id: string) {
-				cache.remove(id);
-			}
-		}
-
 		class Potion extends PotionBase {
 			promise = $q;
 
@@ -52,7 +37,7 @@ export default angular.module('potion', []).provider('potion', function () {
 
 		/* tslint:disable: align */
 		return Potion.create(Object.assign({
-			itemCache: new ItemCache()
+			itemCache: cache
 		}, options));
 	}];
 

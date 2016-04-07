@@ -121,8 +121,8 @@ export class Store<T extends Item> {
 
 	private _promises = [];
 
-	constructor(ctor: ItemConstructor) {
-		let {potion, rootURI} = ctor;
+	constructor(constructor: ItemConstructor) {
+		let {potion, rootURI} = constructor;
 
 		this.cache = potion.itemCache;
 		this.promise = (<typeof PotionBase>potion.constructor).promise;

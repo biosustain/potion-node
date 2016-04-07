@@ -38,6 +38,9 @@ export interface ItemOptions {
 }
 
 export class Item {
+	static store: Store<any>;
+	store;
+
 	get uri() {
 		return this._uri;
 	}
@@ -56,17 +59,16 @@ export class Item {
 	}
 
 	protected _potion: PotionBase;
-	protected _rootURI: string;
 	protected _uri: string;
 
 	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
-		let {potion, rootURI} = potionForCtor(this);
-		return potion.get(`${rootURI}/${id}`, options);
+		let {rootURI} = potionForCtor(this);
+		return this.store.get(`${rootURI}/${id}`, options);
 	}
 
 	static query(options?: PotionRequestOptions): Promise<Item[]> {
-		let {potion, rootURI} = potionForCtor(this);
-		return potion.get(rootURI, options);
+		let {rootURI} = potionForCtor(this);
+		return this.store.get(rootURI, options);
 	}
 
 	static create(...args) {
@@ -75,13 +77,14 @@ export class Item {
 
 	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
-		let {potion, rootURI} = potionForCtor(this.constructor);
-		this._potion = potion;
-		this._rootURI = rootURI;
 
 		if (options && Array.isArray(options.readonly)) {
 			options.readonly.forEach((property) => readonly(this, property));
 		}
+
+		let {potion} = potionForCtor(this.constructor);
+		this.store = (<typeof Item>this.constructor).store;
+		this._potion = potion;
 	}
 
 	toJSON() {
@@ -90,7 +93,7 @@ export class Item {
 		Object.keys(this)
 			.filter((key) => {
 				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
-				return key !== '_uri' && key !== '_potion' && key !== '_rootURI' && (!metadata || (metadata && !metadata[key]));
+				return key !== '_uri' && key !== '_potion' && key !== 'store' && (!metadata || (metadata && !metadata[key]));
 			})
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
@@ -100,15 +103,146 @@ export class Item {
 	}
 
 	save(): Promise<Item> {
-		return this._potion.save(this._rootURI, this.toJSON());
+		return this.store.save(this.toJSON());
 	}
 
 	update(properties: any = {}): Promise<Item> {
-		return this._potion.update(this, properties);
+		return this.store.update(this, properties);
 	}
 
 	destroy(): Promise<Item> {
-		return this._potion.destroy(this);
+		return this.store.destroy(this);
+	}
+}
+
+
+export class Store<T extends Item> {
+	cache: PotionItemCache<T>;
+	promise;
+
+	protected _potion: PotionBase;
+	protected _rootURI: string;
+
+	private _promises = [];
+
+	constructor(ctor: Item) {
+		let {potion, rootURI} = potionForCtor(ctor);
+
+		this.cache = potion.itemCache;
+		this.promise = (<typeof PotionBase>potion.constructor).promise;
+
+		this._potion = potion;
+		this._rootURI = rootURI;
+	}
+
+	get(uri, options?: PotionRequestOptions): Promise<any> {
+		// Try to get from cache
+		if (this.cache && this.cache.get) {
+			let item = this.cache.get(uri);
+			if (item) {
+				return this.promise.resolve(item);
+			}
+		}
+
+		// If we already asked for the resource,
+		// return the exiting promise.
+		let promise = this._promises[uri];
+		if (promise) {
+			return promise;
+		}
+
+		// Register a pending request,
+		// get the data,
+		// and parse it.
+		// Enforce GET method
+		promise = this._promises[uri] = this._potion.request(uri, Object.assign({}, options, {method: 'GET'})).then((json) => {
+			delete this._promises[uri]; // Remove pending request
+			return this._fromPotionJSON(json);
+		});
+
+		return promise;
+	}
+
+	update(item: Item, data: any = {}): Promise<any> {
+		return this._potion.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+	}
+
+	save(data: any = {}): Promise<any> {
+		return this._potion.request(this._rootURI, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
+	}
+
+	destroy(item: Item): Promise<any> {
+		let {uri} = item;
+
+		return this._potion.request(uri, {method: 'DELETE'}).then(() => {
+			// Clear the item from cache if exists
+			if (this.cache && this.cache.get && this.cache.get(uri)) {
+				this.cache.remove(uri);
+			}
+		});
+	}
+
+	private _fromPotionJSON(json: any): Promise<any> {
+		if (typeof json === 'object' && json !== null) {
+			if (json instanceof Array) {
+				return this.promise.all(json.map((item) => this._fromPotionJSON(item)));
+			} else if (typeof json.$uri === 'string') {
+				let {resource, uri} = this._potion.parseURI(json.$uri);
+				let promises = [];
+
+				for (let key of Object.keys(json)) {
+					if (key === '$uri') {
+						promises.push(this.promise.resolve([key, uri]));
+						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
+						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
+					} else {
+						promises.push(this._fromPotionJSON(json[key]).then((value) => {
+							return [toCamelCase(key), value];
+						}));
+					}
+				}
+
+				return this.promise.all(promises).then((propertyValuePairs) => {
+					let properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
+					let obj = {};
+
+					Object
+						.keys(properties)
+						.filter((key) => key !== '$uri')
+						.forEach((key) => obj[key] = properties[key]);
+
+					Object.assign(obj, {uri: properties.$uri});
+
+					let item = Reflect.construct(<any>resource, [obj]);
+					if (this.cache && this.cache.put) {
+						this.cache.put(uri, <any>item);
+					}
+
+					return item;
+				});
+			} else if (Object.keys(json).length === 1) {
+				if (typeof json.$ref === 'string') {
+					let {uri} = this._potion.parseURI(json.$ref);
+					return this.get(uri);
+				} else if (typeof json.$date !== 'undefined') {
+					return this.promise.resolve(new Date(json.$date));
+				}
+			}
+
+			let promises = [];
+
+			for (let key of Object.keys(json)) {
+				promises.push(this._fromPotionJSON(json[key]).then((value) => {
+					return [toCamelCase(key), value];
+				}));
+			}
+
+			return this.promise.all(promises).then((propertyValuePairs) => {
+				return pairsToObject(propertyValuePairs);
+			});
+		} else {
+			return this.promise.resolve(json);
+		}
 	}
 }
 
@@ -131,12 +265,11 @@ export interface PotionRequestOptions {
 }
 
 export abstract class PotionBase {
-	protected static promise = (<any>window).Promise;
+	static promise = (<any>window).Promise;
 	resources = {};
+	itemCache: PotionItemCache<Item>;
 
 	private _prefix: string;
-	private _itemCache: PotionItemCache<Item>;
-	private _promises = [];
 
 	static create(...args) {
 		return Reflect.construct(this, args);
@@ -144,7 +277,7 @@ export abstract class PotionBase {
 
 	constructor({prefix = '', itemCache}: PotionOptions = {}) {
 		this._prefix = prefix;
-		this._itemCache = itemCache;
+		this.itemCache = itemCache;
 	}
 
 	parseURI(uri: string) {
@@ -174,57 +307,11 @@ export abstract class PotionBase {
 		return this.fetch(uri, options);
 	}
 
-	get(uri, options?: PotionRequestOptions): Promise<any> {
-		// Try to get from cache
-		if (this._itemCache && this._itemCache.get) {
-			let item = this._itemCache.get(uri);
-			if (item) {
-				return (<typeof PotionBase>this.constructor).promise.resolve(item);
-			}
-		}
-
-		// If we already asked for the resource,
-		// return the exiting promise.
-		let promise = this._promises[uri];
-		if (promise) {
-			return promise;
-		}
-
-		// Register a pending request,
-		// get the data,
-		// and parse it.
-		// Enforce GET method
-		promise = this._promises[uri] = this.request(uri, Object.assign({}, options, {method: 'GET'})).then((json) => {
-			delete this._promises[uri]; // Remove pending request
-			return this._fromPotionJSON(json);
-		});
-
-		return promise;
-	}
-
-	update(item: Item, data: any = {}): Promise<any> {
-		return this.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
-	}
-
-	save(rootURI: string, data: any = {}): Promise<any> {
-		return this.request(rootURI, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
-	}
-
-	destroy(item: Item): Promise<any> {
-		let {uri} = item;
-
-		return this.request(uri, {method: 'DELETE'}).then(() => {
-			// Clear the item from cache if exists
-			if (this._itemCache && this._itemCache.get && this._itemCache.get(uri)) {
-				this._itemCache.remove(uri);
-			}
-		});
-	}
-
 	register(uri: string, resource: any) {
 		Reflect.defineMetadata(_potionMetadataKey, this, resource);
 		Reflect.defineMetadata(_potionURIMetadataKey, uri, resource);
 		this.resources[uri] = resource;
+		resource.store = new Store(resource);
 	}
 
 	registerAs(uri: string): ClassDecorator {
@@ -233,78 +320,16 @@ export abstract class PotionBase {
 			return target;
 		};
 	}
-
-	private _fromPotionJSON(json: any): Promise<any> {
-		if (typeof json === 'object' && json !== null) {
-			if (json instanceof Array) {
-				return (<typeof PotionBase>this.constructor).promise.all(json.map((item) => this._fromPotionJSON(item)));
-			} else if (typeof json.$uri === 'string') {
-				let {resource, uri} = this.parseURI(json.$uri);
-				let promises = [];
-
-				for (let key of Object.keys(json)) {
-					if (key === '$uri') {
-						promises.push((<typeof PotionBase>this.constructor).promise.resolve([key, uri]));
-						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
-						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
-					} else {
-						promises.push(this._fromPotionJSON(json[key]).then((value) => {
-							return [toCamelCase(key), value];
-						}));
-					}
-				}
-
-				return (<typeof PotionBase>this.constructor).promise.all(promises).then((propertyValuePairs) => {
-					let properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
-					let obj = {};
-
-					Object
-						.keys(properties)
-						.filter((key) => key !== '$uri')
-						.forEach((key) => obj[key] = properties[key]);
-
-					Object.assign(obj, {uri: properties.$uri});
-
-					let item = Reflect.construct(<any>resource, [obj]);
-					if (this._itemCache && this._itemCache.put) {
-						this._itemCache.put(uri, <any>item);
-					}
-
-					return item;
-				});
-			} else if (Object.keys(json).length === 1) {
-				if (typeof json.$ref === 'string') {
-					let {uri} = this.parseURI(json.$ref);
-					return this.get(uri);
-				} else if (typeof json.$date !== 'undefined') {
-					return (<typeof PotionBase>this.constructor).promise.resolve(new Date(json.$date));
-				}
-			}
-
-			let promises = [];
-
-			for (let key of Object.keys(json)) {
-				promises.push(this._fromPotionJSON(json[key]).then((value) => {
-					return [toCamelCase(key), value];
-				}));
-			}
-
-			return (<typeof PotionBase>this.constructor).promise.all(promises).then((propertyValuePairs) => {
-				return pairsToObject(propertyValuePairs);
-			});
-		} else {
-			return (<typeof PotionBase>this.constructor).promise.resolve(json);
-		}
-	}
 }
 
 
 export function route(uri: string, {method}: PotionRequestOptions = {}): (options?) => Promise<any> {
 	return function (options?: PotionRequestOptions) {
 		let isCtor = typeof this === 'function';
-		let {potion, rootURI} = potionForCtor(isCtor ? this : this.constructor);
+		let {rootURI} = potionForCtor(isCtor ? this : this.constructor);
+		let {store} = isCtor ? this : this.constructor;
 
-		return potion.get(
+		return store.get(
 			`${isCtor ? rootURI : this.uri}${uri}`,
 			Object.assign({method}, options)
 		);

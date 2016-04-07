@@ -112,7 +112,7 @@ const ROUTES = [
 			if (anonymous !== null) {
 				return anonymous;
 			} else {
-				return 400;
+				return 404;
 			}
 		}
 	},
@@ -131,7 +131,7 @@ const ROUTES = [
 			if (foo !== null) {
 				return foo;
 			} else {
-				return 400;
+				return 404;
 			}
 		}
 	},

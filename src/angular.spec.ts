@@ -72,7 +72,7 @@ describe('potion/angular', () => {
 			if (anonymous !== null) {
 				return [200, anonymous];
 			} else {
-				return [400];
+				return [404];
 			}
 		});
 	}));
@@ -240,7 +240,7 @@ describe('potion/angular', () => {
 					if (foo !== null) {
 						return [200, foo];
 					} else {
-						return [400];
+						return [404];
 					}
 				});
 

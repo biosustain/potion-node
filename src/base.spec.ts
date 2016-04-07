@@ -23,8 +23,7 @@ describe('potion', () => {
 	describe('Potion.create()', () => {
 		it('should add new resources via .registerAs() decorator', () => {
 			@potion.registerAs('/person')
-			class Person extends Item {
-			}
+			class Person extends Item {}
 
 			expect(Object.keys(potion.resources).length).toEqual(1);
 			expect(potion.resources['/person']).not.toBeUndefined();
@@ -82,7 +81,6 @@ export class Potion extends PotionBase {
 
 class User extends Item {
 	name: string;
-	camelCase: any;
 
 	@readonly
 	age: number;

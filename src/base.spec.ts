@@ -10,7 +10,7 @@ describe('potion', () => {
 	let user;
 
 	beforeEach(() => {
-		potion = Potion.create({prefix: '/api'});
+		potion = new Potion({prefix: '/api'});
 		user = User.create({name: 'John Doe', age: 24, weight: 72}, {
 			readonly: ['weight']
 		});
@@ -20,7 +20,7 @@ describe('potion', () => {
 		user = null;
 	});
 
-	describe('Potion.create()', () => {
+	describe('new Potion()', () => {
 		it('should add new resources via .registerAs() decorator', () => {
 			@potion.registerAs('/person')
 			class Person extends Item {}

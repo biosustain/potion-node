@@ -282,10 +282,6 @@ export abstract class PotionBase {
 
 	private _prefix: string;
 
-	static create(...args) {
-		return Reflect.construct(this, args);
-	}
-
 	constructor({prefix = '', itemCache}: PotionOptions = {}) {
 		this._prefix = prefix;
 		this.itemCache = itemCache;

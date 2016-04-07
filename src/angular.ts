@@ -34,7 +34,7 @@ export default angular.module('potion', []).provider('potion', function () {
 		// Allow user to override cache.
 
 		/* tslint:disable: align */
-		return Potion.create(Object.assign({
+		return new Potion(Object.assign({
 			itemCache: $cacheFactory('potion')
 		}, options));
 	}];

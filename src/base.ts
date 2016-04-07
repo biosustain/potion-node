@@ -175,7 +175,7 @@ export class Store<T extends Item> {
 	}
 
 	update(item: Item, data: any = {}): Promise<any> {
-		return this._potion.request(item.uri, {data, method: 'PUT'}).then((json) => this._fromPotionJSON(json));
+		return this._potion.request(item.uri, {data, method: 'PATCH'}).then((json) => this._fromPotionJSON(json));
 	}
 
 	save(data: any = {}): Promise<any> {
@@ -270,7 +270,7 @@ export interface PotionOptions {
 }
 
 export interface PotionRequestOptions {
-	method?: 'GET' | 'PUT' | 'DELETE' | 'POST';
+	method?: 'GET' | 'PUT' | 'PATCH' | 'DELETE' | 'POST';
 	cache?: any;
 	data?: any;
 }
@@ -356,6 +356,10 @@ export class Route {
 
 	static POST(uri: string) {
 		return route(uri, {method: 'POST'});
+	}
+
+	static PATCH(uri: string) {
+		return route(uri, {method: 'PATCH'});
 	}
 
 	static PUT(uri: string) {

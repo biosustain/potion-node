@@ -87,7 +87,7 @@ const ROUTES = [
 	},
 	{
 		matcher: 'http://localhost/user/1',
-		method: 'PUT',
+		method: 'PATCH',
 		response: (url, opts) => {
 			return Object.assign(JOHN, {}, JSON.parse(opts.body));
 		}

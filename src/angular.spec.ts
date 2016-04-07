@@ -199,7 +199,7 @@ describe('potion/angular', () => {
 					});
 				});
 
-				$httpBackend.expect('PUT', '/user/1').respond((method, url, data) => [200, Object.assign(JOHN, {}, JSON.parse(data))]);
+				$httpBackend.expect('PATCH', '/user/1').respond((method, url, data) => [200, Object.assign(JOHN, {}, JSON.parse(data))]);
 				$httpBackend.flush();
 			});
 		});

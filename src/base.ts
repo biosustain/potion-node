@@ -25,22 +25,24 @@ export function readonly(target, property) {
 }
 
 
-let _potionMetadataKey = Symbol('potion');
-let _potionURIMetadataKey = Symbol('potion:uri');
+export interface ItemConstructor {
+	new (object: any): Item;
 
-function potionForCtor(ctor) {
-	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootURI: Reflect.getMetadata(_potionURIMetadataKey, ctor)};
+	potion: PotionBase;
+	rootURI: string;
+
+	store?: Store<Item>;
 }
-
 
 export interface ItemOptions {
 	'readonly'?: string[];
 }
 
 export class Item {
-	static store: Store<any>;
 	static potion: PotionBase;
 	static rootURI: string;
+
+	static store: Store<any>;
 
 	get uri() {
 		return this._uri;
@@ -111,7 +113,7 @@ export class Item {
 
 
 export class Store<T extends Item> {
-	cache: PotionItemCache<T>;
+	cache: PotionItemCache<Item>;
 	promise;
 
 	protected _potion: PotionBase;
@@ -119,8 +121,8 @@ export class Store<T extends Item> {
 
 	private _promises = [];
 
-	constructor(ctor: Item) {
-		let {potion, rootURI} = potionForCtor(ctor);
+	constructor(ctor: ItemConstructor) {
+		let {potion, rootURI} = ctor;
 
 		this.cache = potion.itemCache;
 		this.promise = (<typeof PotionBase>potion.constructor).promise;
@@ -302,12 +304,13 @@ export abstract class PotionBase {
 	}
 
 	register(uri: string, resource: any) {
-		Reflect.defineMetadata(_potionMetadataKey, this, resource);
-		Reflect.defineMetadata(_potionURIMetadataKey, uri, resource);
 		this.resources[uri] = resource;
-		resource.store = new Store(resource);
+
+		// `potion` and `rootURI` props must be set before `store`
 		resource.potion = this;
 		resource.rootURI = uri;
+
+		resource.store = new Store(resource);
 	}
 
 	registerAs(uri: string): ClassDecorator {

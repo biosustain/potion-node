@@ -41,8 +41,6 @@ export class Item {
 	static store: Store<any>;
 	static potion: PotionBase;
 	static rootURI: string;
-	
-	store;
 
 	get uri() {
 		return this._uri;
@@ -81,8 +79,18 @@ export class Item {
 		if (options && Array.isArray(options.readonly)) {
 			options.readonly.forEach((property) => readonly(this, property));
 		}
+	}
 
-		this.store = (<typeof Item>this.constructor).store;
+	save(): Promise<Item> {
+		return (<typeof Item>this.constructor).store.save(this.toJSON());
+	}
+
+	update(properties: any = {}): Promise<Item> {
+		return (<typeof Item>this.constructor).store.update(this, properties);
+	}
+
+	destroy(): Promise<Item> {
+		return (<typeof Item>this.constructor).store.destroy(this);
 	}
 
 	toJSON() {
@@ -91,25 +99,13 @@ export class Item {
 		Object.keys(this)
 			.filter((key) => {
 				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
-				return key !== '_uri' && key !== 'store' && (!metadata || (metadata && !metadata[key]));
+				return key !== '_uri' && (!metadata || (metadata && !metadata[key]));
 			})
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
 			});
 
 		return properties;
-	}
-
-	save(): Promise<Item> {
-		return this.store.save(this.toJSON());
-	}
-
-	update(properties: any = {}): Promise<Item> {
-		return this.store.update(this, properties);
-	}
-
-	destroy(): Promise<Item> {
-		return this.store.destroy(this);
 	}
 }
 

@@ -295,9 +295,9 @@ export abstract class PotionBase {
 			uri = uri.substring(this._prefix.length);
 		}
 
-		for (let [resourceURI] of (<any>Object).entries(this.resources)) {
+		for (let [resourceURI, resource] of (<any>Object).entries(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return {uri, resource: this.resources[resourceURI], params: uri.substring(resourceURI.length + 1).split('/')};
+				return {uri, resource, params: uri.substring(resourceURI.length + 1).split('/')};
 			}
 		}
 

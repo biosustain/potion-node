@@ -143,10 +143,10 @@ export class Store<T extends Item> {
 			options = id;
 		}
 
-		return this.get(uri, options);
+		return this.fetch(uri, options);
 	}
 
-	get(uri, options?: PotionRequestOptions): Promise<any> {
+	fetch(uri, options?: PotionRequestOptions): Promise<any> {
 		// Try to get from cache
 		if (this.cache && this.cache.get) {
 			let item = this.cache.get(uri);
@@ -234,7 +234,7 @@ export class Store<T extends Item> {
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					let {uri} = this._potion.parseURI(json.$ref);
-					return this.get(uri);
+					return this.fetch(uri);
 				} else if (typeof json.$date !== 'undefined') {
 					return this.promise.resolve(new Date(json.$date));
 				}
@@ -338,7 +338,7 @@ export function route(uri: string, {method}: PotionRequestOptions = {}): (option
 		let isCtor = typeof this === 'function';
 		let {store, rootURI} = isCtor ? this : this.constructor;
 
-		return store.get(
+		return store.fetch(
 			`${isCtor ? rootURI : this.uri}${uri}`,
 			Object.assign({method}, options)
 		);

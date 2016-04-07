@@ -38,6 +38,8 @@ export interface ItemOptions {
 	'readonly'?: string[];
 }
 
+// TODO: when https://github.com/Microsoft/TypeScript/issues/3964 is implemented,
+// use `let uri = Symbol('Resource uri');` and `class Item {[uri]: string}`
 export class Item {
 	static potion: PotionBase;
 	static rootURI: string;

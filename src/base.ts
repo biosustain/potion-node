@@ -66,11 +66,11 @@ export class Item {
 	protected _uri: string;
 
 	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
-		return this.store.get(`${this.rootURI}/${id}`, options);
+		return this.store.query(id, options);
 	}
 
 	static query(options?: PotionRequestOptions): Promise<Item[]> {
-		return this.store.get(this.rootURI, options);
+		return this.store.query(options);
 	}
 
 	static create(...args) {
@@ -131,6 +131,19 @@ export class Store<T extends Item> {
 
 		this._potion = potion;
 		this._rootURI = rootURI;
+	}
+
+	query(...args) {
+		let [id, options] = args;
+		let uri = this._rootURI;
+
+		if (typeof id === 'number') {
+			uri = `${uri}/${id}`
+		} else {
+			options = id;
+		}
+
+		return this.get(uri, options);
 	}
 
 	get(uri, options?: PotionRequestOptions): Promise<any> {

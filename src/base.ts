@@ -39,6 +39,9 @@ export interface ItemOptions {
 
 export class Item {
 	static store: Store<any>;
+	static potion: PotionBase;
+	static rootURI: string;
+	
 	store;
 
 	get uri() {
@@ -54,21 +57,18 @@ export class Item {
 			return null;
 		}
 
-		let {params} = this._potion.parseURI(this.uri);
+		let {params} = (<typeof Item>this.constructor).potion.parseURI(this.uri);
 		return parseInt(params[0], 10);
 	}
 
-	protected _potion: PotionBase;
 	protected _uri: string;
 
 	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
-		let {rootURI} = potionForCtor(this);
-		return this.store.get(`${rootURI}/${id}`, options);
+		return this.store.get(`${this.rootURI}/${id}`, options);
 	}
 
 	static query(options?: PotionRequestOptions): Promise<Item[]> {
-		let {rootURI} = potionForCtor(this);
-		return this.store.get(rootURI, options);
+		return this.store.get(this.rootURI, options);
 	}
 
 	static create(...args) {
@@ -82,9 +82,7 @@ export class Item {
 			options.readonly.forEach((property) => readonly(this, property));
 		}
 
-		let {potion} = potionForCtor(this.constructor);
 		this.store = (<typeof Item>this.constructor).store;
-		this._potion = potion;
 	}
 
 	toJSON() {
@@ -93,7 +91,7 @@ export class Item {
 		Object.keys(this)
 			.filter((key) => {
 				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
-				return key !== '_uri' && key !== '_potion' && key !== 'store' && (!metadata || (metadata && !metadata[key]));
+				return key !== '_uri' && key !== 'store' && (!metadata || (metadata && !metadata[key]));
 			})
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
@@ -312,6 +310,8 @@ export abstract class PotionBase {
 		Reflect.defineMetadata(_potionURIMetadataKey, uri, resource);
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);
+		resource.potion = this;
+		resource.rootURI = uri;
 	}
 
 	registerAs(uri: string): ClassDecorator {
@@ -326,8 +326,7 @@ export abstract class PotionBase {
 export function route(uri: string, {method}: PotionRequestOptions = {}): (options?) => Promise<any> {
 	return function (options?: PotionRequestOptions) {
 		let isCtor = typeof this === 'function';
-		let {rootURI} = potionForCtor(isCtor ? this : this.constructor);
-		let {store} = isCtor ? this : this.constructor;
+		let {store, rootURI} = isCtor ? this : this.constructor;
 
 		return store.get(
 			`${isCtor ? rootURI : this.uri}${uri}`,

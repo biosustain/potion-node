@@ -139,7 +139,7 @@ export class Store<T extends Item> {
 		let uri = this._rootURI;
 
 		if (typeof id === 'number') {
-			uri = `${uri}/${id}`
+			uri = `${uri}/${id}`;
 		} else {
 			options = id;
 		}
@@ -346,6 +346,7 @@ export function route(uri: string, {method}: PotionRequestOptions = {}): (option
 	};
 }
 
+/* tslint:disable: variable-name */
 export let Route = {
 	GET(uri: string) {
 		return route(uri, {method: 'GET'});

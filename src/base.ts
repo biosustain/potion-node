@@ -345,24 +345,20 @@ export function route(uri: string, {method}: PotionRequestOptions = {}): (option
 	};
 }
 
-export class Route {
-	static GET(uri: string) {
+export let Route = {
+	GET(uri: string) {
 		return route(uri, {method: 'GET'});
-	}
-
-	static DELETE(uri: string) {
+	},
+	DELETE(uri: string) {
 		return route(uri, {method: 'DELETE'});
-	}
-
-	static POST(uri: string) {
+	},
+	POST(uri: string) {
 		return route(uri, {method: 'POST'});
-	}
-
-	static PATCH(uri: string) {
+	},
+	PATCH(uri: string) {
 		return route(uri, {method: 'PATCH'});
-	}
-
-	static PUT(uri: string) {
+	},
+	PUT(uri: string) {
 		return route(uri, {method: 'PUT'});
 	}
-}
+};

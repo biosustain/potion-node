@@ -35,7 +35,7 @@ export class Potion extends PotionBase {
 		return fetch(uri, init)
 				.then(checkStatus)
 				.then(parseAsText)
-				.then(parseAsJson);
+				.then(parseAsJSON);
 	}
 }
 
@@ -54,7 +54,7 @@ function parseAsText(response: Response) {
 	return response.text();
 }
 
-function parseAsJson(text: string): any {
+function parseAsJSON(text: string): any {
 	let json;
 
 	try {

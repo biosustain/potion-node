@@ -1,6 +1,6 @@
 import {Item, Route} from './angular';
 
-const john = {
+const JOHN = {
 	$uri: '/user/1',
 	name: 'John Doe',
 	created_at: {
@@ -8,7 +8,7 @@ const john = {
 	}
 };
 
-const jane = {
+const JANE = {
 	$uri: '/user/2',
 	name: 'Jone Doe',
 	created_at: {
@@ -26,7 +26,7 @@ let anonymous = {
 
 let foo = null;
 
-const audi = {
+const AUDI = {
 	$uri: '/car/1',
 	user: {$ref: '/user/1'},
 	model: 'Audi A3'
@@ -66,8 +66,8 @@ describe('potion/angular', () => {
 			})];
 		});
 
-		$httpBackend.when('GET', '/user/1').respond(() => [200, john]); // A fn will always return the updated object
-		$httpBackend.when('GET', '/user/2').respond(() => [200, jane]);
+		$httpBackend.when('GET', '/user/1').respond(() => [200, JOHN]); // A fn will always return the updated object
+		$httpBackend.when('GET', '/user/2').respond(() => [200, JANE]);
 		$httpBackend.when('GET', '/user/3').respond(() => {
 			if (anonymous !== null) {
 				return [200, anonymous];
@@ -94,7 +94,7 @@ describe('potion/angular', () => {
 		it('should correctly deserialize Potion server response', (done) => {
 			User.fetch(1).then((user) => {
 				expect(user.id).toEqual(1);
-				expect(user.name).toEqual(john.name);
+				expect(user.name).toEqual(JOHN.name);
 				expect(user.createdAt instanceof Date).toBe(true);
 				done();
 			});
@@ -105,7 +105,7 @@ describe('potion/angular', () => {
 		it('should have a static route that returns valid JSON', (done) => {
 			User.names().then((names) => {
 				expect(Array.isArray(names)).toBe(true);
-				expect(names[0]).toEqual(john.name);
+				expect(names[0]).toEqual(JOHN.name);
 				done();
 			});
 
@@ -145,7 +145,7 @@ describe('potion/angular', () => {
 		});
 
 		it('should use $cacheFactory (by default) to cache the item', (done) => {
-			const cache = $cacheFactory.get('potion');
+			let cache = $cacheFactory.get('potion');
 
 			expect(cache).not.toBeUndefined();
 
@@ -159,14 +159,14 @@ describe('potion/angular', () => {
 
 		it('should automatically resolve references', (done) => {
 			Car.fetch(1).then((car) => {
-				expect(car.model).toEqual(audi.model);
+				expect(car.model).toEqual(AUDI.model);
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
-				expect(car.user.name).toEqual(john.name);
+				expect(car.user.name).toEqual(JOHN.name);
 				done();
 			});
 
-			$httpBackend.expect('GET', '/car/1').respond(() => [200, audi]);
+			$httpBackend.expect('GET', '/car/1').respond(() => [200, AUDI]);
 			$httpBackend.flush();
 		});
 	});
@@ -181,7 +181,7 @@ describe('potion/angular', () => {
 				done();
 			});
 
-			$httpBackend.expect('GET', '/user').respond(200, [{$ref: john.$uri}, {$ref: jane.$uri}]);
+			$httpBackend.expect('GET', '/user').respond(200, [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
 			$httpBackend.flush();
 		});
 	});
@@ -190,7 +190,7 @@ describe('potion/angular', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
 				User.fetch(1).then((user) => {
-					const name = 'John Foo Doe';
+					let name = 'John Foo Doe';
 					user.update({name}).then(() => {
 						User.fetch(1).then((user) => {
 							expect(user.name).toEqual(name);
@@ -199,7 +199,7 @@ describe('potion/angular', () => {
 					});
 				});
 
-				$httpBackend.expect('PUT', '/user/1').respond((method, url, data) => [200, Object.assign(john, {}, JSON.parse(data))]);
+				$httpBackend.expect('PUT', '/user/1').respond((method, url, data) => [200, Object.assign(JOHN, {}, JSON.parse(data))]);
 				$httpBackend.flush();
 			});
 		});
@@ -225,8 +225,8 @@ describe('potion/angular', () => {
 
 		describe('.save()', () => {
 			it('should save the Item', (done) => {
-				const name = 'Foo Bar';
-				const user = User.create({name});
+				let name = 'Foo Bar';
+				let user = User.create({name});
 
 				user.save().then(() => {
 					User.fetch(4).then((user) => {

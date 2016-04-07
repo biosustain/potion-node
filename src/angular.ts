@@ -12,21 +12,21 @@ export {
 } from './base';
 
 export default angular.module('potion', []).provider('potion', function () {
-	const options = {prefix: '/api'};
+	let options = {prefix: '/api'};
 
 	this.config = (config: PotionOptions) => {
 		return Object.assign(options, config);
 	};
 
 	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
-		const cache = $cacheFactory.get('potion') || $cacheFactory('potion');
+		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
 			protected static promise = $q;
 
 			fetch(url, options?: PotionRequestOptions): Promise<any> {
-				const {method, data} = options || {method: 'GET', data: null};
-				const config: any = {method, url, data};
+				let {method, data} = options || {method: 'GET', data: null};
+				let config: any = {method, url, data};
 
 				return $http(config).then((json) => json.data);
 			}

@@ -15,8 +15,8 @@ export class Potion extends PotionBase {
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// https://github.com/github/fetch
 
-		const {method, data, cache} = options || {method: 'GET', data: null, cache: 'default'};
-		const init: RequestInit = {method, cache};
+		let {method, data, cache} = options || {method: 'GET', data: null, cache: 'default'};
+		let init: RequestInit = {method, cache};
 
 		// Make sure cookies are sent
 		// https://github.com/github/fetch#sending-cookies
@@ -44,7 +44,7 @@ function checkStatus(response) {
 	if (response.status >= 200 && response.status < 300) {
 		return response;
 	} else {
-		const error: any = new Error(response.statusText);
+		let error: any = new Error(response.statusText);
 		error.response = response;
 		throw error;
 	}

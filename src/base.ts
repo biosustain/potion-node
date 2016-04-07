@@ -18,15 +18,15 @@ if (!Reflect.getMetadata) {
  * @readonly decorator
  */
 
-const _readonlyMetadataKey = Symbol('potion:readonly');
+let _readonlyMetadataKey = Symbol('potion:readonly');
 export function readonly(target, property) {
-	const metadata = Reflect.getMetadata(_readonlyMetadataKey, target.constructor);
+	let metadata = Reflect.getMetadata(_readonlyMetadataKey, target.constructor);
 	Reflect.defineMetadata(_readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
 }
 
 
-const _potionMetadataKey = Symbol('potion');
-const _potionUriMetadataKey = Symbol('potion:uri');
+let _potionMetadataKey = Symbol('potion');
+let _potionUriMetadataKey = Symbol('potion:uri');
 
 function potionForCtor(ctor) {
 	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootUri: Reflect.getMetadata(_potionUriMetadataKey, ctor)};
@@ -51,7 +51,7 @@ export class Item {
 			return null;
 		}
 
-		const {params} = this._potion.parseUri(this.uri);
+		let {params} = this._potion.parseUri(this.uri);
 		return parseInt(params[0], 10);
 	}
 
@@ -60,12 +60,12 @@ export class Item {
 	protected _uri: string;
 
 	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
-		const {potion, rootUri} = potionForCtor(this);
+		let {potion, rootUri} = potionForCtor(this);
 		return potion.get(`${rootUri}/${id}`, options);
 	}
 
 	static query(options?: PotionRequestOptions): Promise<Item[]> {
-		const {potion, rootUri} = potionForCtor(this);
+		let {potion, rootUri} = potionForCtor(this);
 		return potion.get(rootUri, options);
 	}
 
@@ -75,7 +75,7 @@ export class Item {
 
 	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
-		const {potion, rootUri} = potionForCtor(this.constructor);
+		let {potion, rootUri} = potionForCtor(this.constructor);
 		this._potion = potion;
 		this._rootUri = rootUri;
 
@@ -85,11 +85,11 @@ export class Item {
 	}
 
 	toJSON() {
-		const properties = {};
+		let properties = {};
 
 		Object.keys(this)
 			.filter((key) => {
-				const metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
+				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
 				return key !== '_uri' && key !== '_potion' && key !== '_rootUri' && (!metadata || (metadata && !metadata[key]));
 			})
 			.forEach((key) => {
@@ -177,7 +177,7 @@ export abstract class PotionBase {
 	get(uri, options?: PotionRequestOptions): Promise<any> {
 		// Try to get from cache
 		if (this._itemCache && this._itemCache.get) {
-			const item = this._itemCache.get(uri);
+			let item = this._itemCache.get(uri);
 			if (item) {
 				return (<typeof PotionBase>this.constructor).promise.resolve(item);
 			}
@@ -211,7 +211,7 @@ export abstract class PotionBase {
 	}
 
 	destroy(item: Item): Promise<any> {
-		const {uri} = item;
+		let {uri} = item;
 
 		return this.request(uri, {method: 'DELETE'}).then(() => {
 			// Clear the item from cache if exists
@@ -239,10 +239,10 @@ export abstract class PotionBase {
 			if (json instanceof Array) {
 				return (<typeof PotionBase>this.constructor).promise.all(json.map((item) => this._fromPotionJson(item)));
 			} else if (typeof json.$uri === 'string') {
-				const {resource, uri} = this.parseUri(json.$uri);
-				const promises = [];
+				let {resource, uri} = this.parseUri(json.$uri);
+				let promises = [];
 
-				for (const key of Object.keys(json)) {
+				for (let key of Object.keys(json)) {
 					if (key === '$uri') {
 						promises.push((<typeof PotionBase>this.constructor).promise.resolve([key, uri]));
 						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
@@ -255,8 +255,8 @@ export abstract class PotionBase {
 				}
 
 				return (<typeof PotionBase>this.constructor).promise.all(promises).then((propertyValuePairs) => {
-					const properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
-					const obj = {};
+					let properties: any = pairsToObject(propertyValuePairs); // `propertyValuePairs` is a collection of [key, value] pairs
+					let obj = {};
 
 					Object
 						.keys(properties)
@@ -281,9 +281,9 @@ export abstract class PotionBase {
 				}
 			}
 
-			const promises = [];
+			let promises = [];
 
-			for (const key of Object.keys(json)) {
+			for (let key of Object.keys(json)) {
 				promises.push(this._fromPotionJson(json[key]).then((value) => {
 					return [toCamelCase(key), value];
 				}));
@@ -301,8 +301,8 @@ export abstract class PotionBase {
 
 export function route(uri: string, {method}: PotionRequestOptions = {}): (options?) => Promise<any> {
 	return function (options?: PotionRequestOptions) {
-		const isCtor = typeof this === 'function';
-		const {potion, rootUri} = potionForCtor(isCtor ? this : this.constructor);
+		let isCtor = typeof this === 'function';
+		let {potion, rootUri} = potionForCtor(isCtor ? this : this.constructor);
 
 		return potion.get(
 			`${isCtor ? rootUri : this.uri}${uri}`,

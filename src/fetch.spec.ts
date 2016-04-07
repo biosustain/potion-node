@@ -10,7 +10,7 @@ import {
 } from './fetch';
 
 
-const john = {
+const JOHN = {
 	$uri: '/user/1',
 	name: 'John Doe',
 	created_at: {
@@ -18,7 +18,7 @@ const john = {
 	}
 };
 
-const jane = {
+const JANE = {
 	$uri: '/user/2',
 	name: 'Jone Doe',
 	created_at: {
@@ -36,21 +36,21 @@ let anonymous = {
 	}
 };
 
-const audi = {
+const AUDI = {
 	$uri: '/car/1',
 	user: {$ref: '/user/1'},
 	model: 'Audi A3'
 };
 
-const delay = new Promise((resolve) => {
+const DELAY = new Promise((resolve) => {
 	setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
 });
 
-const routes = [
+const ROUTES = [
 	{
 		matcher: 'http://localhost/delayed/1',
 		method: 'GET',
-		response: delay
+		response: DELAY
 	},
 	{
 		matcher: 'http://localhost/ping/1',
@@ -60,7 +60,7 @@ const routes = [
 	{
 		matcher: 'http://localhost/user',
 		method: 'GET',
-		response: [{$ref: john.$uri}, {$ref: jane.$uri}]
+		response: [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]
 	},
 	{
 		matcher: 'http://localhost/user',
@@ -78,18 +78,18 @@ const routes = [
 	{
 		matcher: 'http://localhost/user/names',
 		method: 'GET',
-		response: [john.name, jane.name]
+		response: [JOHN.name, JANE.name]
 	},
 	{
 		matcher: 'http://localhost/user/1',
 		method: 'GET',
-		response: () => john // A fn will always return the update object
+		response: () => JOHN // A fn will always return the update object
 	},
 	{
 		matcher: 'http://localhost/user/1',
 		method: 'PUT',
 		response: (url, opts) => {
-			return Object.assign(john, {}, JSON.parse(opts.body));
+			return Object.assign(JOHN, {}, JSON.parse(opts.body));
 		}
 	},
 	{
@@ -103,7 +103,7 @@ const routes = [
 	{
 		matcher: 'http://localhost/user/2',
 		method: 'GET',
-		response: () => jane
+		response: () => JANE
 	},
 	{
 		matcher: 'http://localhost/user/3',
@@ -138,13 +138,13 @@ const routes = [
 	{
 		matcher: 'http://localhost/car/1',
 		method: 'GET',
-		response: audi
+		response: AUDI
 	}
 ];
 
 describe('potion/fetch', () => {
 	beforeAll(() => {
-		fetchMock.mock(<any>{routes, greed: 'bad'});
+		fetchMock.mock(<any>{routes: ROUTES, greed: 'bad'});
 	});
 
 	afterAll(() => {
@@ -162,7 +162,7 @@ describe('potion/fetch', () => {
 		it('should correctly deserialize Potion server response', (done) => {
 			User.fetch(1).then((user: User) => {
 				expect(user.id).toEqual(1);
-				expect(user.name).toEqual(john.name);
+				expect(user.name).toEqual(JOHN.name);
 				expect(user.createdAt instanceof Date).toBe(true);
 				done();
 			});
@@ -181,7 +181,7 @@ describe('potion/fetch', () => {
 		it('should have a static route that returns valid JSON', (done) => {
 			User.names().then((names) => {
 				expect(Array.isArray(names)).toBe(true);
-				expect(names[0]).toEqual(john.name);
+				expect(names[0]).toEqual(JOHN.name);
 				done();
 			});
 		});
@@ -202,10 +202,10 @@ describe('potion/fetch', () => {
 
 		it('should automatically resolve references', (done) => {
 			Car.fetch(1).then((car: Car) => {
-				expect(car.model).toEqual(audi.model);
+				expect(car.model).toEqual(AUDI.model);
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
-				expect(car.user.name).toEqual(john.name);
+				expect(car.user.name).toEqual(JOHN.name);
 				done();
 			});
 		});
@@ -227,7 +227,7 @@ describe('potion/fetch', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
 				User.fetch(1).then((user: User) => {
-					const name = 'John Foo Doe';
+					let name = 'John Foo Doe';
 					user.update({name}).then(() => {
 						User.fetch(1).then((user: User) => {
 							expect(user.name).toEqual(name);
@@ -253,8 +253,8 @@ describe('potion/fetch', () => {
 
 		describe('.save()', () => {
 			it('should save the Item', (done) => {
-				const name = 'Foo Bar';
-				const user = User.create({name});
+				let name = 'Foo Bar';
+				let user = User.create({name});
 
 				user.save().then(() => {
 					User.fetch(4).then((user: User) => {
@@ -288,8 +288,8 @@ class ItemCache implements PotionItemCache<any> {
 
 
 // Create Potion API
-const potion = new Potion({prefix: 'http://localhost', itemCache: new ItemCache()});
-const potionNoItemCache = new Potion({prefix: 'http://localhost'});
+let potion = new Potion({prefix: 'http://localhost', itemCache: new ItemCache()});
+let potionNoItemCache = new Potion({prefix: 'http://localhost'});
 
 // Potion resources
 class Delayed extends Item {

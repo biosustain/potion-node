@@ -26,10 +26,10 @@ export function readonly(target, property) {
 
 
 let _potionMetadataKey = Symbol('potion');
-let _potionUriMetadataKey = Symbol('potion:uri');
+let _potionURIMetadataKey = Symbol('potion:uri');
 
 function potionForCtor(ctor) {
-	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootURI: Reflect.getMetadata(_potionUriMetadataKey, ctor)};
+	return {potion: Reflect.getMetadata(_potionMetadataKey, ctor), rootURI: Reflect.getMetadata(_potionURIMetadataKey, ctor)};
 }
 
 
@@ -51,7 +51,7 @@ export class Item {
 			return null;
 		}
 
-		let {params} = this._potion.parseUri(this.uri);
+		let {params} = this._potion.parseURI(this.uri);
 		return parseInt(params[0], 10);
 	}
 
@@ -147,7 +147,7 @@ export abstract class PotionBase {
 		this._itemCache = itemCache;
 	}
 
-	parseUri(uri: string) {
+	parseURI(uri: string) {
 		uri = decodeURIComponent(uri);
 
 		if (uri.indexOf(this._prefix) === 0) {
@@ -223,7 +223,7 @@ export abstract class PotionBase {
 
 	register(uri: string, resource: any) {
 		Reflect.defineMetadata(_potionMetadataKey, this, resource);
-		Reflect.defineMetadata(_potionUriMetadataKey, uri, resource);
+		Reflect.defineMetadata(_potionURIMetadataKey, uri, resource);
 		this.resources[uri] = resource;
 	}
 
@@ -239,7 +239,7 @@ export abstract class PotionBase {
 			if (json instanceof Array) {
 				return (<typeof PotionBase>this.constructor).promise.all(json.map((item) => this._fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string') {
-				let {resource, uri} = this.parseUri(json.$uri);
+				let {resource, uri} = this.parseURI(json.$uri);
 				let promises = [];
 
 				for (let key of Object.keys(json)) {
@@ -274,7 +274,7 @@ export abstract class PotionBase {
 				});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
-					let {uri} = this.parseUri(json.$ref);
+					let {uri} = this.parseURI(json.$ref);
 					return this.get(uri);
 				} else if (typeof json.$date !== 'undefined') {
 					return (<typeof PotionBase>this.constructor).promise.resolve(new Date(json.$date));

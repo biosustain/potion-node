@@ -273,16 +273,16 @@ describe('potion/fetch', () => {
 class ItemCache implements PotionItemCache<any> {
 	private _memcache = {};
 
-	get(id: string) {
-		return this._memcache[id];
+	get(key: string) {
+		return this._memcache[key];
 	}
 
-	put(id, item) {
-		return this._memcache[id] = item;
+	put(key, item) {
+		return this._memcache[key] = item;
 	}
 
-	remove(id: string) {
-		delete this._memcache[id];
+	remove(key: string) {
+		delete this._memcache[key];
 	}
 }
 

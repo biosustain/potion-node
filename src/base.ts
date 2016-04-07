@@ -259,9 +259,9 @@ export class Store<T extends Item> {
 
 
 export interface PotionItemCache<T extends Item> {
-	get(id: string): T;
-	put(id: string, item: T): T;
-	remove(id: string): void;
+	get(key: string): T;
+	put(key: string, item: T): T;
+	remove(key: string): void;
 }
 
 export interface PotionOptions {

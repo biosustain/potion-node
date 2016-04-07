@@ -288,7 +288,7 @@ class ItemCache implements PotionItemCache<any> {
 
 
 // Create Potion API
-let potion = new Potion({prefix: 'http://localhost', itemCache: new ItemCache()});
+let potion = new Potion({prefix: 'http://localhost', cache: new ItemCache()});
 let potionNoItemCache = new Potion({prefix: 'http://localhost'});
 
 // Potion resources

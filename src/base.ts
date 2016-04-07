@@ -127,7 +127,7 @@ export class Store<T extends Item> {
 	constructor(constructor: ItemConstructor) {
 		let {potion, rootURI} = constructor;
 
-		this.cache = potion.itemCache;
+		this.cache = potion.cache;
 		this.promise = (<typeof PotionBase>potion.constructor).promise;
 
 		this._potion = potion;
@@ -267,7 +267,7 @@ export interface PotionItemCache<T extends Item> {
 
 export interface PotionOptions {
 	prefix?: string;
-	itemCache?: PotionItemCache<Item>;
+	cache?: PotionItemCache<Item>;
 }
 
 export interface PotionRequestOptions {
@@ -279,13 +279,13 @@ export interface PotionRequestOptions {
 export abstract class PotionBase {
 	static promise = (<any>window).Promise;
 	resources = {};
-	itemCache: PotionItemCache<Item>;
+	cache: PotionItemCache<Item>;
 
 	private _prefix: string;
 
-	constructor({prefix = '', itemCache}: PotionOptions = {}) {
+	constructor({prefix = '', cache}: PotionOptions = {}) {
 		this._prefix = prefix;
-		this.itemCache = itemCache;
+		this.cache = cache;
 	}
 
 	parseURI(uri: string) {

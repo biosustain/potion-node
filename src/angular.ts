@@ -35,7 +35,7 @@ export default angular.module('potion', []).provider('potion', function () {
 
 		/* tslint:disable: align */
 		return new Potion(Object.assign({
-			itemCache: $cacheFactory('potion')
+			cache: $cacheFactory('potion')
 		}, options));
 	}];
 

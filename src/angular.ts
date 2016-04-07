@@ -19,8 +19,6 @@ export default angular.module('potion', []).provider('potion', function () {
 	};
 
 	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
-		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
-
 		class Potion extends PotionBase {
 			protected static promise = $q;
 
@@ -37,7 +35,7 @@ export default angular.module('potion', []).provider('potion', function () {
 
 		/* tslint:disable: align */
 		return Potion.create(Object.assign({
-			itemCache: cache
+			itemCache: $cacheFactory('potion')
 		}, options));
 	}];
 

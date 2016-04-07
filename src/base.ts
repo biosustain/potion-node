@@ -100,7 +100,8 @@ export class Item {
 	toJSON() {
 		let properties = {};
 
-		Object.keys(this)
+		Object
+			.keys(this)
 			.filter((key) => {
 				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
 				return key !== '_uri' && (!metadata || (metadata && !metadata[key]));

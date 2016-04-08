@@ -26,121 +26,6 @@ const JANE = {
 	}
 };
 
-let foo = null;
-
-let anonymous = {
-	$uri: '/user/3',
-	name: 'Anonymous',
-	created_at: {
-		$date: 1451060269000
-	}
-};
-
-const AUDI = {
-	$uri: '/car/1',
-	user: {$ref: '/user/1'},
-	model: 'Audi A3'
-};
-
-const DELAY = new Promise((resolve) => {
-	setTimeout(() => resolve({$uri: '/delayed/1', delay: 500}), 150);
-});
-
-const ROUTES = [
-	{
-		matcher: 'http://localhost/delayed/1',
-		method: 'GET',
-		response: DELAY
-	},
-	{
-		matcher: 'http://localhost/ping/1',
-		method: 'GET',
-		response: {$uri: '/ping/1', pong: 1}
-	},
-	{
-		matcher: 'http://localhost/user',
-		method: 'GET',
-		response: [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]
-	},
-	{
-		matcher: 'http://localhost/user',
-		method: 'POST',
-		response: (url, opts) => {
-			// TODO: we need to properly create a way to generate ids based on how many users there are
-			return foo = Object.assign({}, JSON.parse(opts.body), {
-				$uri: '/user/4',
-				created_at: {
-					$date: Date.now()
-				}
-			});
-		}
-	},
-	{
-		matcher: 'http://localhost/user/names',
-		method: 'GET',
-		response: [JOHN.name, JANE.name]
-	},
-	{
-		matcher: 'http://localhost/user/1',
-		method: 'GET',
-		response: () => JOHN // A fn will always return the update object
-	},
-	{
-		matcher: 'http://localhost/user/1',
-		method: 'PATCH',
-		response: (url, opts) => {
-			return Object.assign(JOHN, {}, JSON.parse(opts.body));
-		}
-	},
-	{
-		matcher: 'http://localhost/user/1/attributes',
-		method: 'GET',
-		response: {
-			height: 168,
-			weight: 72
-		}
-	},
-	{
-		matcher: 'http://localhost/user/2',
-		method: 'GET',
-		response: () => JANE
-	},
-	{
-		matcher: 'http://localhost/user/3',
-		method: 'GET',
-		response: (): any => {
-			if (anonymous !== null) {
-				return anonymous;
-			} else {
-				return 404;
-			}
-		}
-	},
-	{
-		matcher: 'http://localhost/user/3',
-		method: 'DELETE',
-		response: () => {
-			anonymous = null;
-			return 200;
-		}
-	},
-	{
-		matcher: 'http://localhost/user/4',
-		method: 'GET',
-		response: () => {
-			if (foo !== null) {
-				return foo;
-			} else {
-				return 404;
-			}
-		}
-	},
-	{
-		matcher: 'http://localhost/car/1',
-		method: 'GET',
-		response: AUDI
-	}
-];
 
 // In memory cache
 class MockMemcache implements PotionItemCache<any> {
@@ -167,14 +52,32 @@ let cache = new MockMemcache();
 
 describe('potion/fetch', () => {
 	beforeEach(() => {
-		fetchMock.mock(<any>{routes: ROUTES, greed: 'bad'});
+		// Mock before each test routes that are reused more than a few times
+		fetchMock.mock(<any>{
+			greed: 'bad',
+			routes: [
+				{
+					matcher: 'http://localhost/ping/1',
+					method: 'GET',
+					response: {$uri: '/ping/1', pong: 1}
+				},
+				{
+					matcher: 'http://localhost/user/1',
+					method: 'GET',
+					response: () => JOHN // A fn will always return the updated object
+				},
+				{
+					matcher: 'http://localhost/user/2',
+					method: 'GET',
+					response: () => JANE
+				}
+			]
+		});
 	});
 
 	afterEach(() => {
 		fetchMock.restore();
-	});
-
-	afterEach(() => {
+		// Clean the mock cache for testing purposes
 		cache.removeAll();
 	});
 
@@ -196,6 +99,11 @@ describe('potion/fetch', () => {
 		});
 
 		it('should have a instance route that returns valid JSON', (done) => {
+			fetchMock.mock('http://localhost/user/1/attributes', 'GET', {
+				height: 168,
+				weight: 72
+			});
+
 			User.fetch(1).then((user: User) => {
 				user.attributes().then((attrs) => {
 					expect(attrs.height).toEqual(168);
@@ -206,6 +114,8 @@ describe('potion/fetch', () => {
 		});
 
 		it('should have a static route that returns valid JSON', (done) => {
+			fetchMock.mock('http://localhost/user/names', 'GET', [JOHN.name, JANE.name]);
+
 			User.names().then((names) => {
 				expect(Array.isArray(names)).toBe(true);
 				expect(names[0]).toEqual(JOHN.name);
@@ -214,6 +124,10 @@ describe('potion/fetch', () => {
 		});
 
 		it('should not trigger more requests for consequent requests for the same resource, if the first request is still pending', (done) => {
+			fetchMock.mock('http://localhost/delayed/1', 'GET', new Promise((resolve) => {
+				setTimeout(() => resolve({$uri: '/delayed/1'}), 150);
+			}));
+
 			Promise.all([Delayed.fetch(1), Delayed.fetch(1)]).then(() => {
 				expect(fetchMock.calls('http://localhost/delayed/1').length).toEqual(1);
 				done();
@@ -246,6 +160,14 @@ describe('potion/fetch', () => {
 		});
 
 		it('should automatically resolve references', (done) => {
+			const AUDI = {
+				$uri: '/car/1',
+				user: {$ref: '/user/1'},
+				model: 'Audi A3'
+			};
+
+			fetchMock.mock('http://localhost/car/1', 'GET', AUDI);
+
 			Car.fetch(1).then((car: Car) => {
 				expect(car.model).toEqual(AUDI.model);
 				expect(car.user instanceof User).toBe(true);
@@ -258,6 +180,8 @@ describe('potion/fetch', () => {
 
 	describe('Item.query()', () => {
 		it('should retrieve all instances of the Item', (done) => {
+			fetchMock.mock('http://localhost/user', 'GET', [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
+
 			User.query().then((users: User[]) => {
 				expect(users.length).toEqual(2);
 				for (let user of users) {
@@ -271,6 +195,10 @@ describe('potion/fetch', () => {
 	describe('Item instance', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
+				fetchMock.mock('http://localhost/user/1', 'PATCH', (url, opts: any) => {
+					return Object.assign(JOHN, {}, JSON.parse(opts.body));
+				});
+
 				User.fetch(1).then((user: User) => {
 					let name = 'John Foo Doe';
 					user.update({name}).then(() => {
@@ -285,6 +213,27 @@ describe('potion/fetch', () => {
 
 		describe('.destroy()', () => {
 			it('should destroy the Item', (done) => {
+				let anonymous = {
+					$uri: '/user/3',
+					name: 'Anonymous',
+					created_at: {
+						$date: 1451060269000
+					}
+				};
+
+				fetchMock.mock('http://localhost/user/3', 'GET', (): any => {
+					if (anonymous !== null) {
+						return anonymous;
+					} else {
+						return 404;
+					}
+				});
+
+				fetchMock.mock('http://localhost/user/3', 'DELETE', () => {
+					anonymous = null;
+					return 200;
+				});
+
 				User.fetch(3).then((user: User) => {
 					user.destroy().then(() => {
 						User.fetch(3).then(null, (error) => {
@@ -300,6 +249,25 @@ describe('potion/fetch', () => {
 			it('should save the Item', (done) => {
 				let name = 'Foo Bar';
 				let user = User.create({name});
+				let foo = null;
+
+				fetchMock.mock('http://localhost/user', 'POST', (url, opts: any) => {
+					// TODO: we need to properly create a way to generate ids based on how many users there are
+					return foo = Object.assign({}, JSON.parse(opts.body), {
+						$uri: '/user/4',
+						created_at: {
+							$date: Date.now()
+						}
+					});
+				});
+
+				fetchMock.mock('http://localhost/user/4', 'GET', () => {
+					if (foo !== null) {
+						return foo;
+					} else {
+						return 404;
+					}
+				});
 
 				user.save().then(() => {
 					User.fetch(4).then((user: User) => {
@@ -320,12 +288,8 @@ let potionNoItemCache = new Potion({cache: null, prefix: 'http://localhost'});
 let potionCustomCache = new Potion({cache, prefix: 'http://localhost'});
 
 // Potion resources
-class Delayed extends Item {
-	delay: number;
-}
-
-class Ping extends Item {
-}
+class Delayed extends Item {}
+class Ping extends Item {}
 
 class User extends Item {
 	static names = Route.GET('/names');
@@ -341,7 +305,6 @@ class Car extends Item {
 }
 
 // Register API resources
-
 potionCustomCache.register('/ping', Ping);
 potionNoItemCache.register('/delayed', Delayed);
 

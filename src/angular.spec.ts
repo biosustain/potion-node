@@ -26,12 +26,6 @@ let anonymous = {
 
 let foo = null;
 
-const AUDI = {
-	$uri: '/car/1',
-	user: {$ref: '/user/1'},
-	model: 'Audi A3'
-};
-
 describe('potion/angular', () => {
 	let $cacheFactory;
 	let $q;
@@ -83,11 +77,12 @@ describe('potion/angular', () => {
 
 	describe('Item.fetch()', () => {
 		it('should make a XHR request', (done) => {
+			$httpBackend.expect('GET', '/ping/1').respond(200, {pong: true});
+
 			Ping.fetch(1).then(() => {
 				done();
 			});
 
-			$httpBackend.expect('GET', '/ping/1').respond(200, {pong: true});
 			$httpBackend.flush();
 		});
 
@@ -103,17 +98,23 @@ describe('potion/angular', () => {
 		});
 
 		it('should have a static route that returns valid JSON', (done) => {
+			$httpBackend.expect('GET', '/user/names').respond(200, ['John Doe', 'Jane Doe']);
+
 			User.names().then((names) => {
 				expect(Array.isArray(names)).toBe(true);
 				expect(names[0]).toEqual(JOHN.name);
 				done();
 			});
 
-			$httpBackend.expect('GET', '/user/names').respond(200, ['John Doe', 'Jane Doe']);
 			$httpBackend.flush();
 		});
 
 		it('should have a instance route that returns valid JSON', (done) => {
+			$httpBackend.expect('GET', '/user/1/attributes').respond(200, {
+				height: 168,
+				weight: 72
+			});
+
 			User.fetch(1).then((user) => {
 				user.attributes().then((attrs) => {
 					expect(attrs.height).toEqual(168);
@@ -122,25 +123,22 @@ describe('potion/angular', () => {
 				});
 			});
 
-			$httpBackend.expect('GET', '/user/1/attributes').respond(200, {
-				height: 168,
-				weight: 72
-			});
 			$httpBackend.flush();
 		});
 
 		it('should not trigger more requests for consequent requests for the same resource, if the first request is still pending', (done) => {
 			let count = 0;
 
+			$httpBackend.expect('GET', '/delayed/1').respond(() => {
+				count++;
+				return [200, {}];
+			});
+
 			$q.all([Delayed.fetch(1), Delayed.fetch(1)]).then(() => {
 				expect(count).toEqual(1);
 				done();
 			});
 
-			$httpBackend.expect('GET', '/delayed/1').respond(() => {
-				count++;
-				return [200, {delay: 250}];
-			});
 			$httpBackend.flush();
 		});
 
@@ -160,6 +158,7 @@ describe('potion/angular', () => {
 		it('should skip caching if {cache} option is set to false', (done) => {
 			let cache = $cacheFactory.get('potion');
 
+			$httpBackend.expect('GET', '/user/4').respond(() => [200, {}]);
 			expect(cache).not.toBeUndefined();
 
 			User.fetch(4, {cache: false}).then(() => {
@@ -167,11 +166,18 @@ describe('potion/angular', () => {
 				done();
 			});
 
-			$httpBackend.expect('GET', '/user/4').respond(() => [200, {}]);
 			$httpBackend.flush();
 		});
 
 		it('should automatically resolve references', (done) => {
+			const AUDI = {
+				$uri: '/car/1',
+				user: {$ref: '/user/1'},
+				model: 'Audi A3'
+			};
+
+			$httpBackend.expect('GET', '/car/1').respond(() => [200, AUDI]);
+
 			Car.fetch(1).then((car) => {
 				expect(car.model).toEqual(AUDI.model);
 				expect(car.user instanceof User).toBe(true);
@@ -180,13 +186,14 @@ describe('potion/angular', () => {
 				done();
 			});
 
-			$httpBackend.expect('GET', '/car/1').respond(() => [200, AUDI]);
 			$httpBackend.flush();
 		});
 	});
 
 	describe('Item.query()', () => {
 		it('should retrieve all instances of the Item', (done) => {
+			$httpBackend.expect('GET', '/user').respond(200, [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
+
 			User.query().then((users: any[]) => {
 				expect(users.length).toEqual(2);
 				for (let user of users) {
@@ -195,7 +202,6 @@ describe('potion/angular', () => {
 				done();
 			});
 
-			$httpBackend.expect('GET', '/user').respond(200, [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
 			$httpBackend.flush();
 		});
 	});
@@ -203,6 +209,8 @@ describe('potion/angular', () => {
 	describe('Item instance', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
+				$httpBackend.expect('PATCH', '/user/1').respond((method, url, data) => [200, Object.assign(JOHN, {}, JSON.parse(data))]);
+
 				User.fetch(1).then((user) => {
 					let name = 'John Foo Doe';
 					user.update({name}).then(() => {
@@ -213,13 +221,17 @@ describe('potion/angular', () => {
 					});
 				});
 
-				$httpBackend.expect('PATCH', '/user/1').respond((method, url, data) => [200, Object.assign(JOHN, {}, JSON.parse(data))]);
 				$httpBackend.flush();
 			});
 		});
 
 		describe('.destroy()', () => {
 			it('should destroy the Item', (done) => {
+				$httpBackend.expect('DELETE', '/user/3').respond(() => {
+					anonymous = null;
+					return [200];
+				});
+
 				User.fetch(3).then((user) => {
 					user.destroy().then(() => {
 						User.fetch(3, {cache: false}).then(null, (error) => {
@@ -229,10 +241,6 @@ describe('potion/angular', () => {
 					});
 				});
 
-				$httpBackend.expect('DELETE', '/user/3').respond(() => {
-					anonymous = null;
-					return [200];
-				});
 				$httpBackend.flush();
 			});
 		});
@@ -242,20 +250,20 @@ describe('potion/angular', () => {
 				let name = 'Foo Bar';
 				let user = User.create({name});
 
-				user.save().then(() => {
-					User.fetch(4).then((user) => {
-						expect(user.id).toEqual(4);
-						expect(user.name).toEqual(name);
-						done();
-					});
-				});
-
 				$httpBackend.when('GET', '/user/4').respond(() => {
 					if (foo !== null) {
 						return [200, foo];
 					} else {
 						return [404];
 					}
+				});
+
+				user.save().then(() => {
+					User.fetch(4).then((user) => {
+						expect(user.id).toEqual(4);
+						expect(user.name).toEqual(name);
+						done();
+					});
 				});
 
 				$httpBackend.flush();
@@ -271,9 +279,7 @@ angular
 		potionProvider.config({prefix: ''});
 	}])
 	.factory('Delayed', ['potion', (potion) => {
-		class Delayed extends Item {
-			delay: number;
-		}
+		class Delayed extends Item {}
 
 		potion.register('/delayed', Delayed);
 

@@ -52,9 +52,10 @@ angular
     
         // Resources can also be registered using `@potion.registerAs('/user')`
         class User extends Item {
-            static names = Route.GET('/names');
-            attributes = Route.GET('/attributes');
             name: string;
+            
+            static readNames = Route.GET('/names');
+            readAttributes = Route.GET('/attributes');
         }
 
         // If the `@potion.registerAs('/user')` decorator is used,
@@ -64,37 +65,35 @@ angular
         return User;
     }])
     .controller('MyAppController', ['User', (User) => {
-        // Fetch a user by id
-        const user1 = User.fetch(1);
-        
-        // Get all user names using the static route created with `Route.GET('/names')`
-        const names = User.names();
+        // Fetch a user object by id
+        const user = User.fetch(1);
         
         // Get the user attributes using the instance route created with `Route.GET('/attributes')`
-        user1.then((user) => {
-        	user.attributes().then((attrs) => {
-        		console.log(attrs);
-        	});
-        });
+        user
+            .then((user) => user.readAttributes()})
+            .then((attrs) => {
+                console.log(attrs);
+            });
+        
+        // Get all user names using the static route created with `Route.GET('/names')`
+        const names = User.readNames();
         
         // Get all users
         const users = User.query();
         
         // Update a user
-        user1.then((user) => {
-            const name = 'John Foo Doe';
-        	user.update({name});
+        user.then((john) => {
+            john.update({name: 'John Doe'});
         });
         
         // Delete a user
-        user1.then((user) => {
-            user.destroy({name});
+        user.then((john) => {
+            john.destroy();
         });
         
         // Create and save a new user
-        const name = 'Foo Bar';
-        let user2 = User.create({name});
-        user2.save();
+        const jane = new User({name: 'Jane Doe'});
+        jane.save();
     }]);
 ```
 

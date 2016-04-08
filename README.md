@@ -33,12 +33,6 @@ TODO
 If you decide to use this package as a AngularJS module, use the following example as a starting point:
 ```js
 import angular from 'angular';
-
-import 'potion/angular';
-// If the bellow import is used,
-// the line above is not necessary.
-// By importing anything from the module,
-// it will implicitly load and register the angularjs module.
 import {Item, Route} from 'potion/angular';
 
 angular

@@ -27,10 +27,78 @@ Note that any routes created with `Route.<method>` and the following methods on 
 * `.fetch()`
 
 #### Standalone
-TODO
+Using the package requires you to have a ES6 env setup with either [JSPM](http://jspm.io/) or [SystemJS](https://github.com/systemjs/systemjs) alone (or any loader that can load commonjs packages).
 
+You will first need to load `Potion` and create an instance of it in order to be able to register any API endpoints:
+```js
+// It will load from the main module `potion/fetch`,
+// and it will use the fetch API
+import {Potion, Item} from 'potion';
+
+let potion = new Potion({prefix: '/api'});
+```
+
+Now the API endpoints can be registered:
+```js
+// `Item` has been imported above,
+// do not forget about it;
+// and `potion` is the instance created in the above example
+@potion.registerAs('/user')
+class User extends Item {}
+
+// If decorators are not something you like,
+// you can use potion.register('/user', User);
+```
+
+If there are some instance or static routes for an API endpoint that you wish to register, this can be done using:
+```js
+import {Route} from 'potion';
+
+// Do not forget to load the Item and register the endpoint
+class User extends Item {
+    static names = Route.GET('/names');
+    groups = Route.GET('/groups');
+}
+
+```
+
+And to use the endpoints that were just created:
+```js
+// Fetch a user object by id
+let user = User.fetch(1);
+
+// Get the user groups,
+// uses the instance route created with `Route.GET('/groups')`
+user
+    .then((user) => user.groups()})
+    .then((groups) => {
+        console.log(groups);
+    });
+
+// Get all user names,
+// uses the static route created with `Route.GET('/names')`
+let names = User.names();
+
+// Get all users
+let users = User.query();
+
+// Update a user
+user.then((john) => {
+    john.update({name: 'John Doe'});
+});
+
+// Delete a user
+user.then((john) => {
+    john.destroy();
+});
+
+// Create and save a new user
+let jane = new User({name: 'Jane Doe'});
+jane.save();
+```
+ 
 #### AngularJS
-If you decide to use this package as a AngularJS module, use the following example as a starting point:
+If you decide to use this package as a AngularJS module, there are a few differences from the standalone version, but the API does not change. Use the following example as a starting point:
 ```js
 import angular from 'angular';
 import {Item, Route} from 'potion/angular';
@@ -60,7 +128,7 @@ angular
     }])
     .controller('MyAppController', ['User', (User) => {
         // Fetch a user object by id
-        const user = User.fetch(1);
+        let user = User.fetch(1);
         
         // Get the user attributes using the instance route created with `Route.GET('/attributes')`
         user
@@ -70,10 +138,10 @@ angular
             });
         
         // Get all user names using the static route created with `Route.GET('/names')`
-        const names = User.readNames();
+        let names = User.readNames();
         
         // Get all users
-        const users = User.query();
+        let users = User.query();
         
         // Update a user
         user.then((john) => {
@@ -86,7 +154,7 @@ angular
         });
         
         // Create and save a new user
-        const jane = new User({name: 'Jane Doe'});
+        let jane = new User({name: 'Jane Doe'});
         jane.save();
     }]);
 ```

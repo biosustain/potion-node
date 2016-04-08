@@ -1,5 +1,7 @@
 import {
+	PotionItemCache,
 	PotionRequestOptions,
+	PotionOptions,
 	PotionBase
 } from './base';
 
@@ -10,6 +12,11 @@ export {
 } from './base';
 
 export class Potion extends PotionBase {
+	constructor(options?: PotionOptions) {
+		let cache = new Memcache();
+		super(Object.assign({cache}, options));
+	}
+
 	fetch(uri, options?: PotionRequestOptions): Promise<any> {
 		// Use window.fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
@@ -43,5 +50,21 @@ export class Potion extends PotionBase {
 				throw error;
 			}
 		});
+	}
+}
+
+let cache = new Map();
+
+class Memcache implements PotionItemCache<any> {
+	get(key: string) {
+		return cache.get(key);
+	}
+
+	put(key, item) {
+		return cache.set(key, item).get(key);
+	}
+
+	remove(key: string) {
+		cache.delete(key);
 	}
 }

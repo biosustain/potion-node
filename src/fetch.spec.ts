@@ -143,7 +143,7 @@ const ROUTES = [
 ];
 
 // In memory cache
-class ItemCache implements PotionItemCache<any> {
+class MockMemcache implements PotionItemCache<any> {
 	private _memcache = {};
 
 	get(key: string) {
@@ -163,7 +163,7 @@ class ItemCache implements PotionItemCache<any> {
 	}
 }
 
-let cache = new ItemCache();
+let cache = new MockMemcache();
 
 describe('potion/fetch', () => {
 	beforeEach(() => {
@@ -220,19 +220,27 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		it('should retrieve from cache (given that a cache was provided)', (done) => {
-			User.fetch(1).then(() => {
-				expect(cache.get('/user/1')).not.toBeUndefined();
-				User.fetch(1).then(() => {
-					expect(fetchMock.calls('http://localhost/user/1').length).toEqual(1);
+		it('should use in memory cache (by default) to retrieve the Item', (done) => {
+			fetchMock.mock('http://localhost/user/5', 'GET', {
+				$uri: '/user/5',
+				name: 'James Dean',
+				created_at: {
+					$date: 1451060269000
+				}
+			});
+
+			User.fetch(5).then(() => {
+				expect(User.store.cache.get('/user/5')).not.toBeUndefined();
+				User.fetch(5).then(() => {
+					expect(fetchMock.calls('http://localhost/user/5').length).toEqual(1);
 					done();
 				});
 			});
 		});
 
 		it('should skip caching if {cache} option is set to false', (done) => {
-			User.fetch(1, {cache: false}).then(() => {
-				expect(cache.get('/user/1')).toBeUndefined();
+			Ping.fetch(1, {cache: false}).then(() => {
+				expect(cache.get('/ping/1')).toBeUndefined();
 				done();
 			});
 		});
@@ -307,8 +315,9 @@ describe('potion/fetch', () => {
 
 
 // Create Potion API
-let potion = new Potion({cache, prefix: 'http://localhost'});
-let potionNoItemCache = new Potion({prefix: 'http://localhost'});
+let potion = new Potion({prefix: 'http://localhost'});
+let potionNoItemCache = new Potion({cache: null, prefix: 'http://localhost'});
+let potionCustomCache = new Potion({cache, prefix: 'http://localhost'});
 
 // Potion resources
 class Delayed extends Item {
@@ -332,7 +341,9 @@ class Car extends Item {
 }
 
 // Register API resources
+
+potionCustomCache.register('/ping', Ping);
 potionNoItemCache.register('/delayed', Delayed);
-potion.register('/ping', Ping);
+
 potion.register('/user', User);
 potion.register('/car', Car);

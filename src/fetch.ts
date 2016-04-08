@@ -32,36 +32,14 @@ export class Potion extends PotionBase {
 			};
 		}
 
-		return fetch(uri, init)
-				.then(checkStatus)
-				.then(parseAsText)
-				.then(parseAsJSON);
+		return fetch(uri, init).then((response) => {
+			if (response.ok) {
+				return response.json().then((json) => json, (error) => (error));
+			} else {
+				let error: any = new Error(response.statusText);
+				error.response = response;
+				throw error;
+			}
+		});
 	}
-}
-
-
-function checkStatus(response) {
-	if (response.ok) {
-		return response;
-	} else {
-		let error: any = new Error(response.statusText);
-		error.response = response;
-		throw error;
-	}
-}
-
-function parseAsText(response: Response) {
-	return response.text();
-}
-
-function parseAsJSON(text: string): any {
-	let json;
-
-	try {
-		json = JSON.parse(text);
-	} catch (e) {
-		json = null;
-	}
-
-	return json;
 }

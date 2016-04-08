@@ -142,6 +142,29 @@ const ROUTES = [
 	}
 ];
 
+// In memory cache
+class ItemCache implements PotionItemCache<any> {
+	private _memcache = {};
+
+	get(key: string) {
+		return this._memcache[key];
+	}
+
+	put(key, item) {
+		return this._memcache[key] = item;
+	}
+
+	remove(key: string) {
+		delete this._memcache[key];
+	}
+
+	removeAll() {
+		this._memcache = {};
+	}
+}
+
+let cache = new ItemCache();
+
 describe('potion/fetch', () => {
 	beforeEach(() => {
 		fetchMock.mock(<any>{routes: ROUTES, greed: 'bad'});
@@ -282,29 +305,6 @@ describe('potion/fetch', () => {
 	});
 });
 
-
-// In memory cache
-class ItemCache implements PotionItemCache<any> {
-	private _memcache = {};
-
-	get(key: string) {
-		return this._memcache[key];
-	}
-
-	put(key, item) {
-		return this._memcache[key] = item;
-	}
-
-	remove(key: string) {
-		delete this._memcache[key];
-	}
-
-	removeAll() {
-		this._memcache = {};
-	}
-}
-
-let cache = new ItemCache();
 
 // Create Potion API
 let potion = new Potion({cache, prefix: 'http://localhost'});

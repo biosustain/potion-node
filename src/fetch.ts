@@ -41,7 +41,7 @@ export class Potion extends PotionBase {
 
 
 function checkStatus(response) {
-	if (response.status >= 200 && response.status < 300) {
+	if (response.ok) {
 		return response;
 	} else {
 		let error: any = new Error(response.statusText);

@@ -23,10 +23,7 @@ export default angular.module('potion', []).provider('potion', function () {
 			static promise = $q;
 
 			fetch(url, options?: PotionRequestOptions): Promise<any> {
-				let {method, data} = options || {method: 'GET', data: null};
-				let config: any = {method, url, data};
-
-				return $http(config).then((json) => json.data);
+				return $http(Object.assign({url, method: 'GET', cache: true}, options)).then((json) => json.data);
 			}
 		}
 

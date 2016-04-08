@@ -11,20 +11,22 @@ export {
 
 export class Potion extends PotionBase {
 	fetch(uri, options?: PotionRequestOptions): Promise<any> {
-		// Use isomorphic fetch for making requests,
+		// Use window.fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
-		// https://github.com/github/fetch
-
-		let {method, data, cache} = options || {method: 'GET', data: null, cache: 'default'};
-		let init: RequestInit = {method, cache};
+		// Polyfill at https://github.com/github/fetch.
+		let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
+		let init: RequestInit = {
+			method,
+			cache: cache ? 'default' : 'no-cache'
+		};
 
 		// Make sure cookies are sent
 		// https://github.com/github/fetch#sending-cookies
 		init.credentials = 'include';
 
 		if (data) {
-			// POST/PUT needs headers and JSON body
-			// https://github.com/github/fetch#post-json
+			// POST/PUT/PATCH needs headers and JSON body,
+			// see https://github.com/github/fetch#post-json for more info.
 			init.body = JSON.stringify(options.data);
 			init.headers = {
 				'Accept': 'application/json',

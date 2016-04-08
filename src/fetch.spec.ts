@@ -143,12 +143,16 @@ const ROUTES = [
 ];
 
 describe('potion/fetch', () => {
-	beforeAll(() => {
+	beforeEach(() => {
 		fetchMock.mock(<any>{routes: ROUTES, greed: 'bad'});
 	});
 
-	afterAll(() => {
+	afterEach(() => {
 		fetchMock.restore();
+	});
+
+	afterEach(() => {
+		cache.removeAll();
 	});
 
 	describe('Item.fetch()', () => {
@@ -194,8 +198,18 @@ describe('potion/fetch', () => {
 		});
 
 		it('should retrieve from cache (given that a cache was provided)', (done) => {
-			Ping.fetch(1).then(() => {
-				expect(fetchMock.calls('http://localhost/ping/1').length).toEqual(1);
+			User.fetch(1).then(() => {
+				expect(cache.get('/user/1')).not.toBeUndefined();
+				User.fetch(1).then(() => {
+					expect(fetchMock.calls('http://localhost/user/1').length).toEqual(1);
+					done();
+				});
+			});
+		});
+
+		it('should skip caching if {cache} option is set to false', (done) => {
+			User.fetch(1, {cache: false}).then(() => {
+				expect(cache.get('/user/1')).toBeUndefined();
 				done();
 			});
 		});
@@ -284,11 +298,16 @@ class ItemCache implements PotionItemCache<any> {
 	remove(key: string) {
 		delete this._memcache[key];
 	}
+
+	removeAll() {
+		this._memcache = {};
+	}
 }
 
+let cache = new ItemCache();
 
 // Create Potion API
-let potion = new Potion({prefix: 'http://localhost', cache: new ItemCache()});
+let potion = new Potion({cache, prefix: 'http://localhost'});
 let potionNoItemCache = new Potion({prefix: 'http://localhost'});
 
 // Potion resources

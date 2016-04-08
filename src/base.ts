@@ -25,6 +25,20 @@ export function readonly(target, property) {
 }
 
 
+export interface PotionRequestOptions {
+	method?: 'GET' | 'PUT' | 'PATCH' | 'DELETE' | 'POST';
+	cache?: boolean;
+	data?: any;
+}
+
+
+export interface PotionItemCache<T extends Item> {
+	get(key: string): T;
+	put(key: string, item: T): T;
+	remove(key: string): void;
+}
+
+
 export interface ItemConstructor {
 	new (object: any): Item;
 
@@ -36,6 +50,10 @@ export interface ItemConstructor {
 
 export interface ItemOptions {
 	'readonly'?: string[];
+}
+
+export interface ItemFetchOptions {
+	cache?: boolean;
 }
 
 // TODO: when https://github.com/Microsoft/TypeScript/issues/3964 is implemented,
@@ -65,11 +83,11 @@ export class Item {
 
 	protected _uri: string;
 
-	static fetch(id, options?: PotionRequestOptions): Promise<Item> {
+	static fetch(id, options?: ItemFetchOptions): Promise<Item> {
 		return this.store.query(id, options);
 	}
 
-	static query(options?: PotionRequestOptions): Promise<Item[]> {
+	static query(options?: ItemFetchOptions): Promise<Item[]> {
 		return this.store.query(options);
 	}
 
@@ -85,12 +103,12 @@ export class Item {
 		}
 	}
 
-	save(): Promise<Item> {
-		return (<typeof Item>this.constructor).store.save(this.toJSON());
+	save(options?: ItemFetchOptions): Promise<Item> {
+		return (<typeof Item>this.constructor).store.save(this.toJSON(), options);
 	}
 
-	update(properties: any = {}): Promise<Item> {
-		return (<typeof Item>this.constructor).store.update(this, properties);
+	update(properties: any = {}, options?: ItemFetchOptions): Promise<Item> {
+		return (<typeof Item>this.constructor).store.update(this, properties, options);
 	}
 
 	destroy(): Promise<Item> {
@@ -147,7 +165,7 @@ export class Store<T extends Item> {
 		return this.get(uri, options);
 	}
 
-	get(uri, options?: PotionRequestOptions): Promise<any> {
+	get(uri, {cache = true}: ItemFetchOptions = {}): Promise<any> {
 		// Try to get from cache
 		if (this.cache && this.cache.get) {
 			let item = this.cache.get(uri);
@@ -167,26 +185,26 @@ export class Store<T extends Item> {
 		// get the data,
 		// and parse it.
 		// Enforce GET method
-		promise = this._promises[uri] = this._fetch(uri, Object.assign({}, options, {method: 'GET'})).then((json) => {
+		promise = this._promises[uri] = this.fetch(uri, {cache, method: 'GET'}).then((json) => {
 			delete this._promises[uri]; // Remove pending request
-			return this._fromPotionJSON(json);
+			return this._fromPotionJSON(json, {cache});
 		});
 
 		return promise;
 	}
 
-	update(item: Item, data: any = {}): Promise<any> {
-		return this._fetch(item.uri, {data, method: 'PATCH'}).then((json) => this._fromPotionJSON(json));
+	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<any> {
+		return this.fetch(item.uri, {data, method: 'PATCH'}).then((json) => this._fromPotionJSON(json, {cache}));
 	}
 
-	save(data: any = {}): Promise<any> {
-		return this._fetch(this._rootURI, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json));
+	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<any> {
+		return this.fetch(this._rootURI, {data, method: 'POST'}).then((json) => this._fromPotionJSON(json, {cache}));
 	}
 
 	destroy(item: Item): Promise<any> {
 		let {uri} = item;
 
-		return this._fetch(uri, {method: 'DELETE'}).then(() => {
+		return this.fetch(uri, {method: 'DELETE'}).then(() => {
 			// Clear the item from cache if exists
 			if (this.cache && this.cache.get && this.cache.get(uri)) {
 				this.cache.remove(uri);
@@ -194,7 +212,7 @@ export class Store<T extends Item> {
 		});
 	}
 
-	private _fetch(uri, options?: PotionRequestOptions): Promise<any> {
+	fetch(uri, options?: PotionRequestOptions): Promise<any> {
 		// Add the API prefix if not present
 		let {prefix} = this._potion;
 		if (uri.indexOf(prefix) === -1) {
@@ -204,10 +222,10 @@ export class Store<T extends Item> {
 		return this._potion.fetch(uri, options);
 	}
 
-	private _fromPotionJSON(json: any): Promise<any> {
+	private _fromPotionJSON(json: any, {cache}: ItemFetchOptions = {}): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
-				return this.promise.all(json.map((item) => this._fromPotionJSON(item)));
+				return this.promise.all(json.map((item) => this._fromPotionJSON(item, {cache})));
 			} else if (typeof json.$uri === 'string') {
 				let {resource, uri} = this._potion.parseURI(json.$uri);
 				let promises = [];
@@ -218,7 +236,7 @@ export class Store<T extends Item> {
 						// } else if (constructor.deferredProperties && constructor.deferredProperties.includes(key)) {
 						// 	converted[toCamelCase(key)] = () => this.fromJSON(value[key]);
 					} else {
-						promises.push(this._fromPotionJSON(json[key]).then((value) => {
+						promises.push(this._fromPotionJSON(json[key], {cache}).then((value) => {
 							return [toCamelCase(key), value];
 						}));
 					}
@@ -236,7 +254,7 @@ export class Store<T extends Item> {
 					Object.assign(obj, {uri: properties.$uri});
 
 					let item = Reflect.construct(<any>resource, [obj]);
-					if (this.cache && this.cache.put) {
+					if (cache && this.cache && this.cache.put) {
 						this.cache.put(uri, <any>item);
 					}
 
@@ -254,7 +272,7 @@ export class Store<T extends Item> {
 			let promises = [];
 
 			for (let key of Object.keys(json)) {
-				promises.push(this._fromPotionJSON(json[key]).then((value) => {
+				promises.push(this._fromPotionJSON(json[key], {cache}).then((value) => {
 					return [toCamelCase(key), value];
 				}));
 			}
@@ -269,21 +287,9 @@ export class Store<T extends Item> {
 }
 
 
-export interface PotionItemCache<T extends Item> {
-	get(key: string): T;
-	put(key: string, item: T): T;
-	remove(key: string): void;
-}
-
 export interface PotionOptions {
 	prefix?: string;
 	cache?: PotionItemCache<Item>;
-}
-
-export interface PotionRequestOptions {
-	method?: 'GET' | 'PUT' | 'PATCH' | 'DELETE' | 'POST';
-	cache?: any;
-	data?: any;
 }
 
 export abstract class PotionBase {
@@ -334,15 +340,27 @@ export abstract class PotionBase {
 }
 
 
-export function route(uri: string, {method}: PotionRequestOptions = {}): (options?) => Promise<any> {
-	return function (options?: PotionRequestOptions) {
+export function route(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<any> {
+	return function (options?: ItemFetchOptions): any {
 		let isCtor = typeof this === 'function';
 		let {store, rootURI} = isCtor ? this : this.constructor;
 
-		return store.get(
-			`${isCtor ? rootURI : this.uri}${uri}`,
-			Object.assign({method}, options)
-		);
+		uri = `${isCtor ? rootURI : this.uri}${uri}`;
+
+		switch (method) {
+			case 'GET':
+				return store.get(uri, options);
+			case 'DELETE':
+				return store.destroy({uri});
+			case 'POST':
+				throw 'Not implemented';
+			case 'PATCH':
+				throw 'Not implemented';
+			case 'PUT':
+				throw 'Not implemented';
+			default:
+				break;
+		}
 	};
 }
 

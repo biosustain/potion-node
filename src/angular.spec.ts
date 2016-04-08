@@ -157,6 +157,20 @@ describe('potion/angular', () => {
 			$httpBackend.flush();
 		});
 
+		it('should skip caching if {cache} option is set to false', (done) => {
+			let cache = $cacheFactory.get('potion');
+
+			expect(cache).not.toBeUndefined();
+
+			User.fetch(4, {cache: false}).then(() => {
+				expect(cache.get('/user/4')).toBeUndefined();
+				done();
+			});
+
+			$httpBackend.expect('GET', '/user/4').respond(() => [200, {}]);
+			$httpBackend.flush();
+		});
+
 		it('should automatically resolve references', (done) => {
 			Car.fetch(1).then((car) => {
 				expect(car.model).toEqual(AUDI.model);
@@ -208,7 +222,7 @@ describe('potion/angular', () => {
 			it('should destroy the Item', (done) => {
 				User.fetch(3).then((user) => {
 					user.destroy().then(() => {
-						User.fetch(3).then(null, (error) => {
+						User.fetch(3, {cache: false}).then(null, (error) => {
 							expect(error).not.toBeUndefined();
 							done();
 						});

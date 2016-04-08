@@ -13,8 +13,7 @@ export {
 
 export class Potion extends PotionBase {
 	constructor(options?: PotionOptions) {
-		let cache = new Memcache();
-		super(Object.assign({cache}, options));
+		super(Object.assign({cache: new Memcache()}, options));
 	}
 
 	fetch(uri, options?: PotionRequestOptions): Promise<any> {

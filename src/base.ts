@@ -185,6 +185,36 @@ export class Store<T extends Item> {
 }
 
 
+export function route(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<any> {
+	return function (options?: ItemFetchOptions): any {
+		let isCtor = typeof this === 'function';
+		uri = `${isCtor ? Reflect.getMetadata(_potionURIMetadataKey, this) : this.uri}${uri}`;
+		return Reflect.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor).fetch(uri, Object.assign({method}, options));
+	};
+}
+
+
+/* tslint:disable: variable-name */
+export let Route = {
+	GET(uri: string) {
+		return route(uri, {method: 'GET'});
+	},
+	DELETE(uri: string) {
+		return route(uri, {method: 'DELETE'});
+	},
+	POST(uri: string) {
+		return route(uri, {method: 'POST'});
+	},
+	PATCH(uri: string) {
+		return route(uri, {method: 'PATCH'});
+	},
+	PUT(uri: string) {
+		return route(uri, {method: 'PUT'});
+	}
+};
+/* tslint:enable: variable-name */
+
+
 export interface PotionOptions {
 	prefix?: string;
 	cache?: PotionItemCache<Item>;
@@ -316,31 +346,3 @@ export abstract class PotionBase {
 		}
 	}
 }
-
-
-export function route(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<any> {
-	return function (options?: ItemFetchOptions): any {
-		let isCtor = typeof this === 'function';
-		uri = `${isCtor ? Reflect.getMetadata(_potionURIMetadataKey, this) : this.uri}${uri}`;
-		return Reflect.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor).fetch(uri, Object.assign({method}, options));
-	};
-}
-
-/* tslint:disable: variable-name */
-export let Route = {
-	GET(uri: string) {
-		return route(uri, {method: 'GET'});
-	},
-	DELETE(uri: string) {
-		return route(uri, {method: 'DELETE'});
-	},
-	POST(uri: string) {
-		return route(uri, {method: 'POST'});
-	},
-	PATCH(uri: string) {
-		return route(uri, {method: 'PATCH'});
-	},
-	PUT(uri: string) {
-		return route(uri, {method: 'PUT'});
-	}
-};

@@ -43,6 +43,12 @@ export interface PotionItemCache<T extends Item> {
 }
 
 
+export interface PaginationOptions {
+	page?: number;
+	perPage?: number;
+}
+
+
 export interface ItemConstructor {
 	new (object: any): Item;
 	store?: Store<Item>;
@@ -52,7 +58,7 @@ export interface ItemOptions {
 	'readonly'?: string[];
 }
 
-export interface ItemFetchOptions {
+export interface ItemFetchOptions extends PaginationOptions {
 	pagination?: boolean;
 	cache?: boolean;
 }
@@ -66,7 +72,7 @@ export class Item {
 		return this.store.fetch(id, options);
 	}
 
-	static query(options?: ItemFetchOptions): Promise<Item[]> {
+	static query(options?: ItemFetchOptions): Promise<Item[] | Pagination<Item>> {
 		return this.store.query(options);
 	}
 
@@ -162,15 +168,25 @@ export class Store<T extends Item> {
 		return promise;
 	}
 
-	query({pagination = true, cache = true}: ItemFetchOptions = {}) {
+	query({pagination = true, cache = true, page = 1, perPage = 5}: ItemFetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T>> {
+		let options: PotionRequestOptions = {cache, method: 'GET'};
+
+		if (pagination) {
+			Object.assign(options, {data: {page, perPage}});
+		}
+
 		return Reflect
 			.getMetadata(_potionMetadataKey, this._itemConstructor)
-			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {cache, method: 'GET'})
+			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options)
 			.then(({headers, data}) => {
 				let keys = Object.keys(headers).map((key) => key.toLowerCase());
 
-				if (pagination && (<any>keys).includes('x-total-count')) {
-					return new Pagination(data);
+				if ((<any>keys).includes('x-total-count')) {
+					if (paginationObj) {
+						return Array.from(paginationObj);
+					} else {
+						return new Pagination<T>(this._itemConstructor, data, options.data);
+					}
 				}
 
 				return data;
@@ -373,14 +389,46 @@ export abstract class PotionBase {
 }
 
 
-export class Pagination {
+export class Pagination<T extends Item>  {
+	get page() {
+		return this._page;
+	}
+
+	set page(page) {
+		let {store} = this._itemConstructor;
+		let {perPage} = this;
+
+		store.query({page, perPage}, this).then((items) => {
+			this._items.splice(0, this.length, ...items);
+			this._page = page;
+			this._total = 2; // TODO: take this value from X-Total-Count
+		});
+	}
+
+	get perPage() {
+		return this._perPage;
+	}
+
+	get pages() {
+		return Math.ceil(this._total / this.perPage);
+	}
+
 	get length() {
 		return this._items.length;
-	};
+	}
 
+	private _itemConstructor: ItemConstructor;
 	private _items: Item[] = [];
+	private _page: number;
+	private _perPage: number;
+	private _total: number;
 
-	constructor(items) {
+	constructor(itemConstructor: ItemConstructor, items, options: PaginationOptions) {
+		this._itemConstructor = itemConstructor;
+		this._page = options.page;
+		this._perPage = options.perPage;
+		this._total = 2; // TODO: take this value from X-Total-Count
+
 		this._items.push(...items);
 	}
 

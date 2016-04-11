@@ -180,34 +180,50 @@ describe('potion/fetch', () => {
 	});
 
 	describe('Item.query()', () => {
-		it('should return a Pagination object', (done) => {
-			fetchMock.mock('http://localhost/user', 'GET', {
-				body: [{$ref: JOHN.$uri}, {$ref: JANE.$uri}],
-				headers: {
-					'X-Total-Count': 2
-				}
-			});
+		beforeEach(() => {
+			fetchMock.mock('http://localhost/user', 'GET', (url, opts: any) => {
+				let {page, perPage} = JSON.parse(opts.body);
+				let response = {body: [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]};
 
-			User.query().then((users: User[]) => {
+				if (page && perPage) {
+					Object.assign(response, {
+						body: toPages(response.body, perPage)[page - 1], // If pagination params are sent, return the appropriate page
+						headers: {
+							'X-Total-Count': 2
+						}
+					});
+				}
+
+				return response;
+			});
+		});
+
+		it('should return a Pagination object', (done) => {
+			User.query().then((users: Pagination<User>) => {
 				expect(users instanceof Pagination).toBe(true);
 				expect(users.length).toEqual(2);
-
-				// for (let user of users) {
-				// 	expect(user instanceof User).toBe(true);
-				// }
-				
+				expect(users.page).toEqual(1);
+				expect(users.perPage).toEqual(5); // Default value if not set with options
+				expect(users.pages).toEqual(1);
 				done();
 			});
 		});
 
 		it('should contain instances of an Item', (done) => {
-			fetchMock.mock('http://localhost/user', 'GET', [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
-
 			User.query().then((users: User[]) => {
-				expect(users.length).toEqual(2);
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
 				}
+				done();
+			});
+		});
+
+		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
+			User.query({page: 2, perPage: 1}).then((users: Pagination<User>) => {
+				expect(users.length).toEqual(1);
+				expect(users.page).toEqual(2);
+				expect(users.perPage).toEqual(1);
+				expect(users.pages).toEqual(2);
 				done();
 			});
 		});
@@ -331,3 +347,15 @@ potionNoItemCache.register('/delayed', Delayed);
 
 potion.register('/user', User);
 potion.register('/car', Car);
+
+function toPages(items: any[], perPage: number): Array<any[]> {
+	let i;
+	let j;
+	let pages = [];
+
+	for (i = 0, j = items.length; i < j; i+=perPage) {
+		pages.push(items.slice(i, i + perPage));
+	}
+
+	return pages;
+}

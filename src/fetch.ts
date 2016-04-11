@@ -16,7 +16,7 @@ export class Potion extends PotionBase {
 		super(Object.assign({cache: new Memcache()}, options));
 	}
 
-	fetch(uri, options?: PotionRequestOptions): Promise<any> {
+	request(uri, options?: PotionRequestOptions): Promise<any> {
 		// Use window.fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// Polyfill at https://github.com/github/fetch.

@@ -55,12 +55,14 @@ describe('potion', () => {
 		describe('.toJSON()', () => {
 			it('should return a JSON repr. of the Item', () => {
 				expect(user.toJSON()).toEqual({
+					id: null,
 					name: 'John Doe'
 				});
 			});
 
 			it('should omit @readonly properties', () => {
 				expect(user.toJSON()).toEqual({
+					id: null,
 					name: 'John Doe'
 				});
 			});
@@ -74,7 +76,7 @@ export class Potion extends PotionBase {
 		super(Object.assign({prefix: '/api', options}));
 	}
 
-	fetch(uri): Promise<any> {
+	request(uri): Promise<any> {
 		return (<typeof PotionBase>this.constructor).promise.resolve({camel_case: true});
 	}
 }

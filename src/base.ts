@@ -61,8 +61,6 @@ export class Item {
 	id = null;
 	uri: string;
 
-	protected _uri: string;
-
 	static fetch(id, options?: ItemFetchOptions): Promise<Item> {
 		return this.store.fetch(id, options);
 	}
@@ -102,7 +100,7 @@ export class Item {
 			.keys(this)
 			.filter((key) => {
 				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
-				return key !== '_uri' && (!metadata || (metadata && !metadata[key]));
+				return (!metadata || (metadata && !metadata[key]));
 			})
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];

@@ -53,6 +53,7 @@ export interface ItemOptions {
 }
 
 export interface ItemFetchOptions {
+	pagination?: boolean;
 	cache?: boolean;
 }
 
@@ -128,15 +129,9 @@ export class Store<T extends Item> {
 
 	}
 
-	fetch(id, options) {
-		return this.get(`${Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor)}/${id}`, options);
-	}
+	fetch(id, {cache = true}: ItemFetchOptions = {}) {
+		let uri = `${Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor)}/${id}`;
 
-	query(options) {
-		return this.get(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options);
-	}
-
-	get(uri, {cache = true}: ItemFetchOptions = {}): Promise<any> {
 		// Try to get from cache
 		if (this.cache && this.cache.get) {
 			let item = this.cache.get(uri);
@@ -156,31 +151,58 @@ export class Store<T extends Item> {
 		// get the data,
 		// and parse it.
 		// Enforce GET method
-		promise = this._promises[uri] = Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(uri, {cache, method: 'GET'}).then((json) => {
-			delete this._promises[uri]; // Remove pending request
-			return json;
-		});
+		promise = this._promises[uri] = Reflect
+			.getMetadata(_potionMetadataKey, this._itemConstructor)
+			.fetch(uri, {cache, method: 'GET'})
+			.then(({data}) => {
+				delete this._promises[uri]; // Remove pending request
+				return data;
+			});
 
 		return promise;
 	}
 
+	query({pagination = true, cache = true}: ItemFetchOptions = {}) {
+		return Reflect
+			.getMetadata(_potionMetadataKey, this._itemConstructor)
+			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {cache, method: 'GET'})
+			.then(({headers, data}) => {
+				let keys = Object.keys(headers).map((key) => key.toLowerCase());
+
+				if (pagination && (<any>keys).includes('x-total-count')) {
+					return new Pagination(data);
+				}
+
+				return data;
+			});
+	}
+
 	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<any> {
-		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(item.uri, {data, cache, method: 'PATCH'});
+		return Reflect
+			.getMetadata(_potionMetadataKey, this._itemConstructor)
+			.fetch(item.uri, {data, cache, method: 'PATCH'})
+			.then(({data}) => data);
 	}
 
 	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<any> {
-		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {data, cache, method: 'POST'});
+		return Reflect
+			.getMetadata(_potionMetadataKey, this._itemConstructor)
+			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {data, cache, method: 'POST'})
+			.then(({data}) => data);
 	}
 
 	destroy(item: Item): Promise<any> {
 		let {uri} = item;
 
-		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(uri, {method: 'DELETE'}).then(() => {
-			// Clear the item from cache if exists
-			if (this.cache && this.cache.get && this.cache.get(uri)) {
-				this.cache.remove(uri);
-			}
-		});
+		return Reflect
+			.getMetadata(_potionMetadataKey, this._itemConstructor)
+			.fetch(uri, {method: 'DELETE'})
+			.then(() => {
+				// Clear the item from cache if exists
+				if (this.cache && this.cache.get && this.cache.get(uri)) {
+					this.cache.remove(uri);
+				}
+			});
 	}
 }
 
@@ -189,7 +211,10 @@ export function route(uri: string, {method}: PotionRequestOptions = {}): (option
 	return function (options?: ItemFetchOptions): any {
 		let isCtor = typeof this === 'function';
 		uri = `${isCtor ? Reflect.getMetadata(_potionURIMetadataKey, this) : this.uri}${uri}`;
-		return Reflect.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor).fetch(uri, Object.assign({method}, options));
+		return Reflect
+			.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor)
+			.fetch(uri, Object.assign({method}, options))
+			.then(({data}) => data);
 	};
 }
 
@@ -256,7 +281,7 @@ export abstract class PotionBase {
 			uri = `${prefix}${uri}`;
 		}
 
-		return this.request(uri, options).then((response) => this._fromPotionJSON(response, options));
+		return this.request(uri, options).then(({data, headers}) => this._fromPotionJSON(data, options).then((json) => ({headers, data: json})));
 	}
 
 	register(uri: string, resource: any) {
@@ -324,7 +349,7 @@ export abstract class PotionBase {
 						}
 					}
 
-					return this.fetch(uri);
+					return this.fetch(uri).then(({data}) => data);
 				} else if (typeof json.$date !== 'undefined') {
 					return promise.resolve(new Date(json.$date));
 				}
@@ -344,5 +369,22 @@ export abstract class PotionBase {
 		} else {
 			return promise.resolve(json);
 		}
+	}
+}
+
+
+export class Pagination {
+	get length() {
+		return this._items.length;
+	};
+
+	private _items: Item[] = [];
+
+	constructor(items) {
+		this._items.push(...items);
+	}
+
+	[Symbol.iterator]() {
+		return this._items.values();
 	}
 }

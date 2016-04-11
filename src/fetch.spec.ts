@@ -6,7 +6,8 @@ import {
 	Potion,
 	PotionItemCache,
 	Item,
-	Route
+	Route,
+	Pagination
 } from './fetch';
 
 
@@ -179,7 +180,27 @@ describe('potion/fetch', () => {
 	});
 
 	describe('Item.query()', () => {
-		it('should retrieve all instances of the Item', (done) => {
+		it('should return a Pagination object', (done) => {
+			fetchMock.mock('http://localhost/user', 'GET', {
+				body: [{$ref: JOHN.$uri}, {$ref: JANE.$uri}],
+				headers: {
+					'X-Total-Count': 2
+				}
+			});
+
+			User.query().then((users: User[]) => {
+				expect(users instanceof Pagination).toBe(true);
+				expect(users.length).toEqual(2);
+
+				// for (let user of users) {
+				// 	expect(user instanceof User).toBe(true);
+				// }
+				
+				done();
+			});
+		});
+
+		it('should contain instances of an Item', (done) => {
 			fetchMock.mock('http://localhost/user', 'GET', [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
 
 			User.query().then((users: User[]) => {

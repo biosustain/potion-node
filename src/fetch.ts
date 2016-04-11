@@ -8,7 +8,8 @@ import {
 export {
 	PotionItemCache,
 	Item,
-	Route
+	Route,
+	Pagination
 } from './base';
 
 export class Potion extends PotionBase {
@@ -42,7 +43,18 @@ export class Potion extends PotionBase {
 
 		return fetch(uri, init).then((response) => {
 			if (response.ok) {
-				return response.json().then((json) => json, (error) => (error));
+				return response.json().then(
+					(json) => {
+						let headers = {};
+
+						response.headers.forEach((value, name) => {
+							headers[name] = value;
+						});
+
+						return {headers, data: json};
+					},
+					(error) => (error)
+				);
 			} else {
 				let error: any = new Error(response.statusText);
 				error.response = response;

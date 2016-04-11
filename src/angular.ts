@@ -8,7 +8,8 @@ import {
 export {
 	PotionItemCache,
 	Item,
-	Route
+	Route,
+	Pagination
 } from './base';
 
 export default angular.module('potion', []).provider('potion', function () {
@@ -23,7 +24,9 @@ export default angular.module('potion', []).provider('potion', function () {
 			static promise = $q;
 
 			request(url, options?: PotionRequestOptions): Promise<any> {
-				return $http(Object.assign({url, method: 'GET', cache: true}, options)).then((json) => json.data);
+				return $http(Object.assign({url, method: 'GET', cache: true}, options)).then(({data, headers}) => {
+					return {data, headers: headers()};
+				});
 			}
 		}
 

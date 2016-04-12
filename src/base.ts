@@ -398,7 +398,7 @@ export class Pagination<T extends Item> {
 	}
 
 	get pages() {
-		return Math.ceil(this._total / this.perPage);
+		return Math.ceil(this._total / this._perPage);
 	}
 
 	get length() {
@@ -426,7 +426,7 @@ export class Pagination<T extends Item> {
 		let {page, perPage} = options.data;
 		this._page = page;
 		this._perPage = perPage;
-		this._total = count;
+		this._total = parseInt(count);
 	}
 
 	[Symbol.iterator]() {

@@ -353,7 +353,7 @@ function toPages(items: any[], perPage: number): Array<any[]> {
 	let j;
 	let pages = [];
 
-	for (i = 0, j = items.length; i < j; i+=perPage) {
+	for (i = 0, j = items.length; i < j; i += perPage) {
 		pages.push(items.slice(i, i + perPage));
 	}
 

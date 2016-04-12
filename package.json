@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.4.3",
+	"version": "0.5.0",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [],
 	"homepage": "",

@@ -382,15 +382,7 @@ export class Pagination<T extends Item> {
 	}
 
 	set page(page) {
-		this._page = page;
-		Object.assign(this._options, {
-			data: Object.assign(this._options.data, {page})
-		});
-		this._potion.fetch(this._uri, this._options, this).then(() => {
-			this._subscribers.forEach((subscriber) => {
-				subscriber(this);
-			});
-		});
+		this.changePageTo(page);
 	}
 
 	get perPage() {
@@ -408,7 +400,6 @@ export class Pagination<T extends Item> {
 	private _potion: PotionBase;
 	private _uri: string;
 	private _options: PotionRequestOptions;
-	private _subscribers = [];
 
 	private _items: T[] = [];
 
@@ -433,13 +424,17 @@ export class Pagination<T extends Item> {
 		return this._items.values();
 	}
 
+	changePageTo(page) {
+		Object.assign(this._options, {
+			data: Object.assign(this._options.data, {page})
+		});
+		this._page = page;
+		return this._potion.fetch(this._uri, this._options, this);
+	}
+
 	update(items, count) {
 		this._items.splice(0, this.length, ...items);
 		this._total = count;
-	}
-
-	subscribe(cb: (pagination: Pagination<T>) => void) {
-		this._subscribers.push(cb);
 	}
 
 	toArray(): T[] {

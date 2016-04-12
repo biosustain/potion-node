@@ -426,7 +426,7 @@ export class Pagination<T extends Item> {
 		let {page, perPage} = options.data;
 		this._page = page;
 		this._perPage = perPage;
-		this._total = parseInt(count);
+		this._total = parseInt(count, 10);
 	}
 
 	[Symbol.iterator]() {

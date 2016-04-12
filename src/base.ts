@@ -279,7 +279,7 @@ export abstract class PotionBase {
 					if (paginationObj) {
 						paginationObj.update(data, count);
 					} else {
-						return new Pagination<Item>({uri, potion: this}, data, count, {page, perPage});
+						return new Pagination<Item>({uri, potion: this}, data, count, options);
 					}
 				}
 
@@ -376,14 +376,21 @@ export abstract class PotionBase {
 }
 
 
-export class Pagination<T extends Item>  {
+export class Pagination<T extends Item> {
 	get page() {
 		return this._page;
 	}
 
 	set page(page) {
-		this._potion.fetch({page, perPage: this.perPage}, this);
 		this._page = page;
+		Object.assign(this._options, {
+			data: Object.assign(this._options.data, {page})
+		});
+		this._potion.fetch(this._uri, this._options, this).then(() => {
+			this._subscribers.forEach((subscriber) => {
+				subscriber(this);
+			});
+		});
 	}
 
 	get perPage() {
@@ -400,21 +407,25 @@ export class Pagination<T extends Item>  {
 
 	private _potion: PotionBase;
 	private _uri: string;
+	private _options: PotionRequestOptions;
+	private _subscribers = [];
 
-	private _items: Item[] = [];
+	private _items: T[] = [];
 
 	private _page: number;
 	private _perPage: number;
 	private _total: number;
 
-	constructor({potion, uri}, items, count, options: PaginationOptions) {
+	constructor({potion, uri}, items, count, options: PotionRequestOptions) {
 		this._potion = potion;
 		this._uri = uri;
+		this._options = options;
 
 		this._items.push(...items);
 
-		this._page = options.page;
-		this._perPage = options.perPage;
+		let {page, perPage} = options.data;
+		this._page = page;
+		this._perPage = perPage;
 		this._total = count;
 	}
 
@@ -425,5 +436,13 @@ export class Pagination<T extends Item>  {
 	update(items, count) {
 		this._items.splice(0, this.length, ...items);
 		this._total = count;
+	}
+
+	subscribe(cb: (pagination: Pagination<T>) => void) {
+		this._subscribers.push(cb);
+	}
+
+	toArray(): T[] {
+		return this._items;
 	}
 }

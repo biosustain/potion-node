@@ -224,7 +224,19 @@ describe('potion/fetch', () => {
 				expect(users.page).toEqual(2);
 				expect(users.perPage).toEqual(1);
 				expect(users.pages).toEqual(2);
+				expect(users.toArray()[0].id).toEqual(2); // Jane
 				done();
+			});
+		});
+
+		it('should update query if {page} is set on the pagination object', (done) => {
+			User.query({paginate: true, page: 2, perPage: 1}).then((users: Pagination<User>) => {
+				users.page = 1;
+				users.subscribe((updatedUsers) => {
+					expect(updatedUsers.page).toEqual(1);
+					expect(updatedUsers.toArray()[0].id).toEqual(1); // John
+					done();
+				});
 			});
 		});
 	});

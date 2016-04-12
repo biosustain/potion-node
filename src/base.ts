@@ -291,7 +291,7 @@ export abstract class PotionBase {
 			uri = `${prefix}${uri}`;
 		}
 
-		return this.request(uri, options).then(({data, headers}) => this._fromPotionJSON(data, options).then((json) => ({headers, data: json})));
+		return this.request(uri, options).then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})));
 	}
 
 	register(uri: string, resource: any) {
@@ -309,11 +309,11 @@ export abstract class PotionBase {
 		};
 	}
 
-	private _fromPotionJSON(json: any, {cache}: ItemFetchOptions = {}): Promise<any> {
+	private _fromPotionJSON(json: any): Promise<any> {
 		let {promise} = (<typeof PotionBase>this.constructor);
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
-				return promise.all(json.map((item) => this._fromPotionJSON(item, {cache})));
+				return promise.all(json.map((item) => this._fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string') {
 				let {resource, uri} = this.parseURI(json.$uri);
 				let promises = [];
@@ -322,7 +322,7 @@ export abstract class PotionBase {
 					if (key === '$uri') {
 						promises.push(promise.resolve([key, uri]));
 					} else {
-						promises.push(this._fromPotionJSON(json[key], {cache}).then((value) => {
+						promises.push(this._fromPotionJSON(json[key]).then((value) => {
 							return [toCamelCase(key), value];
 						}));
 					}
@@ -341,7 +341,7 @@ export abstract class PotionBase {
 					Object.assign(obj, {uri, id: parseInt(params[0], 10)});
 
 					let item = Reflect.construct(<any>resource, [obj]);
-					if (cache && this.cache && this.cache.put) {
+					if (this.cache && this.cache.put) {
 						this.cache.put(uri, <any>item);
 					}
 
@@ -368,7 +368,7 @@ export abstract class PotionBase {
 			let promises = [];
 
 			for (let key of Object.keys(json)) {
-				promises.push(this._fromPotionJSON(json[key], {cache}).then((value) => {
+				promises.push(this._fromPotionJSON(json[key]).then((value) => {
 					return [toCamelCase(key), value];
 				}));
 			}

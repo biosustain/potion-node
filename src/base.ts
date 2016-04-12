@@ -129,7 +129,7 @@ export class Store<T extends Item> {
 
 	}
 
-	fetch(id, {cache = true}: ItemFetchOptions = {}) {
+	fetch(id, {cache = true}: ItemFetchOptions = {}): Promise<T> {
 		let uri = `${Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor)}/${id}`;
 
 		// Try to get from cache
@@ -187,21 +187,21 @@ export class Store<T extends Item> {
 			});
 	}
 
-	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<any> {
+	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
 		return Reflect
 			.getMetadata(_potionMetadataKey, this._itemConstructor)
 			.fetch(item.uri, {data, cache, method: 'PATCH'})
 			.then(({data}) => data);
 	}
 
-	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<any> {
+	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
 		return Reflect
 			.getMetadata(_potionMetadataKey, this._itemConstructor)
 			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {data, cache, method: 'POST'})
 			.then(({data}) => data);
 	}
 
-	destroy(item: Item): Promise<any> {
+	destroy(item: Item): Promise<T> {
 		let {uri} = item;
 
 		return Reflect
@@ -217,7 +217,7 @@ export class Store<T extends Item> {
 }
 
 
-export function route(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<any> {
+export function route<T>(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<T> {
 	return function (options?: ItemFetchOptions): any {
 		let isCtor = typeof this === 'function';
 		uri = `${isCtor ? Reflect.getMetadata(_potionURIMetadataKey, this) : this.uri}${uri}`;
@@ -231,20 +231,20 @@ export function route(uri: string, {method}: PotionRequestOptions = {}): (option
 
 /* tslint:disable: variable-name */
 export let Route = {
-	GET(uri: string) {
-		return route(uri, {method: 'GET'});
+	GET<T>(uri: string) {
+		return route<T>(uri, {method: 'GET'});
 	},
-	DELETE(uri: string) {
-		return route(uri, {method: 'DELETE'});
+	DELETE<T>(uri: string) {
+		return route<T>(uri, {method: 'DELETE'});
 	},
-	POST(uri: string) {
-		return route(uri, {method: 'POST'});
+	POST<T>(uri: string) {
+		return route<T>(uri, {method: 'POST'});
 	},
-	PATCH(uri: string) {
-		return route(uri, {method: 'PATCH'});
+	PATCH<T>(uri: string) {
+		return route<T>(uri, {method: 'PATCH'});
 	},
-	PUT(uri: string) {
-		return route(uri, {method: 'PUT'});
+	PUT<T>(uri: string) {
+		return route<T>(uri, {method: 'PUT'});
 	}
 };
 /* tslint:enable: variable-name */

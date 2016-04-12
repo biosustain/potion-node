@@ -329,9 +329,9 @@ class Delayed extends Item {}
 class Ping extends Item {}
 
 class User extends Item {
-	static names = Route.GET('/names');
+	static names = Route.GET<string[]>('/names');
 
-	attributes = Route.GET('/attributes');
+	attributes = Route.GET<{height: number, weight: number}>('/attributes');
 	name: string;
 	createdAt: Date;
 }

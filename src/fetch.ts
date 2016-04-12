@@ -70,6 +70,7 @@ class MemCache implements PotionItemCache<any> {
 	constructor() {
 		this._items = new Map();
 	}
+
 	get(key: string) {
 		return this._items.get(key);
 	}

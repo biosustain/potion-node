@@ -154,9 +154,9 @@ export class Store<T extends Item> {
 		promise = this._promises[uri] = Reflect
 			.getMetadata(_potionMetadataKey, this._itemConstructor)
 			.fetch(uri, {cache, method: 'GET'})
-			.then(({data}) => {
+			.then((item) => {
 				delete this._promises[uri]; // Remove pending request
-				return data;
+				return item;
 			});
 
 		return promise;
@@ -169,36 +169,15 @@ export class Store<T extends Item> {
 			Object.assign(options, {data: {page, perPage}});
 		}
 
-		return Reflect
-			.getMetadata(_potionMetadataKey, this._itemConstructor)
-			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options)
-			.then(({headers, data}) => {
-				let count = headers['x-total-count'] || data.length;
-
-				if (paginate) {
-					if (paginationObj) {
-						paginationObj.update(data, count);
-					} else {
-						return new Pagination<T>(this._itemConstructor, data, count, options.data);
-					}
-				}
-
-				return data;
-			});
+		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options, paginationObj);
 	}
 
 	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
-		return Reflect
-			.getMetadata(_potionMetadataKey, this._itemConstructor)
-			.fetch(item.uri, {data, cache, method: 'PATCH'})
-			.then(({data}) => data);
+		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(item.uri, {data, cache, method: 'PATCH'});
 	}
 
 	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
-		return Reflect
-			.getMetadata(_potionMetadataKey, this._itemConstructor)
-			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {data, cache, method: 'POST'})
-			.then(({data}) => data);
+		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {data, cache, method: 'POST'});
 	}
 
 	destroy(item: Item): Promise<T> {
@@ -221,10 +200,7 @@ export function route<T>(uri: string, {method}: PotionRequestOptions = {}): (opt
 	return function (options?: ItemFetchOptions): any {
 		let isCtor = typeof this === 'function';
 		uri = `${isCtor ? Reflect.getMetadata(_potionURIMetadataKey, this) : this.uri}${uri}`;
-		return Reflect
-			.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor)
-			.fetch(uri, Object.assign({method}, options))
-			.then(({data}) => data);
+		return Reflect.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor).fetch(uri, Object.assign({method}, options));
 	};
 }
 
@@ -284,14 +260,31 @@ export abstract class PotionBase {
 
 	abstract request(uri, options?: PotionRequestOptions): Promise<any>;
 
-	fetch(uri, options?: PotionRequestOptions): Promise<any> {
+	fetch(uri, options?: PotionRequestOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		// Add the API prefix if not present
 		let {prefix} = this;
 		if (uri.indexOf(prefix) === -1) {
 			uri = `${prefix}${uri}`;
 		}
 
-		return this.request(uri, options).then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})));
+		return this
+			.request(uri, options)
+			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
+			.then(({headers, data}) => {
+				let {page = null, perPage = null} = options && options.data ? options.data : {};
+
+				if (page || perPage) {
+					let count = headers['x-total-count'] || data.length;
+
+					if (paginationObj) {
+						paginationObj.update(data, count);
+					} else {
+						return new Pagination<Item>({uri, potion: this}, data, count, {page, perPage});
+					}
+				}
+
+				return data;
+			});
 	}
 
 	register(uri: string, resource: any) {
@@ -359,7 +352,7 @@ export abstract class PotionBase {
 						}
 					}
 
-					return this.fetch(uri).then(({data}) => data);
+					return this.fetch(uri);
 				} else if (typeof json.$date !== 'undefined') {
 					return promise.resolve(new Date(json.$date));
 				}
@@ -389,7 +382,7 @@ export class Pagination<T extends Item>  {
 	}
 
 	set page(page) {
-		(<typeof Item>this._itemConstructor).store.query({page, perPage: this.perPage}, this);
+		this._potion.fetch({page, perPage: this.perPage}, this);
 		this._page = page;
 	}
 
@@ -405,19 +398,24 @@ export class Pagination<T extends Item>  {
 		return this._items.length;
 	}
 
-	private _itemConstructor: ItemConstructor;
+	private _potion: PotionBase;
+	private _uri: string;
+
 	private _items: Item[] = [];
+
 	private _page: number;
 	private _perPage: number;
 	private _total: number;
 
-	constructor(itemConstructor: ItemConstructor, items, count, options: PaginationOptions) {
-		this._itemConstructor = itemConstructor;
+	constructor({potion, uri}, items, count, options: PaginationOptions) {
+		this._potion = potion;
+		this._uri = uri;
+
+		this._items.push(...items);
+
 		this._page = options.page;
 		this._perPage = options.perPage;
 		this._total = count;
-
-		this._items.push(...items);
 	}
 
 	[Symbol.iterator]() {

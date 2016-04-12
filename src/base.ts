@@ -175,11 +175,13 @@ export class Store<T extends Item> {
 			.getMetadata(_potionMetadataKey, this._itemConstructor)
 			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options)
 			.then(({headers, data}) => {
-				if (headers['x-total-count']) {
+				let count = headers['x-total-count'] || data.length;
+
+				if (pagination) {
 					if (paginationObj) {
-						return Array.from(paginationObj);
+						paginationObj.update(data, count);
 					} else {
-						return new Pagination<T>(this._itemConstructor, data, options.data);
+						return new Pagination<T>(this._itemConstructor, data, count, options.data);
 					}
 				}
 
@@ -389,14 +391,8 @@ export class Pagination<T extends Item>  {
 	}
 
 	set page(page) {
-		let {store} = this._itemConstructor;
-		let {perPage} = this;
-
-		store.query({page, perPage}, this).then((items) => {
-			this._items.splice(0, this.length, ...items);
-			this._page = page;
-			this._total = 2; // TODO: take this value from X-Total-Count
-		});
+		(<typeof Item>this._itemConstructor).store.query({page, perPage: this.perPage}, this);
+		this._page = page;
 	}
 
 	get perPage() {
@@ -417,16 +413,21 @@ export class Pagination<T extends Item>  {
 	private _perPage: number;
 	private _total: number;
 
-	constructor(itemConstructor: ItemConstructor, items, options: PaginationOptions) {
+	constructor(itemConstructor: ItemConstructor, items, count, options: PaginationOptions) {
 		this._itemConstructor = itemConstructor;
 		this._page = options.page;
 		this._perPage = options.perPage;
-		this._total = 2; // TODO: take this value from X-Total-Count
+		this._total = count;
 
 		this._items.push(...items);
 	}
 
 	[Symbol.iterator]() {
 		return this._items.values();
+	}
+
+	update(items, count) {
+		this._items.splice(0, this.length, ...items);
+		this._total = count;
 	}
 }

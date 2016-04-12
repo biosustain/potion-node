@@ -14,7 +14,7 @@ export {
 
 export class Potion extends PotionBase {
 	constructor(options?: PotionOptions) {
-		super(Object.assign({cache: new Memcache()}, options));
+		super(Object.assign({cache: new MemCache()}, options));
 	}
 
 	request(uri, options?: PotionRequestOptions): Promise<any> {
@@ -64,18 +64,21 @@ export class Potion extends PotionBase {
 	}
 }
 
-let cache = new Map();
+class MemCache implements PotionItemCache<any> {
+	protected _items: Map<string,any>;
 
-class Memcache implements PotionItemCache<any> {
+	constructor() {
+		this._items = new Map();
+	}
 	get(key: string) {
-		return cache.get(key);
+		return this._items.get(key);
 	}
 
 	put(key, item) {
-		return cache.set(key, item).get(key);
+		return this._items.set(key, item).get(key);
 	}
 
 	remove(key: string) {
-		cache.delete(key);
+		this._items.delete(key);
 	}
 }

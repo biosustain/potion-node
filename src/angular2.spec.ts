@@ -6,13 +6,16 @@ import {
 	setBaseTestProviders
 } from 'angular2/testing';
 import {TEST_BROWSER_PLATFORM_PROVIDERS, TEST_BROWSER_APPLICATION_PROVIDERS} from 'angular2/platform/testing/browser';
-import {MockBackend, MockConnection} from 'angular2/http/testing';
+import {
+	MockBackend
+	// MockConnection
+} from 'angular2/http/testing';
 import {Injector, provide} from 'angular2/core';
 import {
 	ConnectionBackend,
 	BaseRequestOptions,
-	ResponseOptions,
-	Response,
+	// ResponseOptions,
+	// Response,
 	Http
 } from 'angular2/http';
 
@@ -27,7 +30,7 @@ setBaseTestProviders(
 import {
 	POTION_CONFIG,
 	POTION_PROVIDERS,
-	PotionConfig,
+	// PotionConfig,
 	Potion
 } from './angular2';
 

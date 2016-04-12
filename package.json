@@ -54,6 +54,9 @@
 	},
 	"peerDependencies": {
 		"angular": "1.5.x",
+		"angular2": "2.0.0-beta.14",
+		"rxjs": "5.0.0-beta.2",
+		"zone.js": "^0.6.6",
 		"whatwg-fetch": "0.11.x"
 	},
 	"engines": {

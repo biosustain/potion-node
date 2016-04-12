@@ -98,13 +98,11 @@ export class Item {
 
 	toJSON() {
 		let properties = {};
+		let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
 
 		Object
 			.keys(this)
-			.filter((key) => {
-				let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
-				return (!metadata || (metadata && !metadata[key]));
-			})
+			.filter((key) => !metadata || (metadata && !metadata[key]))
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
 			});

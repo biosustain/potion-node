@@ -285,7 +285,7 @@ describe('potion/fetch', () => {
 		describe('.save()', () => {
 			it('should save the Item', (done) => {
 				let name = 'Foo Bar';
-				let user = User.create({name});
+				let user = new User({name});
 				let foo = null;
 
 				fetchMock.mock('http://localhost/user', 'POST', (url, opts: any) => {

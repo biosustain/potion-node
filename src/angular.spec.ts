@@ -248,7 +248,7 @@ describe('potion/angular', () => {
 		describe('.save()', () => {
 			it('should save the Item', (done) => {
 				let name = 'Foo Bar';
-				let user = User.create({name});
+				let user = new User({name});
 
 				$httpBackend.when('GET', '/user/4').respond(() => {
 					if (foo !== null) {

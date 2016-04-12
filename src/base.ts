@@ -76,10 +76,6 @@ export class Item {
 		return this.store.query(options);
 	}
 
-	static create(...args) {
-		return Reflect.construct(this, args);
-	}
-
 	constructor(properties: any = {}, options?: ItemOptions) {
 		Object.assign(this, properties);
 

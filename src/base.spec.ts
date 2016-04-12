@@ -11,7 +11,7 @@ describe('potion', () => {
 
 	beforeEach(() => {
 		potion = new Potion({prefix: '/api'});
-		user = User.create({name: 'John Doe', age: 24, weight: 72}, {
+		user = new User({name: 'John Doe', age: 24, weight: 72}, {
 			readonly: ['weight']
 		});
 	});
@@ -37,7 +37,7 @@ describe('potion', () => {
 		});
 	});
 
-	describe('Item.create()', () => {
+	describe('new Item()', () => {
 		it('should create an instance of Item', () => {
 			expect(user.id).toEqual(null);
 		});

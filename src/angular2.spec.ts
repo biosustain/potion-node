@@ -22,9 +22,7 @@ import {
 
 setBaseTestProviders(
 	TEST_BROWSER_PLATFORM_PROVIDERS,
-	TEST_BROWSER_APPLICATION_PROVIDERS.concat([
-		// provide(UrlResolver, {useFactory: () => new FakeUrlResolver()})
-	])
+	TEST_BROWSER_APPLICATION_PROVIDERS
 );
 
 import {

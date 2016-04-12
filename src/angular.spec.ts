@@ -1,4 +1,8 @@
-import {Item, Route} from './angular';
+import {
+	Item,
+	Route,
+	Pagination
+} from './angular';
 
 const JOHN = {
 	$uri: '/user/1',
@@ -191,15 +195,67 @@ describe('potion/angular', () => {
 	});
 
 	describe('Item.query()', () => {
-		it('should retrieve all instances of the Item', (done) => {
-			$httpBackend.expect('GET', '/user').respond(200, [{$ref: JOHN.$uri}, {$ref: JANE.$uri}]);
+		beforeEach(() => {
+			$httpBackend.when('GET', '/user').respond((method, url, data) => {
+				let {page, perPage} = JSON.parse(data);
+				let response = [{$ref: JOHN.$uri}, {$ref: JANE.$uri}];
 
-			User.query().then((users: any[]) => {
+				if (page && perPage) {
+					response = toPages(response, perPage)[page - 1]; // If pagination params are sent, return the appropriate page
+				}
+
+				return [200, response, {
+					'X-Total-Count': 2
+				}];
+			});
+		});
+
+		it('should return a Pagination object', (done) => {
+			User.query({paginate: true}).then((users: Pagination<any>) => {
+				expect(users instanceof Pagination).toBe(true);
+				expect(users.length).toEqual(2);
+				expect(users.page).toEqual(1);
+				expect(users.perPage).toEqual(5); // Default value if not set with options
+				expect(users.pages).toEqual(1);
+				done();
+			});
+
+			$httpBackend.flush();
+		});
+
+		it('should retrieve all instances of the Item', (done) => {
+			User.query({paginate: true}).then((users: any[]) => {
 				expect(users.length).toEqual(2);
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
 				}
 				done();
+			});
+
+			$httpBackend.flush();
+		});
+
+		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
+			User.query({paginate: true, page: 2, perPage: 1, cache: false}).then((users: Pagination<any>) => {
+				expect(users.length).toEqual(1);
+				expect(users.page).toEqual(2);
+				expect(users.perPage).toEqual(1);
+				expect(users.pages).toEqual(2);
+				expect(users.toArray()[0].id).toEqual(2); // Jane
+				done();
+			});
+
+			$httpBackend.flush();
+		});
+
+		it('should update query if {page} is set on the pagination object', (done) => {
+			User.query({paginate: true, page: 2, perPage: 1, cache: false}).then((users: Pagination<any>) => {
+				users.page = 1;
+				users.subscribe((updatedUsers) => {
+					expect(updatedUsers.page).toEqual(1);
+					expect(updatedUsers.toArray()[0].id).toEqual(1); // John
+					done();
+				});
 			});
 
 			$httpBackend.flush();
@@ -315,3 +371,15 @@ angular
 
 		return Car;
 	}]);
+
+function toPages(items: any[], perPage: number): Array<any[]> {
+	let i;
+	let j;
+	let pages = [];
+
+	for (i = 0, j = items.length; i < j; i += perPage) {
+		pages.push(items.slice(i, i + perPage));
+	}
+
+	return pages;
+}

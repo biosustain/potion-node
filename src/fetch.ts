@@ -65,11 +65,12 @@ export class Potion extends PotionBase {
 }
 
 class MemCache implements PotionItemCache<any> {
-	protected _items: Map<string,any>;
+	protected _items: Map<string, any>;
 
 	constructor() {
 		this._items = new Map();
 	}
+
 	get(key: string) {
 		return this._items.get(key);
 	}

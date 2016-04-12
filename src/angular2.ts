@@ -5,11 +5,14 @@ import {
 	Provider
 } from 'angular2/core';
 import {Http} from 'angular2/http';
+
 import {
 	PotionRequestOptions,
 	PotionOptions,
 	PotionBase
 } from './base';
+
+import {MemCache} from './utils';
 
 export {
 	Item,
@@ -37,7 +40,10 @@ export class Potion extends PotionBase {
 
 export const POTION_PROVIDERS = [
 	new Provider(POTION_CONFIG, {
-		useValue: {}
+		useValue: {
+			prefix: '/api',
+			cache: new MemCache()
+		}
 	}),
 	new Provider(Potion, {
 		useClass: Potion,

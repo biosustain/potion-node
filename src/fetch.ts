@@ -1,9 +1,10 @@
 import {
-	PotionItemCache,
 	PotionRequestOptions,
 	PotionOptions,
 	PotionBase
 } from './base';
+
+import {MemCache} from './utils';
 
 export {
 	PotionItemCache,
@@ -61,25 +62,5 @@ export class Potion extends PotionBase {
 				throw error;
 			}
 		});
-	}
-}
-
-class MemCache implements PotionItemCache<any> {
-	protected _items: Map<string, any>;
-
-	constructor() {
-		this._items = new Map();
-	}
-
-	get(key: string) {
-		return this._items.get(key);
-	}
-
-	put(key, item) {
-		return this._items.set(key, item).get(key);
-	}
-
-	remove(key: string) {
-		this._items.delete(key);
 	}
 }

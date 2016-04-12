@@ -44,6 +44,7 @@ export interface PotionItemCache<T extends Item> {
 
 
 export interface PaginationOptions {
+	paginate?: boolean;
 	page?: number;
 	perPage?: number;
 }
@@ -59,7 +60,6 @@ export interface ItemOptions {
 }
 
 export interface ItemFetchOptions extends PaginationOptions {
-	pagination?: boolean;
 	cache?: boolean;
 }
 
@@ -164,10 +164,10 @@ export class Store<T extends Item> {
 		return promise;
 	}
 
-	query({pagination = true, cache = true, page = 1, perPage = 5}: ItemFetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
+	query({paginate = false, cache = true, page = 1, perPage = 5}: ItemFetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
 		let options: PotionRequestOptions = {cache, method: 'GET'};
 
-		if (pagination) {
+		if (paginate) {
 			Object.assign(options, {data: {page, perPage}});
 		}
 
@@ -177,7 +177,7 @@ export class Store<T extends Item> {
 			.then(({headers, data}) => {
 				let count = headers['x-total-count'] || data.length;
 
-				if (pagination) {
+				if (paginate) {
 					if (paginationObj) {
 						paginationObj.update(data, count);
 					} else {

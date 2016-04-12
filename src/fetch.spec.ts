@@ -199,7 +199,7 @@ describe('potion/fetch', () => {
 		});
 
 		it('should return a Pagination object', (done) => {
-			User.query().then((users: Pagination<User>) => {
+			User.query({paginate: true}).then((users: Pagination<User>) => {
 				expect(users instanceof Pagination).toBe(true);
 				expect(users.length).toEqual(2);
 				expect(users.page).toEqual(1);
@@ -210,7 +210,7 @@ describe('potion/fetch', () => {
 		});
 
 		it('should contain instances of an Item', (done) => {
-			User.query().then((users: User[]) => {
+			User.query({paginate: true}).then((users: User[]) => {
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
 				}
@@ -219,7 +219,7 @@ describe('potion/fetch', () => {
 		});
 
 		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
-			User.query({page: 2, perPage: 1}).then((users: Pagination<User>) => {
+			User.query({paginate: true, page: 2, perPage: 1}).then((users: Pagination<User>) => {
 				expect(users.length).toEqual(1);
 				expect(users.page).toEqual(2);
 				expect(users.perPage).toEqual(1);

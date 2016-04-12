@@ -164,7 +164,7 @@ export class Store<T extends Item> {
 		return promise;
 	}
 
-	query({pagination = true, cache = true, page = 1, perPage = 5}: ItemFetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T>> {
+	query({pagination = true, cache = true, page = 1, perPage = 5}: ItemFetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
 		let options: PotionRequestOptions = {cache, method: 'GET'};
 
 		if (pagination) {

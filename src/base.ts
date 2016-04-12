@@ -133,7 +133,7 @@ export class Store<T extends Item> {
 		let uri = `${Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor)}/${id}`;
 
 		// Try to get from cache
-		if (this.cache && this.cache.get) {
+		if (cache && this.cache && this.cache.get) {
 			let item = this.cache.get(uri);
 			if (item) {
 				return this.promise.resolve(item);

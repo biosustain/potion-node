@@ -155,7 +155,7 @@ describe('potion/fetch', () => {
 
 		it('should skip caching if {cache} option is set to false', (done) => {
 			Ping.fetch(1, {cache: false}).then(() => {
-				expect(cache.get('/ping/1')).toBeUndefined();
+				expect((<any>fetchMock.lastOptions('http://localhost/ping/1')).cache).toEqual('no-cache');
 				done();
 			});
 		});

@@ -175,9 +175,7 @@ export class Store<T extends Item> {
 			.getMetadata(_potionMetadataKey, this._itemConstructor)
 			.fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options)
 			.then(({headers, data}) => {
-				let keys = Object.keys(headers).map((key) => key.toLowerCase());
-
-				if ((<any>keys).includes('x-total-count')) {
+				if (headers['x-total-count']) {
 					if (paginationObj) {
 						return Array.from(paginationObj);
 					} else {

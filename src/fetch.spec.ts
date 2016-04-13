@@ -4,52 +4,11 @@ import * as fetchMock from 'fetch-mock';
 
 import {
 	Potion,
-	PotionItemCache,
+	Pagination,
 	Item,
-	Route,
-	Pagination
+	Route
 } from './fetch';
 
-
-const JOHN = {
-	$uri: '/user/1',
-	name: 'John Doe',
-	created_at: {
-		$date: 1451060269000
-	}
-};
-
-const JANE = {
-	$uri: '/user/2',
-	name: 'Jone Doe',
-	created_at: {
-		$date: 1451060269000
-	}
-};
-
-
-// In memory cache
-class MockMemcache implements PotionItemCache<any> {
-	private _memcache = {};
-
-	get(key: string) {
-		return this._memcache[key];
-	}
-
-	put(key, item) {
-		return this._memcache[key] = item;
-	}
-
-	remove(key: string) {
-		delete this._memcache[key];
-	}
-
-	removeAll() {
-		this._memcache = {};
-	}
-}
-
-let cache = new MockMemcache();
 
 describe('potion/fetch', () => {
 	beforeEach(() => {
@@ -57,11 +16,6 @@ describe('potion/fetch', () => {
 		fetchMock.mock(<any>{
 			greed: 'bad',
 			routes: [
-				{
-					matcher: 'http://localhost/ping/1',
-					method: 'GET',
-					response: {$uri: '/ping/1', pong: 1}
-				},
 				{
 					matcher: 'http://localhost/user/1',
 					method: 'GET',
@@ -78,12 +32,12 @@ describe('potion/fetch', () => {
 
 	afterEach(() => {
 		fetchMock.restore();
-		// Clean the mock cache for testing purposes
-		cache.removeAll();
 	});
 
 	describe('Item.fetch()', () => {
 		it('should make a XHR request', (done) => {
+			fetchMock.mock('http://localhost/ping/1', 'GET', {});
+
 			Ping.fetch(1).then(() => {
 				expect(fetchMock.called('http://localhost/ping/1')).toBe(true);
 				done();
@@ -129,7 +83,7 @@ describe('potion/fetch', () => {
 				setTimeout(() => resolve({$uri: '/delayed/1'}), 150);
 			}));
 
-			Promise.all([Delayed.fetch(1), Delayed.fetch(1)]).then(() => {
+			Promise.all([Delayed.fetch(1, {cache: false}), Delayed.fetch(1, {cache: false})]).then(() => {
 				expect(fetchMock.calls('http://localhost/delayed/1').length).toEqual(1);
 				done();
 			});
@@ -154,6 +108,8 @@ describe('potion/fetch', () => {
 		});
 
 		it('should skip caching if {cache} option is set to false', (done) => {
+			fetchMock.mock('http://localhost/ping/1', 'GET', {$uri: '/ping/1', pong: 1});
+
 			Ping.fetch(1, {cache: false}).then(() => {
 				expect((<any>fetchMock.lastOptions('http://localhost/ping/1')).cache).toEqual('no-cache');
 				done();
@@ -240,7 +196,7 @@ describe('potion/fetch', () => {
 		});
 	});
 
-	describe('Item instance', () => {
+	describe('Item()', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
 				fetchMock.mock('http://localhost/user/1', 'PATCH', (url, opts: any) => {
@@ -300,7 +256,6 @@ describe('potion/fetch', () => {
 				let foo = null;
 
 				fetchMock.mock('http://localhost/user', 'POST', (url, opts: any) => {
-					// TODO: we need to properly create a way to generate ids based on how many users there are
 					return foo = Object.assign({}, JSON.parse(opts.body), {
 						$uri: '/user/4',
 						created_at: {
@@ -330,15 +285,34 @@ describe('potion/fetch', () => {
 });
 
 
-// Create Potion API
+// Mock users
+const JOHN = {
+	$uri: '/user/1',
+	name: 'John Doe',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+const JANE = {
+	$uri: '/user/2',
+	name: 'Jone Doe',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+// Potion instance
 let potion = new Potion({prefix: 'http://localhost'});
-let potionNoItemCache = new Potion({cache: null, prefix: 'http://localhost'});
-let potionCustomCache = new Potion({cache, prefix: 'http://localhost'});
 
 // Potion resources
-class Delayed extends Item {}
+@potion.registerAs('/ping')
 class Ping extends Item {}
 
+@potion.registerAs('/delayed')
+class Delayed extends Item {}
+
+@potion.registerAs('/user')
 class User extends Item {
 	static names = Route.GET<string[]>('/names');
 
@@ -347,18 +321,13 @@ class User extends Item {
 	createdAt: Date;
 }
 
+@potion.registerAs('/car')
 class Car extends Item {
 	model: string;
 	user: User;
 }
 
-// Register API resources
-potionCustomCache.register('/ping', Ping);
-potionNoItemCache.register('/delayed', Delayed);
-
-potion.register('/user', User);
-potion.register('/car', Car);
-
+// Create paginated items
 function toPages(items: any[], perPage: number): Array<any[]> {
 	let i;
 	let j;

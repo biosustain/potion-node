@@ -68,4 +68,10 @@ describe('potion/angular2', () => {
 			expect(potion).not.toBeUndefined();
 		});
 	});
+
+	describe('POTION_CONFIG', () => {
+		it('should configure Potion({prefix, cache}) properties', () => {
+			expect(potion.prefix).toEqual('/api');
+		});
+	});
 });

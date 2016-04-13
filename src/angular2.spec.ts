@@ -80,13 +80,9 @@ describe('potion/angular2', () => {
 
 	describe('Item.fetch()', () => {
 		it('should make a XHR request', (done: () => void) => {
-
 			backend.connections.subscribe((connection: MockConnection) => {
-
-				console.log(connection);
-
 				connection.mockRespond(new Response(
-					new ResponseOptions({body: ''})
+					new ResponseOptions({body: {}})
 				));
 			});
 

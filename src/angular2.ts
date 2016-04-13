@@ -11,6 +11,7 @@ import {
 	Request
 } from 'angular2/http';
 import 'rxjs/add/operator/toPromise';
+import 'rxjs/add/operator/map';
 
 import {
 	PotionRequestOptions,
@@ -38,12 +39,12 @@ export class Potion extends PotionBase {
 		this._http = http;
 	}
 
-	request(uri, {method = 'GET', data = null, cache = true}: PotionRequestOptions = {}): Promise<any> {
+	request(uri, {method = 'GET', data = null}: PotionRequestOptions = {}): Promise<any> {
 		// Angular Http Request accepts a RequestMethod type for a method,
 		// but the value for that is an integer.
 		// Therefore we need to match the string literals like 'GET' to the enum values for RequestMethod.
 		let request = new RequestOptions({
-			method: parseInt((<any>Object).entries(RequestMethod).find((entry) => entry[1].toLowerCase() == (<string>method).toLowerCase())[0], 10),
+			method: parseInt((<any>Object).entries(RequestMethod).find((entry) => entry[1].toLowerCase() === (<string>method).toLowerCase())[0], 10),
 			url: uri
 		});
 
@@ -55,6 +56,7 @@ export class Potion extends PotionBase {
 
 		return this._http
 			.request(new Request(request))
+			.map((response) => response.json())
 			.toPromise();
 	}
 }

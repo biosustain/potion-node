@@ -1,5 +1,6 @@
 import {
 	PotionBase,
+	PotionItemCache,
 	Item,
 	readonly
 } from './base';
@@ -18,6 +19,14 @@ describe('potion', () => {
 	afterEach(() => {
 		potion = null;
 		user = null;
+	});
+
+	describe('Potion', () => {
+		it('should have {prefix, cache} configurable properties', () => {
+			let potion = new Potion({prefix: '/api', cache: new MockCache()});
+			expect(potion.prefix).toEqual('/api');
+			expect(potion.cache instanceof MockCache).toBe(true);
+		});
 	});
 
 	describe('new Potion()', () => {
@@ -72,13 +81,15 @@ describe('potion', () => {
 
 
 export class Potion extends PotionBase {
-	constructor(options?) {
-		super(Object.assign({prefix: '/api', options}));
-	}
-
 	request(uri): Promise<any> {
 		return (<typeof PotionBase>this.constructor).promise.resolve({camel_case: true});
 	}
+}
+
+class MockCache implements PotionItemCache<Item> {
+	get(key: string): any {};
+	put(key: string, item: Item): any {};
+	remove(key: string) {};
 }
 
 class User extends Item {

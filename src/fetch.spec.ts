@@ -46,52 +46,7 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		it('should correctly deserialize Potion server response', (done) => {
-			User.fetch(1).then((user: User) => {
-				expect(user.id).toEqual(1);
-				expect(user.name).toEqual(JOHN.name);
-				expect(user.createdAt instanceof Date).toBe(true);
-				done();
-			});
-		});
-
-		it('should have a instance route that returns valid JSON', (done) => {
-			fetchMock.mock('http://localhost/user/1/attributes', 'GET', {
-				height: 168,
-				weight: 72
-			});
-
-			User.fetch(1).then((user: User) => {
-				user.attributes().then((attrs) => {
-					expect(attrs.height).toEqual(168);
-					expect(attrs.weight).toEqual(72);
-					done();
-				});
-			});
-		});
-
-		it('should have a static route that returns valid JSON', (done) => {
-			fetchMock.mock('http://localhost/user/names', 'GET', [JOHN.name, JANE.name]);
-
-			User.names().then((names) => {
-				expect(Array.isArray(names)).toBe(true);
-				expect(names[0]).toEqual(JOHN.name);
-				done();
-			});
-		});
-
-		it('should not trigger more requests for consequent requests for the same resource, if the first request is still pending', (done) => {
-			fetchMock.mock('http://localhost/delayed/1', 'GET', new Promise((resolve) => {
-				setTimeout(() => resolve({$uri: '/delayed/1'}), 150);
-			}));
-
-			Promise.all([Delayed.fetch(1, {cache: false}), Delayed.fetch(1, {cache: false})]).then(() => {
-				expect(fetchMock.calls('http://localhost/delayed/1').length).toEqual(1);
-				done();
-			});
-		});
-
-		it('should use in memory cache (by default) to retrieve the Item', (done) => {
+		it('should use in memory cache by default to retrieve an Item', (done) => {
 			fetchMock.mock('http://localhost/user/5', 'GET', {
 				$uri: '/user/5',
 				name: 'James Dean',
@@ -109,7 +64,7 @@ describe('potion/fetch', () => {
 			});
 		});
 
-		it('should skip caching if {cache} option is set to false', (done) => {
+		it('should use \'no-cache\' for the fetch() request if {cache} option is set to false', (done) => {
 			fetchMock.mock('http://localhost/ping/1', 'GET', {$uri: '/ping/1', pong: 1});
 
 			Ping.fetch(1, {cache: false}).then(() => {
@@ -118,6 +73,7 @@ describe('potion/fetch', () => {
 			});
 		});
 
+		// TODO: move this to potion/base spec
 		it('should automatically resolve references', (done) => {
 			const AUDI = {
 				$uri: '/car/1',
@@ -137,6 +93,7 @@ describe('potion/fetch', () => {
 		});
 	});
 
+	// TODO: probably/maybe move this to potion/base spec
 	describe('Item.query()', () => {
 		beforeEach(() => {
 			fetchMock.mock('http://localhost/user', 'GET', (url, opts: any) => {
@@ -197,7 +154,8 @@ describe('potion/fetch', () => {
 			});
 		});
 	});
-
+	
+	// TODO: probably/maybe move this to potion/base spec
 	describe('Item()', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {

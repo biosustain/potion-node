@@ -93,69 +93,6 @@ describe('potion/angular2', () => {
 				done();
 			});
 		});
-
-		it('should correctly deserialize Potion server response', (done: () => void) => {
-			backend.connections.subscribe((connection: MockConnection) => {
-				connection.mockRespond(new Response(
-					new ResponseOptions({body: JOHN, status: 200})
-				));
-			});
-
-			User.fetch(1).then((user: User) => {
-				expect(user.id).toEqual(1);
-				expect(user.name).toEqual(JOHN.name);
-				expect(user.createdAt instanceof Date).toBe(true);
-				done();
-			});
-		});
-
-		it('should have a instance route that returns valid JSON', (done) => {
-			backend.connections.subscribe((connection: MockConnection) => {
-				switch (connection.request.url) {
-					case '/api/user/1':
-						connection.mockRespond(new Response(
-							new ResponseOptions({body: JOHN, status: 200})
-						));
-						break;
-					case '/api/user/1/attributes':
-						connection.mockRespond(new Response(
-							new ResponseOptions({
-								status: 200,
-								body: {
-									height: 168,
-									weight: 72
-								}
-							})
-						));
-						break;
-					default:
-						break;
-				}
-			});
-
-			User.fetch(1).then((user: User) => {
-				console.log(user);
-				user.attributes().then((attrs) => {
-					expect(attrs.height).toEqual(168);
-					expect(attrs.weight).toEqual(72);
-					done();
-				});
-			});
-		});
-
-		it('should have a static route that returns valid JSON', (done) => {
-			backend.connections.subscribe((connection: MockConnection) => {
-				connection.mockRespond(new Response(
-					new ResponseOptions({body: [JOHN.name, JANE.name], status: 200})
-				));
-			});
-
-			User.names().then((names) => {
-				expect(Array.isArray(names)).toBe(true);
-				expect(names[0]).toEqual(JOHN.name);
-				done();
-			});
-		});
 	});
 });
 

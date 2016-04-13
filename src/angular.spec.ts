@@ -87,63 +87,7 @@ describe('potion/angular', () => {
 			$httpBackend.flush();
 		});
 
-		it('should correctly deserialize Potion server response', (done) => {
-			User.fetch(1).then((user: User) => {
-				expect(user.id).toEqual(1);
-				expect(user.name).toEqual(JOHN.name);
-				expect(user.createdAt instanceof Date).toBe(true);
-				done();
-			});
-
-			$httpBackend.flush();
-		});
-
-		it('should have a static route that returns valid JSON', (done) => {
-			$httpBackend.expect('GET', '/user/names').respond(200, ['John Doe', 'Jane Doe']);
-
-			User.names().then((names) => {
-				expect(Array.isArray(names)).toBe(true);
-				expect(names[0]).toEqual(JOHN.name);
-				done();
-			});
-
-			$httpBackend.flush();
-		});
-
-		it('should have a instance route that returns valid JSON', (done) => {
-			$httpBackend.expect('GET', '/user/1/attributes').respond(200, {
-				height: 168,
-				weight: 72
-			});
-
-			User.fetch(1).then((user: User) => {
-				user.attributes().then((attrs) => {
-					expect(attrs.height).toEqual(168);
-					expect(attrs.weight).toEqual(72);
-					done();
-				});
-			});
-
-			$httpBackend.flush();
-		});
-
-		it('should not trigger more requests for consequent requests for the same resource, if the first request is still pending', (done) => {
-			let count = 0;
-
-			$httpBackend.expect('GET', '/delayed/1').respond(() => {
-				count++;
-				return [200, {}];
-			});
-
-			$q.all([Delayed.fetch(1), Delayed.fetch(1)]).then(() => {
-				expect(count).toEqual(1);
-				done();
-			});
-
-			$httpBackend.flush();
-		});
-
-		it('should use $cacheFactory (by default) to cache the item', (done) => {
+		it('should use $cacheFactory by default to cache an Item', (done) => {
 			let cache = $cacheFactory.get('potion');
 
 			expect(cache).not.toBeUndefined();
@@ -156,6 +100,7 @@ describe('potion/angular', () => {
 			$httpBackend.flush();
 		});
 
+		// TODO: this should actually check if the http cache for $http was skipped, not the item cache (we already test of the item cache)
 		it('should skip caching if {cache} option is set to false', (done) => {
 			let cache = $cacheFactory.get('potion');
 

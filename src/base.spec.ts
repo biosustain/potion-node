@@ -7,46 +7,55 @@ import {
 
 
 describe('potion', () => {
-	let potion;
-	let user;
+	describe('Potion()', () => {
+		let potion;
 
-	beforeEach(() => {
-		potion = new Potion({prefix: '/api'});
-		user = new User({name: 'John Doe', age: 24, weight: 72}, {
-			readonly: ['weight']
+		beforeEach(() => {
+			potion = new Potion({prefix: '/api', cache: new MockCache()});
 		});
-	});
-	afterEach(() => {
-		potion = null;
-		user = null;
-	});
 
-	describe('Potion', () => {
+		afterEach(() => {
+			potion = null;
+		});
+
 		it('should have {prefix, cache} configurable properties', () => {
-			let potion = new Potion({prefix: '/api', cache: new MockCache()});
 			expect(potion.prefix).toEqual('/api');
 			expect(potion.cache instanceof MockCache).toBe(true);
 		});
-	});
 
-	describe('new Potion()', () => {
-		it('should add new resources via .registerAs() decorator', () => {
-			@potion.registerAs('/person')
-			class Person extends Item {}
+		describe('.register()', () => {
+			it('should add new resources', () => {
+				potion.register('/user', User);
 
-			expect(Object.keys(potion.resources).length).toEqual(1);
-			expect(potion.resources['/person']).not.toBeUndefined();
+				expect(Object.keys(potion.resources).length).toEqual(1);
+				expect(potion.resources['/user']).not.toBeUndefined();
+			});
 		});
 
-		it('should add new resources via .register() method', () => {
-			potion.register('/user', User);
+		describe('.registerAs()', () => {
+			it('should add new resources', () => {
+				@potion.registerAs('/person')
+				class Person extends Item {}
 
-			expect(Object.keys(potion.resources).length).toEqual(1);
-			expect(potion.resources['/user']).not.toBeUndefined();
+				expect(Object.keys(potion.resources).length).toEqual(1);
+				expect(potion.resources['/person']).not.toBeUndefined();
+			});
 		});
 	});
 
-	describe('new Item()', () => {
+	describe('Item()', () => {
+		let user;
+
+		beforeEach(() => {
+			user = new User({name: 'John Doe', age: 24, weight: 72}, {
+				readonly: ['weight']
+			});
+		});
+
+		afterEach(() => {
+			user = null;
+		});
+
 		it('should create an instance of Item', () => {
 			expect(user.id).toEqual(null);
 		});
@@ -58,9 +67,7 @@ describe('potion', () => {
 		it('should have the same attributes it was initialized with', () => {
 			expect(user.name).toEqual('John Doe');
 		});
-	});
 
-	describe('Item instance', () => {
 		describe('.toJSON()', () => {
 			it('should return a JSON repr. of the Item', () => {
 				expect(user.toJSON()).toEqual({

@@ -9,6 +9,8 @@ import {
 	Route
 } from './fetch';
 
+import {toPages} from '../test/utils';
+
 
 describe('potion/fetch', () => {
 	beforeEach(() => {
@@ -325,17 +327,4 @@ class User extends Item {
 class Car extends Item {
 	model: string;
 	user: User;
-}
-
-// Create paginated items
-function toPages(items: any[], perPage: number): Array<any[]> {
-	let i;
-	let j;
-	let pages = [];
-
-	for (i = 0, j = items.length; i < j; i += perPage) {
-		pages.push(items.slice(i, i + perPage));
-	}
-
-	return pages;
 }

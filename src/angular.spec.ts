@@ -1,34 +1,11 @@
 import {
+	Pagination,
 	Item,
-	Route,
-	Pagination
+	Route
 } from './angular';
 
-const JOHN = {
-	$uri: '/user/1',
-	name: 'John Doe',
-	created_at: {
-		$date: 1451060269000
-	}
-};
+import {toPages} from '../test/utils';
 
-const JANE = {
-	$uri: '/user/2',
-	name: 'Jone Doe',
-	created_at: {
-		$date: 1451060269000
-	}
-};
-
-let anonymous = {
-	$uri: '/user/3',
-	name: 'Anonymous',
-	created_at: {
-		$date: 1451060269000
-	}
-};
-
-let foo = null;
 
 describe('potion/angular', () => {
 	let $cacheFactory;
@@ -91,7 +68,7 @@ describe('potion/angular', () => {
 		});
 
 		it('should correctly deserialize Potion server response', (done) => {
-			User.fetch(1).then((user) => {
+			User.fetch(1).then((user: User) => {
 				expect(user.id).toEqual(1);
 				expect(user.name).toEqual(JOHN.name);
 				expect(user.createdAt instanceof Date).toBe(true);
@@ -119,7 +96,7 @@ describe('potion/angular', () => {
 				weight: 72
 			});
 
-			User.fetch(1).then((user) => {
+			User.fetch(1).then((user: User) => {
 				user.attributes().then((attrs) => {
 					expect(attrs.height).toEqual(168);
 					expect(attrs.weight).toEqual(72);
@@ -182,7 +159,7 @@ describe('potion/angular', () => {
 
 			$httpBackend.expect('GET', '/car/1').respond(() => [200, AUDI]);
 
-			Car.fetch(1).then((car) => {
+			Car.fetch(1).then((car: Car) => {
 				expect(car.model).toEqual(AUDI.model);
 				expect(car.user instanceof User).toBe(true);
 				expect(car.user.id).toEqual(1);
@@ -224,7 +201,7 @@ describe('potion/angular', () => {
 		});
 
 		it('should retrieve all instances of the Item', (done) => {
-			User.query({paginate: true}).then((users: any[]) => {
+			User.query({paginate: true}).then((users: User[]) => {
 				expect(users.length).toEqual(2);
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
@@ -236,7 +213,7 @@ describe('potion/angular', () => {
 		});
 
 		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
-			User.query({paginate: true, page: 2, perPage: 1, cache: false}).then((users: Pagination<any>) => {
+			User.query({paginate: true, page: 2, perPage: 1, cache: false}).then((users: Pagination<User>) => {
 				expect(users.length).toEqual(1);
 				expect(users.page).toEqual(2);
 				expect(users.perPage).toEqual(1);
@@ -249,7 +226,7 @@ describe('potion/angular', () => {
 		});
 
 		it('should update query if {page} is set on the pagination object', (done) => {
-			User.query({paginate: true, page: 2, perPage: 1, cache: false}).then((users: Pagination<any>) => {
+			User.query({paginate: true, page: 2, perPage: 1, cache: false}).then((users: Pagination<User>) => {
 				users.page = 1;
 				users.changePageTo(1).then(() => {
 					expect(users.page).toEqual(1);
@@ -262,15 +239,15 @@ describe('potion/angular', () => {
 		});
 	});
 
-	describe('Item instance', () => {
+	describe('Item()', () => {
 		describe('.update()', () => {
 			it('should update the Item', (done) => {
 				$httpBackend.expect('PATCH', '/user/1').respond((method, url, data) => [200, Object.assign(JOHN, {}, JSON.parse(data))]);
 
-				User.fetch(1).then((user) => {
+				User.fetch(1).then((user: User) => {
 					let name = 'John Foo Doe';
 					user.update({name}).then(() => {
-						User.fetch(1).then((user) => {
+						User.fetch(1).then((user: User) => {
 							expect(user.name).toEqual(name);
 							done();
 						});
@@ -288,7 +265,7 @@ describe('potion/angular', () => {
 					return [200];
 				});
 
-				User.fetch(3).then((user) => {
+				User.fetch(3).then((user: User) => {
 					user.destroy().then(() => {
 						User.fetch(3, {cache: false}).then(null, (error) => {
 							expect(error).not.toBeUndefined();
@@ -315,7 +292,7 @@ describe('potion/angular', () => {
 				});
 
 				user.save().then(() => {
-					User.fetch(4).then((user) => {
+					User.fetch(4).then((user: User) => {
 						expect(user.id).toEqual(4);
 						expect(user.name).toEqual(name);
 						done();
@@ -329,57 +306,68 @@ describe('potion/angular', () => {
 });
 
 
+// Mock users
+const JOHN = {
+	$uri: '/user/1',
+	name: 'John Doe',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+const JANE = {
+	$uri: '/user/2',
+	name: 'Jone Doe',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+let anonymous = {
+	$uri: '/user/3',
+	name: 'Anonymous',
+	created_at: {
+		$date: 1451060269000
+	}
+};
+
+let foo = null;
+
+// Resources
+class Delayed extends Item {}
+class Ping extends Item {}
+class User extends Item {
+	static names = Route.GET<string[]>('/names');
+
+	attributes = Route.GET<{height: number, weight: number}>('/attributes');
+	name: string;
+	createdAt: Date;
+}
+class Car extends Item {
+	model: string;
+	user: any;
+}
+
+// Configure Potion,
+// and register resources
 angular
 	.module('test', ['potion'])
 	.config(['potionProvider', (potionProvider) => {
 		potionProvider.config({prefix: ''});
 	}])
 	.factory('Delayed', ['potion', (potion) => {
-		class Delayed extends Item {}
-
 		potion.register('/delayed', Delayed);
-
 		return Delayed;
 	}])
 	.factory('Ping', ['potion', (potion) => {
-		class Ping extends Item {}
-
 		potion.register('/ping', Ping);
-
 		return Ping;
 	}])
 	.factory('User', ['potion', (potion) => {
-		class User extends Item {
-			static names = Route.GET('/names');
-
-			attributes = Route.GET('/attributes');
-			name: string;
-			createdAt: Date;
-		}
-
 		potion.register('/user', User);
-
 		return User;
 	}])
 	.factory('Car', ['potion', (potion) => {
-		class Car extends Item {
-			model: string;
-			user: any;
-		}
-
 		potion.register('/car', Car);
-
 		return Car;
 	}]);
-
-function toPages(items: any[], perPage: number): Array<any[]> {
-	let i;
-	let j;
-	let pages = [];
-
-	for (i = 0, j = items.length; i < j; i += perPage) {
-		pages.push(items.slice(i, i + perPage));
-	}
-
-	return pages;
-}

@@ -4,6 +4,8 @@ import {
 	Route
 } from './angular';
 
+import {PotionBase} from './base';
+
 import {toPages} from '../test/utils';
 
 
@@ -11,6 +13,8 @@ describe('potion/angular', () => {
 	let $cacheFactory;
 	let $q;
 	let $httpBackend;
+	let $http;
+	let provider;
 
 	// Make sure tslint does not complain about the var names
 	/* tslint:disable: variable-name */
@@ -20,12 +24,15 @@ describe('potion/angular', () => {
 	let Car;
 	/* tslint:enable: variable-name */
 
-	beforeEach((<angular.IMockStatic>angular.mock).module('test'));
+	beforeEach((<angular.IMockStatic>angular.mock).module('test', ['potionProvider', (potionProvider) => {
+		provider = potionProvider;
+	}]));
 
 	beforeEach((<angular.IMockStatic>angular.mock).inject(function ($injector) {
 		$cacheFactory = $injector.get('$cacheFactory');
 		$q = $injector.get('$q');
 		$httpBackend = $injector.get('$httpBackend');
+		$http = $injector.get('$http');
 
 		Delayed = $injector.get('Delayed');
 		Ping = $injector.get('Ping');
@@ -54,6 +61,21 @@ describe('potion/angular', () => {
 
 	afterEach(() => {
 		$httpBackend.verifyNoOutstandingRequest();
+	});
+
+	describe('potionProvider', () => {
+		it('should provide a Potion instance', () => {
+			expect(provider.$get($cacheFactory, $q, $http)).not.toBeUndefined();
+		});
+
+		describe('.config()', () => {
+			it('should configure Potion({prefix, cache}) properties', () => {
+				let config = {prefix: '/api'};
+				provider.config(config);
+				expect(provider.config()).toEqual(config);
+				expect(provider.$get($cacheFactory, $q, $http).prefix).toEqual('/api');
+			});
+		});
 	});
 
 	describe('Item.fetch()', () => {

@@ -8,10 +8,12 @@ import {
 	Http,
 	RequestOptions,
 	RequestMethod,
-	Request
+	Request,
+	Response
 } from 'angular2/http';
+
+import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/toPromise';
-import 'rxjs/add/operator/map';
 
 import {
 	PotionRequestOptions,
@@ -54,10 +56,22 @@ export class Potion extends PotionBase {
 			});
 		}
 
-		return this._http
-			.request(new Request(request))
-			.map((response) => response.json())
-			.toPromise();
+		let obs = new Observable((observer) => {
+			let subscriber = this._http.request(new Request(request)).subscribe((response: Response) => {
+				// TODO: handle errors
+				observer.next({
+					headers: response.headers ? JSON.parse(<any>response.headers.toJSON()) : {},
+					data: response.json()
+				});
+				observer.complete();
+			}, (error) => observer.error(error));
+
+			return () => {
+				subscriber.unsubscribe();
+			};
+		});
+
+		return obs.toPromise();
 	}
 }
 

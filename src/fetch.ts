@@ -18,11 +18,11 @@ export class Potion extends PotionBase {
 		super(Object.assign({cache: new MemCache()}, options));
 	}
 
-	request(uri, options?: PotionRequestOptions): Promise<any> {
+	request(uri, {method = 'GET', data = null, cache = true}: PotionRequestOptions = {}): Promise<any> {
 		// Use window.fetch for making requests,
 		// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 		// Polyfill at https://github.com/github/fetch.
-		let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
+		// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
 		let init: RequestInit = {
 			method,
 			cache: cache ? 'default' : 'no-cache'
@@ -35,7 +35,7 @@ export class Potion extends PotionBase {
 		if (data) {
 			// POST/PUT/PATCH needs headers and JSON body,
 			// see https://github.com/github/fetch#post-json for more info.
-			init.body = JSON.stringify(options.data);
+			init.body = JSON.stringify(data);
 			init.headers = {
 				'Accept': 'application/json',
 				'Content-Type': 'application/json'

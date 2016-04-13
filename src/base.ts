@@ -30,7 +30,7 @@ export function readonly(target, property) {
 
 
 export interface PotionRequestOptions {
-	method?: 'GET' | 'PUT' | 'PATCH' | 'DELETE' | 'POST';
+	method?: string;
 	cache?: boolean;
 	data?: any;
 }

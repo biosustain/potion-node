@@ -7,15 +7,15 @@ import {
 } from 'angular2/testing';
 import {TEST_BROWSER_PLATFORM_PROVIDERS, TEST_BROWSER_APPLICATION_PROVIDERS} from 'angular2/platform/testing/browser';
 import {
-	MockBackend
-	// MockConnection
+	MockBackend,
+	MockConnection
 } from 'angular2/http/testing';
 import {Injector, provide} from 'angular2/core';
 import {
 	ConnectionBackend,
 	BaseRequestOptions,
-	// ResponseOptions,
-	// Response,
+	ResponseOptions,
+	Response,
 	Http
 } from 'angular2/http';
 
@@ -28,8 +28,8 @@ setBaseTestProviders(
 import {
 	POTION_CONFIG,
 	POTION_PROVIDERS,
-	// PotionConfig,
-	Potion
+	Potion,
+	Item
 } from './angular2';
 
 describe('potion/angular2', () => {
@@ -59,6 +59,9 @@ describe('potion/angular2', () => {
 		]);
 		backend = injector.get(MockBackend);
 		potion = injector.get(Potion);
+
+		// Register Potion resources
+		potion.register('/ping', Ping);
 	});
 
 	afterEach(() => backend.verifyNoPendingRequests());
@@ -74,4 +77,26 @@ describe('potion/angular2', () => {
 			expect(potion.prefix).toEqual('/api');
 		});
 	});
+
+	describe('Item.fetch()', () => {
+		it('should make a XHR request', (done: () => void) => {
+
+			backend.connections.subscribe((connection: MockConnection) => {
+
+				console.log(connection);
+
+				connection.mockRespond(new Response(
+					new ResponseOptions({body: ''})
+				));
+			});
+
+			Ping.fetch(1).then(() => {
+				done();
+			});
+		});
+	});
 });
+
+
+// Potion resources
+class Ping extends Item {}

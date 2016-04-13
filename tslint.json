@@ -30,7 +30,6 @@
 		"no-unreachable": true,
 		"no-unused-expression": true,
 		"no-unused-variable": true,
-		"no-use-before-declare": true,
 		"no-var-requires": true,
 		"one-line": [true, "check-catch", "check-else", "check-open-brace", "check-whitespace"],
 		"quotemark": [true, "single"],

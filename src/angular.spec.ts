@@ -4,8 +4,6 @@ import {
 	Route
 } from './angular';
 
-import {PotionBase} from './base';
-
 import {toPages} from '../test/utils';
 
 

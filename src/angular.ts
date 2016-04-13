@@ -28,7 +28,7 @@ export default angular.module('potion', []).provider('potion', function () {
 
 		class Potion extends PotionBase {
 			static promise = $q;
-			
+
 			request(url, options?: PotionRequestOptions): Promise<any> {
 				return $http(Object.assign({url, method: 'GET', cache: true}, options)).then(({data, headers}) => {
 					return {data, headers: headers()};

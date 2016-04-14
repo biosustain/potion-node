@@ -13,12 +13,14 @@ import {
 import {Injector, provide} from 'angular2/core';
 import {
 	ConnectionBackend,
+	RequestMethod,
 	BaseRequestOptions,
 	ResponseOptions,
 	Response,
 	Http
 } from 'angular2/http';
-
+import {Observable} from 'rxjs/Observable';
+import {Subscription} from 'rxjs/Subscription';
 
 setBaseTestProviders(
 	TEST_BROWSER_PLATFORM_PROVIDERS,
@@ -81,15 +83,64 @@ describe('potion/angular2', () => {
 	});
 
 	describe('Potion()', () => {
+		let response;
+		let subscription: Subscription;
+
+		beforeEach(() => {
+			response = new Response(
+				new ResponseOptions({status: 200, body: {}})
+			);
+		});
+
+		afterEach(() => {
+			subscription.unsubscribe();
+		});
+
 		describe('.request()', () => {
+			it('should return a Promise', () => {
+				subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
+				expect(potion.request('/ping') instanceof Promise).toBe(true);
+			});
+
 			it('should make a XHR request', (done: () => void) => {
-				backend.connections.subscribe((connection: MockConnection) => {
-					connection.mockRespond(new Response(
-						new ResponseOptions({status: 200})
-					));
+				subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
+				Ping.fetch(1).then(() => {
+					done();
+				});
+			});
+
+			it('should return a Promise with a {data, headers} object', (done: () => void) => {
+				subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
+				potion.request('/ping').then(({data, headers}) => {
+					expect(data).not.toBeUndefined();
+					expect(headers).not.toBeUndefined();
+					done();
+				});
+			});
+
+			it('should use the appropriate request method set by the {method} option', (done: () => void) => {
+				let method = null;
+				subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+					method = connection.request.method;
+					connection.mockRespond(response);
 				});
 
-				Ping.fetch(1).then(() => {
+				potion.request('/ping', {method: 'PATCH'}).then(() => {
+					expect(method).toEqual(RequestMethod.Patch);
+					done();
+				});
+			});
+
+			it('should pass anything set on {data} option as the {body} property of the request in JSON format', (done: () => void) => {
+				let body = null;
+				subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+					body = connection.request.text();
+					connection.mockRespond(response);
+				});
+
+				potion.request('/ping', {method: 'POST', data: {pong: true}}).then(() => {
+					expect(body).not.toBeNull();
+					expect(JSON.parse(body)).toEqual({pong: true});
 					done();
 				});
 			});
@@ -100,6 +151,4 @@ describe('potion/angular2', () => {
 
 // Potion resources
 class Ping extends Item {}
-class User extends Item {
-	name: string;
-}
+class User extends Item {}

@@ -51,7 +51,7 @@ export class Potion extends PotionBase {
 		});
 
 		if (data) {
-			request.merge({
+			request = request.merge({
 				body: JSON.stringify(data)
 			});
 		}

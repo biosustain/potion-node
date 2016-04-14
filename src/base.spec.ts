@@ -145,10 +145,8 @@ describe('potion/base', () => {
 							case 'GET':
 								if (john) {
 									return promise.resolve({data: john});
-								} else {
-									return promise.reject();
 								}
-								break;
+								return promise.reject();
 							case 'DELETE':
 								john = null;
 								return promise.resolve({});

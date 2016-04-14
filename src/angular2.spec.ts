@@ -80,16 +80,18 @@ describe('potion/angular2', () => {
 		});
 	});
 
-	describe('Item.fetch()', () => {
-		it('should make a XHR request', (done: () => void) => {
-			backend.connections.subscribe((connection: MockConnection) => {
-				connection.mockRespond(new Response(
-					new ResponseOptions({status: 200})
-				));
-			});
+	describe('Potion()', () => {
+		describe('.request()', () => {
+			it('should make a XHR request', (done: () => void) => {
+				backend.connections.subscribe((connection: MockConnection) => {
+					connection.mockRespond(new Response(
+						new ResponseOptions({status: 200})
+					));
+				});
 
-			Ping.fetch(1).then(() => {
-				done();
+				Ping.fetch(1).then(() => {
+					done();
+				});
 			});
 		});
 	});

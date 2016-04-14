@@ -2,37 +2,23 @@ import {Item} from './angular';
 
 
 describe('potion/angular', () => {
-	let $cacheFactory;
-	let $q;
-	let $httpBackend;
-	let $http;
-	let provider;
-
-	// Make sure tslint does not complain about the var names
-	/* tslint:disable: variable-name */
-	let Ping;
-	let User;
-	/* tslint:enable: variable-name */
-
-	beforeEach((<angular.IMockStatic>angular.mock).module('test', ['potionProvider', (potionProvider) => {
-		provider = potionProvider;
-	}]));
-
-	beforeEach((<angular.IMockStatic>angular.mock).inject(function ($injector) {
-		$cacheFactory = $injector.get('$cacheFactory');
-		$q = $injector.get('$q');
-		$httpBackend = $injector.get('$httpBackend');
-		$http = $injector.get('$http');
-
-		Ping = $injector.get('Ping');
-		User = $injector.get('User');
-	}));
-
-	afterEach(() => {
-		$httpBackend.verifyNoOutstandingRequest();
-	});
-
 	describe('potionProvider', () => {
+		let $cacheFactory;
+		let $q;
+		let $http;
+
+		let provider;
+
+		beforeEach(angular.mock.module('test', ['potionProvider', (potionProvider) => {
+			provider = potionProvider;
+		}]));
+
+		beforeEach(angular.mock.inject(function ($injector) {
+			$cacheFactory = $injector.get('$cacheFactory');
+			$q = $injector.get('$q');
+			$http = $injector.get('$http');
+		}));
+
 		it('should provide a Potion instance', () => {
 			expect(provider.$get($cacheFactory, $q, $http)).not.toBeUndefined();
 		});
@@ -47,51 +33,129 @@ describe('potion/angular', () => {
 		});
 	});
 
-	describe('Item.fetch()', () => {
-		it('should make a XHR request', (done) => {
-			$httpBackend.expect('GET', '/ping/1').respond(200, {pong: true});
+	describe('Potion()', () => {
+		describe('.request()', () => {
+			let $q;
+			let $httpBackend;
+			let potion;
 
-			Ping.fetch(1).then(() => {
-				done();
+			beforeEach(angular.mock.module('test'));
+
+			beforeEach(angular.mock.inject(function ($injector) {
+				$q = $injector.get('$q');
+				$httpBackend = $injector.get('$httpBackend');
+				potion = $injector.get('potion');
+			}));
+
+			afterEach(() => {
+				$httpBackend.verifyNoOutstandingRequest();
 			});
 
-			$httpBackend.flush();
+			it('should make a XHR request', () => {
+				let response = jasmine.createSpy('response').and.returnValue([200, {}]);
+				$httpBackend.expect('GET', '/ping').respond(response);
+
+				potion.request('/ping');
+
+				$httpBackend.flush();
+
+				expect(response).toHaveBeenCalled();
+			});
+
+			it('should use the appropriate request method set by the {method} option', () => {
+				let response = jasmine.createSpy('response').and.returnValue([200, {}]);
+				$httpBackend.expect('PATCH', '/ping').respond(response);
+
+				potion.request('/ping', {method: 'PATCH'});
+
+				$httpBackend.flush();
+
+				expect(response).toHaveBeenCalled();
+			});
+
+			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
+				let body = null;
+				let response = jasmine.createSpy('response');
+				$httpBackend.expect('POST', '/ping').respond((method, url, data: any) => {
+					body = data;
+					response();
+					return [200, {}]
+				});
+
+				potion.request('/ping', {method: 'POST', data: {pong: true}});
+
+				$httpBackend.flush();
+
+				expect(response).toHaveBeenCalled();
+				expect(body).not.toBeNull();
+				expect(JSON.parse(body)).toEqual({pong: true});
+			});
+
+			it('should return a Promise', () => {
+				$httpBackend.expect('GET', '/ping').respond(200);
+				expect(potion.request('/ping') instanceof $q).toBe(true);
+			});
+
+			it('should return a Promise with a {data, headers} object', (done) => {
+				$httpBackend.expect('GET', '/ping').respond(200, {});
+
+				potion.request('/ping').then(({data, headers}) => {
+					expect(data).not.toBeUndefined();
+					expect(headers).not.toBeUndefined();
+					done();
+				});
+
+				$httpBackend.flush();
+			});
 		});
 
-		it('should use $cacheFactory by default to cache an Item', (done) => {
-			let cache = $cacheFactory.get('potion');
+		describe('.fetch()', () => {
+			let $cacheFactory;
+			let $httpBackend;
 
-			$httpBackend.expect('GET', '/user/1').respond(() => [200, {$uri: '/user/1'}]); // A fn will always return the updated object
-			expect(cache).not.toBeUndefined();
+			// Make sure tslint does not complain about the var names
+			/* tslint:disable: variable-name */
+			let User;
+			/* tslint:enable: variable-name */
 
-			User.fetch(1).then(() => {
-				expect(cache.get('/user/1')).not.toBeUndefined();
-				done();
+			beforeEach(angular.mock.module('test'));
+
+			beforeEach(angular.mock.inject(function ($injector) {
+				$cacheFactory = $injector.get('$cacheFactory');
+				$httpBackend = $injector.get('$httpBackend');
+
+				User = $injector.get('User');
+			}));
+
+			afterEach(() => {
+				$httpBackend.verifyNoOutstandingRequest();
 			});
 
-			$httpBackend.flush();
-		});
+			it('should use $cacheFactory by default to to store and retrieve items', (done) => {
+				let cache = $cacheFactory.get('potion');
 
-		// TODO: this should actually check if the http cache for $http was skipped, not the item cache (we already test of the item cache)
-		it('should skip caching if {cache} option is set to false', (done) => {
-			let cache = $cacheFactory.get('potion');
+				expect(cache).not.toBeUndefined();
 
-			$httpBackend.expect('GET', '/user/4').respond(() => [200, {}]);
-			expect(cache).not.toBeUndefined();
+				let response = jasmine.createSpy('response').and.returnValue([200, {$uri: '/user/1'}]);
+				$httpBackend.expect('GET', '/user/1').respond(response);
 
-			User.fetch(4, {cache: false}).then(() => {
-				expect(cache.get('/user/4')).toBeUndefined();
-				done();
+				User.fetch(1).then(() => {
+					expect(cache.get('/user/1')).not.toBeUndefined();
+					User.fetch(1).then((user: User) => {
+						expect(response).toHaveBeenCalledTimes(1);
+						expect(user).not.toBeUndefined();
+						done();
+					});
+				});
+
+				$httpBackend.flush();
 			});
-
-			$httpBackend.flush();
 		});
 	});
 });
 
 
 // Resources
-class Ping extends Item {}
 class User extends Item {
 	name: string;
 }
@@ -102,10 +166,6 @@ angular
 	.module('test', ['potion'])
 	.config(['potionProvider', (potionProvider) => {
 		potionProvider.config({prefix: ''});
-	}])
-	.factory('Ping', ['potion', (potion) => {
-		potion.register('/ping', Ping);
-		return Ping;
 	}])
 	.factory('User', ['potion', (potion) => {
 		potion.register('/user', User);

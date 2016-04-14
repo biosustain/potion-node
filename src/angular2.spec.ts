@@ -65,7 +65,6 @@ describe('potion/angular2', () => {
 
 		// Register Potion resources
 		potion.register('/ping', Ping);
-		potion.register('/user', User);
 	});
 
 	afterEach(() => backend.verifyNoPendingRequests());
@@ -151,4 +150,3 @@ describe('potion/angular2', () => {
 
 // Potion resources
 class Ping extends Item {}
-class User extends Item {}

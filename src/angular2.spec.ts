@@ -29,8 +29,7 @@ import {
 	POTION_CONFIG,
 	POTION_PROVIDERS,
 	Potion,
-	Item,
-	Route
+	Item
 } from './angular2';
 
 
@@ -99,28 +98,6 @@ describe('potion/angular2', () => {
 
 // Potion resources
 class Ping extends Item {}
-
 class User extends Item {
-	static names = Route.GET<string[]>('/names');
-
-	attributes = Route.GET<{height: number, weight: number}>('/attributes');
 	name: string;
-	createdAt: Date;
 }
-
-// Mock users
-const JOHN = {
-	$uri: '/user/1',
-	name: 'John Doe',
-	created_at: {
-		$date: 1451060269000
-	}
-};
-
-const JANE = {
-	$uri: '/user/2',
-	name: 'Jone Doe',
-	created_at: {
-		$date: 1451060269000
-	}
-};

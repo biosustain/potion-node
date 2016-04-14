@@ -96,7 +96,7 @@ export class Item {
 		return (<typeof Item>this.constructor).store.destroy(this);
 	}
 
-	toJSON() {
+	toJSON(): any {
 		let properties = {};
 		let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
 

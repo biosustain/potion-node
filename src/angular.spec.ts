@@ -79,7 +79,7 @@ describe('potion/angular', () => {
 				$httpBackend.expect('POST', '/ping').respond((method, url, data: any) => {
 					body = data;
 					response();
-					return [200, {}]
+					return [200, {}];
 				});
 
 				potion.request('/ping', {method: 'POST', data: {pong: true}});

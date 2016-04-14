@@ -86,6 +86,6 @@ describe('potion/fetch', () => {
 				});
 			});
 		});
-	})
+	});
 });
 

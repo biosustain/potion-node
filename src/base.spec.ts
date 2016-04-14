@@ -148,7 +148,7 @@ describe('potion/base', () => {
 								} else {
 									return promise.reject();
 								}
-
+								break;
 							case 'DELETE':
 								john = null;
 								return promise.resolve({});
@@ -169,11 +169,14 @@ describe('potion/base', () => {
 				User.fetch(3).then((user: User) => {
 					user.destroy().then(() => {
 						User.fetch(3).then(success, error);
-						setTimeout(() => {
-							expect(success).not.toHaveBeenCalled();
-							expect(error).toHaveBeenCalled();
-							done();
-						}, 50);
+						setTimeout(
+							() => {
+								expect(success).not.toHaveBeenCalled();
+								expect(error).toHaveBeenCalled();
+								done();
+							},
+							50
+						);
 					});
 				});
 			});

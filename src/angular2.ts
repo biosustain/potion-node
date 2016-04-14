@@ -56,6 +56,7 @@ export class Potion extends PotionBase {
 			});
 		}
 
+		/* tslint:disable: align */
 		let obs = new Observable((observer) => {
 			let subscriber = this._http.request(new Request(request)).subscribe((response: Response) => {
 				// TODO: handle errors
@@ -70,6 +71,7 @@ export class Potion extends PotionBase {
 				subscriber.unsubscribe();
 			};
 		});
+		/* tslint:enable: align */
 
 		return obs.toPromise();
 	}

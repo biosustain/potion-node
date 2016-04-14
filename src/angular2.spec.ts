@@ -30,8 +30,7 @@ setBaseTestProviders(
 import {
 	POTION_CONFIG,
 	POTION_PROVIDERS,
-	Potion,
-	Item
+	Potion
 } from './angular2';
 
 
@@ -62,9 +61,6 @@ describe('potion/angular2', () => {
 		]);
 		backend = injector.get(MockBackend);
 		potion = injector.get(Potion);
-
-		// Register Potion resources
-		potion.register('/ping', Ping);
 	});
 
 	afterEach(() => backend.verifyNoPendingRequests());
@@ -103,7 +99,7 @@ describe('potion/angular2', () => {
 
 			it('should make a XHR request', (done: () => void) => {
 				subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
-				Ping.fetch(1).then(() => {
+				potion.request('/ping').then(() => {
 					done();
 				});
 			});
@@ -146,7 +142,3 @@ describe('potion/angular2', () => {
 		});
 	});
 });
-
-
-// Potion resources
-class Ping extends Item {}

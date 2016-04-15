@@ -1,17 +1,9 @@
 import {
 	fromCamelCase,
 	toCamelCase,
-	pairsToObject
+	pairsToObject,
+	reflector
 } from './utils';
-
-
-/* tslint:disable: variable-name */
-let Reflect = (<any>window).Reflect || {};
-/* tslint:enable: variable-name */
-
-if (!Reflect.getMetadata) {
-	throw 'reflect-metadata shim is required and is missing';
-}
 
 
 let _potionMetadataKey = Symbol('potion');
@@ -24,8 +16,8 @@ let _potionURIMetadataKey = Symbol('potion:uri');
 
 let _readonlyMetadataKey = Symbol('potion:readonly');
 export function readonly(target, property) {
-	let metadata = Reflect.getMetadata(_readonlyMetadataKey, target.constructor);
-	Reflect.defineMetadata(_readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}), target.constructor);
+	let metadata = reflector.get(target.constructor, _readonlyMetadataKey);
+	reflector.set(target.constructor, _readonlyMetadataKey, Object.assign(metadata || {}, {[property]: true}));
 }
 
 
@@ -63,7 +55,7 @@ export interface ItemFetchOptions extends PaginationOptions {
 	cache?: boolean;
 }
 
-export class Item {
+export abstract class Item {
 	static store: Store<any>;
 	id = null;
 	uri: string;
@@ -98,7 +90,7 @@ export class Item {
 
 	toJSON(): any {
 		let properties = {};
-		let metadata = Reflect.getMetadata(_readonlyMetadataKey, this.constructor);
+		let metadata = reflector.get(this.constructor, _readonlyMetadataKey);
 
 		Object
 			.keys(this)
@@ -122,7 +114,7 @@ export class Store<T extends Item> {
 	constructor(itemConstructor: ItemConstructor) {
 		this._itemConstructor = itemConstructor;
 
-		let potion = Reflect.getMetadata(_potionMetadataKey, itemConstructor);
+		let potion: PotionBase = reflector.get(itemConstructor, _potionMetadataKey);
 
 		this.promise = (<typeof PotionBase>potion.constructor).promise;
 		this.cache = potion.cache;
@@ -130,7 +122,7 @@ export class Store<T extends Item> {
 	}
 
 	fetch(id, {cache = true}: ItemFetchOptions = {}): Promise<T> {
-		let uri = `${Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor)}/${id}`;
+		let uri = `${reflector.get(this._itemConstructor, _potionURIMetadataKey)}/${id}`;
 
 		// Try to get from cache
 		if (cache && this.cache && this.cache.get) {
@@ -151,8 +143,8 @@ export class Store<T extends Item> {
 		// get the data,
 		// and parse it.
 		// Enforce GET method
-		promise = this._promises[uri] = Reflect
-			.getMetadata(_potionMetadataKey, this._itemConstructor)
+		promise = this._promises[uri] = reflector
+			.get(this._itemConstructor, _potionMetadataKey)
 			.fetch(uri, {cache, method: 'GET'})
 			.then((item) => {
 				delete this._promises[uri]; // Remove pending request
@@ -169,22 +161,22 @@ export class Store<T extends Item> {
 			Object.assign(options, {data: {page, perPage}});
 		}
 
-		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), options, paginationObj);
+		return reflector.get(this._itemConstructor, _potionMetadataKey).fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), options, paginationObj);
 	}
 
 	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
-		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(item.uri, {data, cache, method: 'PATCH'});
+		return reflector.get(this._itemConstructor, _potionMetadataKey).fetch(item.uri, {data, cache, method: 'PATCH'});
 	}
 
 	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
-		return Reflect.getMetadata(_potionMetadataKey, this._itemConstructor).fetch(Reflect.getMetadata(_potionURIMetadataKey, this._itemConstructor), {data, cache, method: 'POST'});
+		return reflector.get(this._itemConstructor, _potionMetadataKey).fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), {data, cache, method: 'POST'});
 	}
 
 	destroy(item: Item): Promise<T> {
 		let {uri} = item;
 
-		return Reflect
-			.getMetadata(_potionMetadataKey, this._itemConstructor)
+		return reflector
+			.get(this._itemConstructor, _potionMetadataKey)
 			.fetch(uri, {method: 'DELETE'})
 			.then(() => {
 				// Clear the item from cache if exists
@@ -199,8 +191,8 @@ export class Store<T extends Item> {
 export function route<T>(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<T> {
 	return function (options?: ItemFetchOptions): any {
 		let isCtor = typeof this === 'function';
-		uri = `${isCtor ? Reflect.getMetadata(_potionURIMetadataKey, this) : this.uri}${uri}`;
-		return Reflect.getMetadata(_potionMetadataKey, isCtor ? this : this.constructor).fetch(uri, Object.assign({method}, options));
+		uri = `${isCtor ? reflector.get(this, _potionURIMetadataKey) : this.uri}${uri}`;
+		return reflector.get(isCtor ? this : this.constructor, _potionMetadataKey).fetch(uri, Object.assign({method}, options));
 	};
 }
 
@@ -288,8 +280,8 @@ export abstract class PotionBase {
 	}
 
 	register(uri: string, resource: any) {
-		Reflect.defineMetadata(_potionMetadataKey, this, resource);
-		Reflect.defineMetadata(_potionURIMetadataKey, uri, resource);
+		reflector.set(resource, _potionMetadataKey, this);
+		reflector.set(resource, _potionURIMetadataKey, uri);
 
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);

@@ -2,6 +2,28 @@ import {PotionItemCache} from './base';
 
 
 /**
+ * Quick way of getting/setting constructor metadata
+ */
+
+/* tslint:disable: variable-name */
+let Reflect: any = (<any>window).Reflect || {};
+/* tslint:enable: variable-name */
+
+if (!Reflect.getMetadata) {
+	throw 'reflect-metadata shim is required and is missing';
+}
+
+export let reflector = {
+	get(constructor: Function, key: string | symbol) {
+		return Reflect.getOwnMetadata(key, constructor);
+	},
+	set(constructor: Function, key: string | symbol, annotations: any) {
+		Reflect.defineMetadata(key, annotations, constructor);
+	}
+};
+
+
+/**
  * Camel case to snake case
  */
 
@@ -31,6 +53,10 @@ export function pairsToObject(pairs: any[]) {
 	return obj;
 }
 
+
+/**
+ * Memory cache
+ */
 
 export class MemCache implements PotionItemCache<any> {
 	protected _items: Map<string, any>;

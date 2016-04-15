@@ -15,6 +15,7 @@
 		"node_modules/typescript/lib/lib.es7.d.ts",
 		"typings/main.d.ts",
 		"src/angular.ts",
+		"src/angular2.ts",
 		"src/fetch.ts",
 		"src/base.ts",
 		"src/utils.ts"

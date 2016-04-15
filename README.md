@@ -17,7 +17,8 @@ Before you use this package, make sure you include [reflect-metadata](https://ww
 
 Furthermore, this package has multiple implementations available, it can be used as:
 * [standalone](#standalone) package using [Fetch API](https://developer.mozilla.org/en/docs/Web/API/Fetch_API) (make sure to include a polyfill such as [whatwg-fetch](https://github.com/github/fetch) if you are targeting a browser that does not implement the API);
-* as a [AngularJS](#angularjs) module.
+* as a [AngularJS](#angularjs) module;
+* as a [Angular 2](#angular-2) package.
 
 Note that any routes created with `Route.<method>` and the following methods on `Item` return a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise):
 * `.save()`
@@ -96,7 +97,7 @@ user.then((john) => {
 let jane = new User({name: 'Jane Doe'});
 jane.save();
 ```
- 
+
 #### AngularJS
 If you decide to use this package as a AngularJS module, there are a few differences from the standalone version, but the API does not change. Use the following example as a starting point:
 ```js
@@ -157,6 +158,46 @@ angular
         let jane = new User({name: 'Jane Doe'});
         jane.save();
     }]);
+```
+
+#### Angular 2
+Using the package in an Angular 2 app is very similar to the above, as in there are no API changes, but a few differences.
+```js
+import {bootstrap} from 'angular2/platform/browser';
+import {Component} from 'angular2/core';
+
+// Load the providers
+import {POTION_PROVIDERS, Item} from 'potion/angular2';
+
+@Component({
+    selector: 'my-app',
+    template: '<h1>My Angular 2 App</h1>'
+})
+
+@PotionResources([
+    new Resource({
+        path: '/user',
+        type: User
+    })
+])
+
+class App {
+    constructor(User: User) {    
+        let user = new User({name: 'John Doe'});
+    }
+}
+
+
+class User extends Item {}
+
+
+// Add the providers
+bootstrap(AppComponent, [
+    POTION_PROVIDERS,
+    provide(POTION_PRIMARY_COMPONENT, {
+        useClass: App
+    })
+]);
 ```
 
 

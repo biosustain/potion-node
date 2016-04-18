@@ -41,13 +41,20 @@ describe('potion/fetch', () => {
 
 			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
 				let body = null;
+				let headers: Headers = null;
 				fetchMock.mock('http://localhost/ping', 'POST', (url, opts: any) => {
+					headers = opts.headers;
 					body = opts.body;
 				});
 
 				potion.request('http://localhost/ping', {method: 'POST', data: {pong: true}});
 
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
+
+				expect(headers).not.toBeNull();
+				expect(headers.get('accept')).toEqual('application/json');
+				expect(headers.get('content-type')).toEqual('application/json');
+
 				expect(body).not.toBeNull();
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});

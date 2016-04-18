@@ -1,9 +1,17 @@
 import {
-	Inject,
+	APP_INITIALIZER,
+	ApplicationRef,
 	Injectable,
+	Inject,
 	OpaqueToken,
-	Provider
+	Provider,
+	Type
 } from 'angular2/core';
+
+import {isType} from 'angular2/src/facade/lang';
+import {reflector} from 'angular2/src/core/reflection/reflection';
+import {makeDecorator} from 'angular2/src/core/util/decorators';
+
 import {
 	Http,
 	RequestOptions,
@@ -15,13 +23,12 @@ import {
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/toPromise';
 
+import {MemCache} from './utils';
 import {
 	PotionRequestOptions,
 	PotionOptions,
 	PotionBase
 } from './base';
-
-import {MemCache} from './utils';
 
 
 export {
@@ -29,8 +36,31 @@ export {
 	Route
 } from './base';
 
-export let POTION_CONFIG = new OpaqueToken('potion.config');
+
+export let POTION_CONFIG = new OpaqueToken('PotionConfig');
 export interface PotionConfig extends PotionOptions {}
+
+
+class PotionResourcesAnnotation {
+	resources: Resource[];
+	constructor(resources: Resource[]) {
+		this.resources = resources;
+	}
+}
+
+/* tslint:disable: variable-name */
+export let PotionResources: (resources: Resource[]) => ClassDecorator  = makeDecorator(PotionResourcesAnnotation);
+/* tslint:enable: variable-name */
+
+export class Resource {
+	path: string;
+	type: Type;
+	constructor({path, type}: {path: string, type: Type}) {
+		this.path = path;
+		this.type = type;
+	}
+}
+
 
 @Injectable()
 export class Potion extends PotionBase {
@@ -38,7 +68,30 @@ export class Potion extends PotionBase {
 
 	constructor(http: Http, @Inject(POTION_CONFIG) config: PotionConfig) {
 		super(config);
+		// Use Angular 2 Http for requests
 		this._http = http;
+	}
+
+	registerFromComponent(component: any) {
+		if (!isType(component)) {
+			return;
+		}
+
+		if (component) {
+			let annotations = reflector.annotations(component);
+			for (let annotation of annotations) {
+				if (annotation instanceof PotionResourcesAnnotation) {
+					for (let resource of annotation.resources) {
+						let {path, type} = resource;
+						if (this.resources[path] === undefined) {
+							this.register(path, type);
+						} else {
+							throw new TypeError(`Cannot register ${type.name} for "${path}". A resource has already been registered on "${path}"`);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	request(uri, {method = 'GET', data = null}: PotionRequestOptions = {}): Promise<any> {
@@ -77,7 +130,29 @@ export class Potion extends PotionBase {
 	}
 }
 
+
 export const POTION_PROVIDERS = [
+	new Provider(APP_INITIALIZER, {
+		useFactory: (appRef: ApplicationRef, potion: Potion) => {
+			// Do not remove this,
+			// having it run on app init,
+			// will ensure that whatever resources were added via `@PotionResources` decorator,
+			// will be registered with Potion.
+			return () => {
+				appRef.registerBootstrapListener(() => {
+					// Register resources added via `@PotionResources` decorator
+					for (let component of appRef.componentTypes) {
+						potion.registerFromComponent(component);
+					}
+				});
+			};
+		},
+		multi: true,
+		deps: [
+			ApplicationRef,
+			Potion
+		]
+	}),
 	new Provider(POTION_CONFIG, {
 		useValue: {
 			prefix: '/api',

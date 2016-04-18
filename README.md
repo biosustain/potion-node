@@ -161,13 +161,21 @@ angular
 ```
 
 #### Angular 2
-Using the package in an Angular 2 app is very similar to the above, as in there are no API changes, but a few differences.
+Using the package in an Angular 2 app is very similar to the above, as in there are no API changes, but a few differences in the way resources are registered:
 ```js
 import {bootstrap} from 'angular2/platform/browser';
 import {Component} from 'angular2/core';
+import {HTTP_PROVIDERS} from 'angular2/http';
 
 // Load the providers
-import {POTION_PROVIDERS, Item} from 'potion/angular2';
+import {
+    POTION_PROVIDERS,
+    PotionResources,
+    Resource,
+    Item
+} from 'potion/angular2';
+
+class User extends Item {}
 
 @Component({
     selector: 'my-app',
@@ -175,28 +183,87 @@ import {POTION_PROVIDERS, Item} from 'potion/angular2';
 })
 
 @PotionResources([
-    new Resource({
-        path: '/user',
-        type: User
-    })
+	new Resource({
+		path: '/user',
+		type: <Type>User
+	})
 ])
 
 class App {
-    constructor(User: User) {    
+    constructor() {    
         let user = new User({name: 'John Doe'});
+        user.save();
     }
 }
 
+// Add the providers
+bootstrap(App, [
+    HTTP_PROVIDERS,
+    POTION_PROVIDERS
+]);
+```
+It is important that `HTTP_PROVIDERS` is provided as `Potion` internally uses `Http`. Moreover, `@PotionResources` can be used on multiple components, but be aware that you cannot register a resource for the same path, if you do you will get an exception.
 
-class User extends Item {}
 
+If you wish to override either of the config values, you can use `POTION_CONFIG`:
+```js
+import {
+    Component,
+    provide
+} from 'angular2/core';
+import {bootstrap} from 'angular2/platform/browser';
+
+import {
+    POTION_PROVIDERS,
+    POTION_CONFIG
+} from 'potion/angular2';
+
+@Component({
+    selector: 'my-app',
+    template: '<h1>My Angular 2 App</h1>'
+})
+
+class App {}
 
 // Add the providers
-bootstrap(AppComponent, [
+bootstrap(App, [
     POTION_PROVIDERS,
-    provide(POTION_PRIMARY_COMPONENT, {
-        useClass: App
+    provide(POTION_CONFIG, {
+        useValue: {
+            prefix: '/api-endpoint'
+        }
     })
+]);
+```
+Note that you can still register new resources at a later point by using the `Potion` instance provided by `POTION_PROVIDERS`:
+```js
+import {
+    Component,
+    provide
+} from 'angular2/core';
+import {bootstrap} from 'angular2/platform/browser';
+
+import {
+    POTION_PROVIDERS,
+    Potion,
+    Item
+} from 'potion/angular2';
+
+@Component({
+    selector: 'my-app',
+    template: '<h1>My Angular 2 App</h1>'
+})
+
+class App {
+    constructor(potion: Potion) {
+        class Engine extends Item {}
+        potion.register('/engine', Engine);
+    }
+}
+
+// Add the providers
+bootstrap(App, [
+    POTION_PROVIDERS
 ]);
 ```
 

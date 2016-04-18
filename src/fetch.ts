@@ -35,11 +35,14 @@ export class Potion extends PotionBase {
 		if (data) {
 			// POST/PUT/PATCH needs headers and JSON body,
 			// see https://github.com/github/fetch#post-json for more info.
-			init.body = JSON.stringify(data);
-			init.headers = {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			};
+			let headers: Headers = new Headers();
+			headers.set('Accept', 'application/json');
+			headers.set('Content-Type', 'application/json');
+
+			Object.assign(init, {
+				headers,
+				body: JSON.stringify(data)
+			});
 		}
 
 		return fetch(uri, init).then((response) => {

@@ -271,6 +271,33 @@ describe('potion/angular2', () => {
 				});
 			});
 		});
+
+		describe('.fetch()', () => {
+			it('should use a memory cache by default to store and retrieve items', (done) => {
+				@potion.registerAs('/user')
+				class User extends Item {}
+
+				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+					connection.mockRespond(new Response(
+						new ResponseOptions({
+							status: 200,
+							body: {
+								$uri: '/user/1'
+							}
+						})
+					));
+				});
+
+				User.fetch(1).then(() => {
+					expect(User.store.cache.get('/user/1')).not.toBeUndefined();
+					User.fetch(1).then((user: User) => {
+						expect(user).not.toBeUndefined();
+						subscription.unsubscribe();
+						done();
+					});
+				});
+			});
+		});
 	});
 });
 

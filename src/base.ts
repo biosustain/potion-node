@@ -21,9 +21,14 @@ export function readonly(target, property) {
 }
 
 
+export interface URLSearchParams {
+	[key: string]: any;
+}
+
 export interface PotionRequestOptions {
 	method?: string;
 	cache?: boolean;
+	search?: URLSearchParams;
 	data?: any;
 }
 
@@ -158,7 +163,7 @@ export class Store<T extends Item> {
 		let options: PotionRequestOptions = {cache, method: 'GET'};
 
 		if (paginate) {
-			Object.assign(options, {data: {page, perPage}});
+			Object.assign(options, {search: {page, perPage}});
 		}
 
 		return reflector.get(this._itemConstructor, _potionMetadataKey).fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), options, paginationObj);
@@ -263,8 +268,8 @@ export abstract class PotionBase {
 			.request(uri, options)
 			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 			.then(({headers, data}) => {
-				let {page = null, perPage = null} = options && options.data ? options.data : {};
-
+				let {page = null, perPage = null} = options && options.search ? options.search : {};
+				
 				if (page || perPage) {
 					let count = headers['x-total-count'] || data.length;
 
@@ -406,7 +411,7 @@ export class Pagination<T extends Item> {
 
 		this._items.push(...items);
 
-		let {page, perPage} = options.data;
+		let {page, perPage} = options.search;
 		this._page = page;
 		this._perPage = perPage;
 		this._total = parseInt(count, 10);
@@ -418,7 +423,7 @@ export class Pagination<T extends Item> {
 
 	changePageTo(page) {
 		Object.assign(this._options, {
-			data: Object.assign(this._options.data, {page})
+			search: Object.assign(this._options.search, {page})
 		});
 		this._page = page;
 		return this._potion.fetch(this._uri, this._options, this);

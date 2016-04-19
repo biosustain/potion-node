@@ -32,6 +32,7 @@ import {
 	BaseRequestOptions,
 	ResponseOptions,
 	Response,
+	Headers,
 	Http
 } from 'angular2/http';
 
@@ -183,7 +184,7 @@ describe('potion/angular2', () => {
 
 		beforeEach(() => {
 			response = new Response(
-				new ResponseOptions({status: 200, body: {}})
+				new ResponseOptions({status: 200})
 			);
 		});
 
@@ -203,10 +204,24 @@ describe('potion/angular2', () => {
 			});
 
 			it('should return a Promise with a {data, headers} object', (done: () => void) => {
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
+				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+					let headers = new Headers();
+					headers.append('Content-Type', 'image/jpeg');
+					connection.mockRespond(new Response(
+						new ResponseOptions({
+							headers,
+							status: 200,
+							body: {
+								pong: true
+							}
+						})
+					))
+				});
 				potion.request('/ping').then(({data, headers}) => {
 					expect(data).not.toBeUndefined();
+					expect(data).toEqual({pong: true});
 					expect(headers).not.toBeUndefined();
+					expect(headers).toEqual({'content-type': 'image/jpeg'});
 					subscription.unsubscribe();
 					done();
 				});
@@ -233,9 +248,24 @@ describe('potion/angular2', () => {
 					connection.mockRespond(response);
 				});
 
-				potion.request('/ping', {method: 'POST', data: {pong: true}}).then(() => {
+				potion.request('/ping', {method: 'GET', data: {pong: true}}).then(() => {
 					expect(body).not.toBeNull();
 					expect(JSON.parse(body)).toEqual({pong: true});
+					subscription.unsubscribe();
+					done();
+				});
+			});
+
+			it('should pass on the query params from the {search} option', (done: () => void) => {
+				let url = null;
+				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+					url = connection.request.url;
+					connection.mockRespond(response);
+				});
+
+				potion.request('/ping', {method: 'POST', search: {pong: true}}).then(() => {
+					expect(url).not.toBeNull();
+					expect(url).toEqual('/ping?pong=true');
 					subscription.unsubscribe();
 					done();
 				});

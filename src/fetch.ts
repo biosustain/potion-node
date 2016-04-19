@@ -22,7 +22,7 @@ export class Potion extends PotionBase {
 	// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 	// Polyfill at https://github.com/github/fetch.
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
-	request(uri, {method = 'GET', data = null, cache = true}: PotionRequestOptions = {}): Promise<any> {
+	request(uri, {method = 'GET', search, data, cache = true}: PotionRequestOptions = {}): Promise<any> {
 		let headers: Headers = new Headers();
 		let init: any = {
 			method,
@@ -42,20 +42,38 @@ export class Potion extends PotionBase {
 
 		Object.assign(init, {headers});
 
+		// TODO: when URL will be supported we will switch to it
+		if (search) {
+			let count = 1;
+			let entries = (<any>Object).entries(search);
+			let size = entries.length;
+
+			for (let [key, value] of entries) {
+				if (count === 1) {
+					uri += '?';
+				}
+
+				uri += `${key}=${value}`;
+
+				if (count < size) {
+					uri += '&';
+				}
+
+				count++;
+			}
+		}
+
 		return fetch(new Request(uri, init), init).then((response) => {
 			if (response.ok) {
-				return response.json().then(
-					(json) => {
-						let headers = {};
+				let headers = {};
 
-						response.headers.forEach((value, name) => {
-							headers[name] = value;
-						});
+				if (response.headers) {
+					response.headers.forEach((value, key) => {
+						headers[key] = value;
+					});
+				}
 
-						return {headers, data: json};
-					},
-					(error) => (error)
-				);
+				return response.json().then((json) => ({headers, data: json}), (error) => (error));
 			} else {
 				let error: any = new Error(response.statusText);
 				error.response = response;

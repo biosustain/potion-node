@@ -91,17 +91,37 @@ describe('potion/angular', () => {
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});
 
+			it('should pass on the query params from the {search} option', () => {
+				let search = null;
+				let response = jasmine.createSpy('response');
+				$httpBackend.expect('GET', '/ping?pong=true').respond((method, url, data, headers, params) => {
+					search = params;
+					response();
+					return [200, {}];
+				});
+
+				potion.request('/ping', {method: 'GET', search: {pong: true}});
+
+				$httpBackend.flush();
+
+				expect(response).toHaveBeenCalled();
+				expect(search).not.toBeNull();
+				expect(search).toEqual({pong: 'true'});
+			});
+
 			it('should return a Promise', () => {
 				$httpBackend.expect('GET', '/ping').respond(200);
 				expect(potion.request('/ping') instanceof $q).toBe(true);
 			});
 
 			it('should return a Promise with a {data, headers} object', (done) => {
-				$httpBackend.expect('GET', '/ping').respond(200, {});
+				$httpBackend.expect('GET', '/ping').respond(200, {pong: true}, {'Content-Type': 'application/json'});
 
 				potion.request('/ping').then(({data, headers}) => {
 					expect(data).not.toBeUndefined();
+					expect(data).toEqual({pong: true});
 					expect(headers).not.toBeUndefined();
+					expect(headers['content-type']).toEqual('application/json');
 					done();
 				});
 

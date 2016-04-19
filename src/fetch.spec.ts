@@ -45,6 +45,7 @@ describe('potion/fetch', () => {
 				fetchMock.mock('http://localhost/ping', 'POST', (url, opts: any) => {
 					headers = opts.headers;
 					body = opts.body;
+					return 200;
 				});
 
 				potion.request('http://localhost/ping', {method: 'POST', data: {pong: true}});
@@ -59,16 +60,31 @@ describe('potion/fetch', () => {
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});
 
+			it('should pass on the query params from the {search} option', () => {
+				fetchMock.mock('http://localhost/ping?pong=true&count=1', 'GET', 200);
+				potion.request('http://localhost/ping', {method: 'GET', search: {pong: true, count: 1}});
+				expect(fetchMock.called('http://localhost/ping?pong=true&count=1')).toBe(true);
+			});
+
 			it('should return a Promise', () => {
 				fetchMock.mock('http://localhost/ping', 'GET', {});
 				expect(potion.request('http://localhost/ping') instanceof Promise).toBe(true);
 			});
 
 			it('should return a Promise with a {data, headers} object', (done) => {
-				fetchMock.mock('http://localhost/ping', 'GET', {});
+				fetchMock.mock('http://localhost/ping', 'GET', {
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: {
+						pong: true
+					}
+				});
 				potion.request('http://localhost/ping').then(({data, headers}) => {
 					expect(data).not.toBeUndefined();
+					expect(data).toEqual({pong: true});
 					expect(headers).not.toBeUndefined();
+					expect(headers).toEqual({'content-type': 'application/json'});
 					done();
 				});
 			});

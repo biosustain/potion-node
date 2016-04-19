@@ -17,7 +17,9 @@ import {
 	RequestOptions,
 	RequestMethod,
 	Request,
-	Response
+	Response,
+	Headers,
+	URLSearchParams
 } from 'angular2/http';
 
 import {Observable} from 'rxjs/Observable';
@@ -94,7 +96,7 @@ export class Potion extends PotionBase {
 		}
 	}
 
-	request(uri, {method = 'GET', data = null}: PotionRequestOptions = {}): Promise<any> {
+	request(uri, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
 		// Angular Http Request accepts a RequestMethod type for a method,
 		// but the value for that is an integer.
 		// Therefore we need to match the string literals like 'GET' to the enum values for RequestMethod.
@@ -109,14 +111,37 @@ export class Potion extends PotionBase {
 			});
 		}
 
+		if (search) {
+			let params = new URLSearchParams();
+
+			for (let [key, value] of (<any>Object).entries(search)) {
+				params.append(key, value);
+			}
+
+			request = request.merge({
+				search: params
+			})
+		}
+
 		/* tslint:disable: align */
 		let obs = new Observable((observer) => {
 			let subscriber = this._http.request(new Request(request)).subscribe((response: Response) => {
-				// TODO: handle errors
+				let headers = {};
+
+				if (response.headers) {
+					for (let key of response.headers.keys()) {
+						// Angular 2 does not yet lowercase headers.
+						// Make sure we get the first string value of the header instead of the array of values.
+						headers[key.toLowerCase()] = response.headers.get(key);
+					}
+				}
+
 				observer.next({
-					headers: response.headers ? JSON.parse(<any>response.headers.toJSON()) : {},
+					headers: headers,
 					data: response.json()
 				});
+				// Trigger the obs. completion
+				// in order for the promise to be resolved.
 				observer.complete();
 			}, (error) => observer.error(error));
 
@@ -159,7 +184,7 @@ export const POTION_PROVIDERS = [
 			cache: new MemCache()
 		}
 	}),
-	new Provider(Potion, {
+	new Provider(Potion, <any>{
 		useClass: Potion,
 		deps: [
 			Http,

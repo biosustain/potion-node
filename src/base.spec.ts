@@ -354,7 +354,7 @@ describe('potion/base', () => {
 
 					switch (uri) {
 						case '/api/user':
-							let {page, perPage} = options.data;
+							let {page, perPage} = options.search;
 							let response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
 
 							if (page && perPage) {

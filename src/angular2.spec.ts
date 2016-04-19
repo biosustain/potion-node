@@ -215,7 +215,7 @@ describe('potion/angular2', () => {
 								pong: true
 							}
 						})
-					))
+					));
 				});
 				potion.request('/ping').then(({data, headers}) => {
 					expect(data).not.toBeUndefined();

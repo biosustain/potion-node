@@ -18,7 +18,6 @@ import {
 	RequestMethod,
 	Request,
 	Response,
-	Headers,
 	URLSearchParams
 } from 'angular2/http';
 
@@ -120,7 +119,7 @@ export class Potion extends PotionBase {
 
 			request = request.merge({
 				search: params
-			})
+			});
 		}
 
 		/* tslint:disable: align */

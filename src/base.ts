@@ -269,7 +269,7 @@ export abstract class PotionBase {
 			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 			.then(({headers, data}) => {
 				let {page = null, perPage = null} = options && options.search ? options.search : {};
-				
+
 				if (page || perPage) {
 					let count = headers['x-total-count'] || data.length;
 

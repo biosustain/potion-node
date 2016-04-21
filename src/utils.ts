@@ -1,17 +1,13 @@
-import {PotionItemCache} from './base';
+import 'core-js/shim';
+import 'reflect-metadata';
+import {
+	PotionItemCache
+} from './base';
 
 
 /**
  * Quick way of getting/setting constructor metadata
  */
-
-/* tslint:disable: variable-name */
-let Reflect: any = (<any>window).Reflect || {};
-/* tslint:enable: variable-name */
-
-if (!Reflect.getMetadata) {
-	throw 'reflect-metadata shim is required and is missing';
-}
 
 export let reflector = {
 	get(constructor: Function, key: string | symbol) {

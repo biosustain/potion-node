@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.9.5",
+	"version": "0.9.6",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [],
 	"homepage": "",
@@ -55,14 +55,10 @@
 		"zone.js": "^0.6.6",
 		"whatwg-fetch": "0.11.x"
 	},
-	"peerDependencies": {
-		"angular": "1.5.x",
-		"angular2": "2.0.0-beta.15",
-		"rxjs": "5.0.0-beta.6",
-		"zone.js": "^0.6.10",
-		"whatwg-fetch": "0.11.x"
-	},
 	"engines": {
 		"node": ">=0.4"
+	},
+	"jspm": {
+		"name": "potion"
 	}
 }

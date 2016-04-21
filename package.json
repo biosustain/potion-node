@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.9.8",
+	"version": "0.9.9",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [],
 	"homepage": "",
@@ -57,5 +57,9 @@
 	},
 	"engines": {
 		"node": ">=0.4"
+	},
+	"jspm": {
+		"jspmNodeConversion": false,
+		"format": "cjs"
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.9.10",
+	"version": "0.9.11",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [],
 	"homepage": "",
@@ -19,7 +19,7 @@
 		"test": "karma start karma.config.js --single-run --log-level error",
 		"test:ci": "karma start karma.config.js --browsers PhantomJS --single-run --log-level error",
 		"clean": "rm -rf dist",
-		"build": "tsc --target es5"
+		"build": "tsc --target es5 --module system"
 	},
 	"dependencies": {
 		"reflect-metadata": "^0.1.3"
@@ -59,7 +59,6 @@
 		"node": ">=0.4"
 	},
 	"jspm": {
-		"jspmNodeConversion": false,
-		"format": "cjs"
+		"jspmNodeConversion": false
 	}
 }

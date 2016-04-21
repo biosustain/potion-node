@@ -8,7 +8,7 @@
 ### Installation
 ----------------
 ```shell
-$(node bin)/jspm install npm:potion-client
+$(node bin)/jspm install potion=npm:potion-client
 ```
 
 

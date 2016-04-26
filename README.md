@@ -281,7 +281,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
     // these files will always stay here
 	"node_modules/typescript/lib/lib.es6.d.ts",
 	"typings/main.d.ts",
-	// you can change the bellow as you wish
+	// you can change the below as you wish
 	"src/angular.ts",
 	"src/fetch.ts",
 	"src/base.ts",

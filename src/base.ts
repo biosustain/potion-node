@@ -24,17 +24,9 @@ export function readonly(target, property) {
 }
 
 
-export interface URLSearchParams {
-	[key: string]: any;
-}
-
-export interface PotionRequestOptions {
-	method?: string;
-	cache?: boolean;
-	search?: URLSearchParams;
-	data?: any;
-}
-
+/**
+ * Item cache
+ */
 
 export interface PotionItemCache<T extends Item> {
 	get(key: string): T;
@@ -43,24 +35,40 @@ export interface PotionItemCache<T extends Item> {
 }
 
 
-export interface PaginationOptions {
+export interface URLSearchParams {
+	[key: string]: any;
+}
+
+export interface FetchOptions {
+	method?: string;
+	search?: URLSearchParams;
+	data?: any;
 	paginate?: boolean;
+	cache?: boolean;
+}
+
+export interface PaginationOptions {
 	page?: number;
 	perPage?: number;
 }
 
-
-export interface ItemConstructor {
-	new (object: any): Item;
-	store?: Store<Item>;
+export interface QueryOptions extends PaginationOptions {
+	where?: any;
+	sort?: any
 }
 
 export interface ItemOptions {
 	'readonly'?: string[];
 }
 
-export interface ItemFetchOptions extends PaginationOptions {
-	cache?: boolean;
+
+/**
+ * Item
+ */
+
+export interface ItemConstructor {
+	new (object: any): Item;
+	store?: Store<Item>;
 }
 
 export abstract class Item {
@@ -68,12 +76,12 @@ export abstract class Item {
 	id = null;
 	uri: string;
 
-	static fetch(id, options?: ItemFetchOptions): Promise<Item> {
-		return this.store.fetch(id, options);
+	static fetch(id, {cache = true}: FetchOptions = {}): Promise<Item> {
+		return this.store.fetch(id, {cache});
 	}
 
-	static query(options?: ItemFetchOptions): Promise<Item[] | Pagination<Item>> {
-		return this.store.query(options);
+	static query(queryOptions?: QueryOptions, fetchOptions?: FetchOptions): Promise<Item[] | Pagination<Item>> {
+		return this.store.query(queryOptions, fetchOptions);
 	}
 
 	constructor(properties: any = {}, options?: ItemOptions) {
@@ -84,12 +92,12 @@ export abstract class Item {
 		}
 	}
 
-	save(options?: ItemFetchOptions): Promise<Item> {
-		return (<typeof Item>this.constructor).store.save(this.toJSON(), options);
+	save(): Promise<Item> {
+		return (<typeof Item>this.constructor).store.save(this.toJSON());
 	}
 
-	update(properties: any = {}, options?: ItemFetchOptions): Promise<Item> {
-		return (<typeof Item>this.constructor).store.update(this, properties, options);
+	update(properties: any = {}): Promise<Item> {
+		return (<typeof Item>this.constructor).store.update(this, properties);
 	}
 
 	destroy(): Promise<Item> {
@@ -129,7 +137,7 @@ export class Store<T extends Item> {
 
 	}
 
-	fetch(id, {cache = true}: ItemFetchOptions = {}): Promise<T> {
+	fetch(id, {cache}: FetchOptions = {}): Promise<T> {
 		let uri = `${reflector.get(this._itemConstructor, _potionURIMetadataKey)}/${id}`;
 
 		// Try to get from cache
@@ -162,28 +170,34 @@ export class Store<T extends Item> {
 		return promise;
 	}
 
-	query({paginate = false, cache = true, page = 1, perPage = 25}: ItemFetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
-		let options: PotionRequestOptions = {cache, method: 'GET'};
-
-		if (paginate) {
-			Object.assign(options, {search: {page, perPage}});
-		}
-
+	query({page = 1, perPage = 25, where, sort}: QueryOptions = {}, {paginate = false, cache = true}: FetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
+		let fetchOptions: FetchOptions = {
+			paginate,
+			cache,
+			method: 'GET',
+			search: {
+				page,
+				perPage,
+				where,
+				sort
+			}
+		};
+		
 		return reflector
 			.get(this._itemConstructor, _potionMetadataKey)
-			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), options, paginationObj);
+			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), fetchOptions, paginationObj);
 	}
 
-	update(item: Item, data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
+	update(item: Item, data: any = {}): Promise<T> {
 		return reflector
 			.get(this._itemConstructor, _potionMetadataKey)
-			.fetch(item.uri, {data, cache, method: 'PATCH'});
+			.fetch(item.uri, {data, cache: true, method: 'PATCH'});
 	}
 
-	save(data: any = {}, {cache = true}: ItemFetchOptions = {}): Promise<T> {
+	save(data: any = {}): Promise<T> {
 		return reflector
 			.get(this._itemConstructor, _potionMetadataKey)
-			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), {data, cache, method: 'POST'});
+			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), {data, cache: true, method: 'POST'});
 	}
 
 	destroy(item: Item): Promise<T> {
@@ -202,8 +216,8 @@ export class Store<T extends Item> {
 }
 
 
-export function route<T>(uri: string, {method}: PotionRequestOptions = {}): (options?: ItemFetchOptions) => Promise<T> {
-	return function (options?: ItemFetchOptions): any {
+export function route<T>(uri: string, {method}: FetchOptions = {}): (options?: FetchOptions) => Promise<T> {
+	return function (options?: FetchOptions): any {
 		let isCtor = typeof this === 'function';
 		uri = `${isCtor ? reflector.get(this, _potionURIMetadataKey) : this.uri}${uri}`;
 		return reflector
@@ -266,28 +280,29 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
-	protected abstract _fetch(uri, options?: PotionRequestOptions): Promise<any>;
+	protected abstract _fetch(uri, options?: FetchOptions): Promise<any>;
 
-	fetch(uri, options?: PotionRequestOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
+	fetch(uri, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		// Add the API prefix if not present
 		let {prefix} = this;
 		if (uri.indexOf(prefix) === -1) {
 			uri = `${prefix}${uri}`;
 		}
 
+		fetchOptions = fetchOptions || {};
+
 		return this
-			._fetch(uri, options)
+			._fetch(uri, fetchOptions)
 			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 			.then(({headers, data}) => {
-				let {page = null, perPage = null} = options && options.search ? options.search : {};
 
-				if (page || perPage) {
+				if (fetchOptions.paginate) {
 					let count = headers['x-total-count'] || data.length;
 
 					if (paginationObj) {
 						paginationObj.update(data, count);
 					} else {
-						return new Pagination<Item>({uri, potion: this}, data, count, options);
+						return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
 					}
 				}
 
@@ -405,7 +420,7 @@ export class Pagination<T extends Item> {
 
 	private _potion: PotionBase;
 	private _uri: string;
-	private _options: PotionRequestOptions;
+	private _options: FetchOptions;
 
 	private _items: T[] = [];
 
@@ -413,7 +428,7 @@ export class Pagination<T extends Item> {
 	private _perPage: number;
 	private _total: number;
 
-	constructor({potion, uri}, items, count, options: PotionRequestOptions) {
+	constructor({potion, uri}, items, count, options: FetchOptions) {
 		this._potion = potion;
 		this._uri = uri;
 		this._options = options;

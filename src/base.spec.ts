@@ -1,6 +1,6 @@
 import {
 	PotionItemCache,
-	PotionRequestOptions,
+	FetchOptions,
 	PotionBase,
 	Pagination,
 	Item,
@@ -96,7 +96,7 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
+					protected _fetch(uri, options?: FetchOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (uri) {
@@ -138,7 +138,7 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
+					protected _fetch(uri, options?: FetchOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (options.method) {
@@ -185,7 +185,7 @@ describe('potion/base', () => {
 				let john = null;
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
+					protected _fetch(uri, options?: FetchOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (options.method) {
@@ -349,7 +349,7 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
+				protected _fetch(uri, options?: FetchOptions): Promise<any> {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {
@@ -403,7 +403,7 @@ describe('potion/base', () => {
 		});
 
 		it('should return a Pagination object', (done) => {
-			User.query({paginate: true}).then((users: Pagination<User>) => {
+			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users instanceof Pagination).toBe(true);
 				expect(users.length).toEqual(2);
 				expect(users.page).toEqual(1);
@@ -414,7 +414,7 @@ describe('potion/base', () => {
 		});
 
 		it('should contain instances of an Item', (done) => {
-			User.query({paginate: true}).then((users: User[]) => {
+			User.query({}, {paginate: true}).then((users: User[]) => {
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
 				}
@@ -423,7 +423,7 @@ describe('potion/base', () => {
 		});
 
 		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
-			User.query({paginate: true, page: 2, perPage: 1}).then((users: Pagination<User>) => {
+			User.query({page: 2, perPage: 1}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users.length).toEqual(1);
 				expect(users.page).toEqual(2);
 				expect(users.perPage).toEqual(1);
@@ -434,7 +434,7 @@ describe('potion/base', () => {
 		});
 
 		it('should update query if {page} is set on the pagination object', (done) => {
-			User.query({paginate: true, page: 2, perPage: 1}).then((users: Pagination<User>) => {
+			User.query({page: 2, perPage: 1}, {paginate: true}).then((users: Pagination<User>) => {
 				users.changePageTo(1).then(() => {
 					expect(users.page).toEqual(1);
 					expect(users.toArray()[0].id).toEqual(1); // John

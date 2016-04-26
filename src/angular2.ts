@@ -21,7 +21,6 @@ import {
 	URLSearchParams
 } from 'angular2/http';
 
-import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/toPromise';
 
 import {MemCache} from './utils';

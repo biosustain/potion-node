@@ -184,12 +184,9 @@ class User extends Item {}
     template: '<h1>My Angular 2 App</h1>'
 })
 
-@PotionResources([
-	new Resource({
-		path: '/user',
-		type: <Type>User
-	})
-])
+@PotionResources({
+    '/user': User
+})
 
 class App {
     constructor() {    

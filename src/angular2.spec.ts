@@ -50,7 +50,6 @@ import {
 	POTION_PROVIDERS,
 	Potion,
 	PotionResources,
-	Resource,
 	Item
 } from './angular2';
 
@@ -309,12 +308,7 @@ class User extends Item {}
 	template: ''
 })
 
-@PotionResources([
-	new Resource({
-		path: '/user',
-		type: <Type>User
-	})
-])
+@PotionResources({'/user': User})
 
 class App {
 	potion: Potion;

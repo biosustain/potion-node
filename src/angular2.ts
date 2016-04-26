@@ -42,25 +42,20 @@ export let POTION_CONFIG = new OpaqueToken('PotionConfig');
 export interface PotionConfig extends PotionOptions {}
 
 
+export interface Resources {
+	[key: string]: Type;
+}
+
 class PotionResourcesAnnotation {
-	resources: Resource[];
-	constructor(resources: Resource[]) {
+	resources: Resources;
+	constructor(resources: Resources) {
 		this.resources = resources;
 	}
 }
 
 /* tslint:disable: variable-name */
-export let PotionResources: (resources: Resource[]) => ClassDecorator  = makeDecorator(PotionResourcesAnnotation);
+export let PotionResources: (resources: Resources) => ClassDecorator  = makeDecorator(PotionResourcesAnnotation);
 /* tslint:enable: variable-name */
-
-export class Resource {
-	path: string;
-	type: Type;
-	constructor({path, type}: {path: string, type: Type}) {
-		this.path = path;
-		this.type = type;
-	}
-}
 
 
 @Injectable()
@@ -82,8 +77,7 @@ export class Potion extends PotionBase {
 			let annotations = reflector.annotations(component);
 			for (let annotation of annotations) {
 				if (annotation instanceof PotionResourcesAnnotation) {
-					for (let resource of annotation.resources) {
-						let {path, type} = resource;
+					for (let [path, type] of (<any>Object).entries(annotation.resources)) {
 						if (this.resources[path] === undefined) {
 							this.register(path, type);
 						} else {

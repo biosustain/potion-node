@@ -431,9 +431,7 @@ export class Pagination<T extends Item> {
 	}
 
 	changePageTo(page) {
-		Object.assign(this._options, {
-			search: Object.assign(this._options.search, {page})
-		});
+		(<any>this._options.search).page = page;
 		this._page = page;
 		return this._potion.fetch(this._uri, this._options, this);
 	}

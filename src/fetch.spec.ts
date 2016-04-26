@@ -23,19 +23,19 @@ describe('potion/fetch', () => {
 
 			it('should make a XHR request', () => {
 				fetchMock.mock('http://localhost/ping', 'GET', {});
-				potion.request('http://localhost/ping');
+				potion.fetch('http://localhost/ping');
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
 			});
 
 			it('should use \'no-cache\' for the window.fetch() request {cache} option if {cache} option is set to false', () => {
 				fetchMock.mock('http://localhost/ping', 'GET', {});
-				potion.request('http://localhost/ping', {cache: false});
+				potion.fetch('http://localhost/ping', {cache: false});
 				expect((<any>fetchMock.lastOptions('http://localhost/ping')).cache).toEqual('no-cache');
 			});
 
 			it('should use the appropriate request method set by the {method} option', () => {
 				fetchMock.mock('http://localhost/ping', 'PATCH', {});
-				potion.request('http://localhost/ping', {method: 'PATCH'});
+				potion.fetch('http://localhost/ping', {method: 'PATCH'});
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
 			});
 
@@ -48,7 +48,7 @@ describe('potion/fetch', () => {
 					return 200;
 				});
 
-				potion.request('http://localhost/ping', {method: 'POST', data: {pong: true}});
+				potion.fetch('http://localhost/ping', {method: 'POST', data: {pong: true}});
 
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
 
@@ -62,34 +62,27 @@ describe('potion/fetch', () => {
 
 			it('should pass on the query params from the {search} option', () => {
 				fetchMock.mock('http://localhost/ping?pong=true&count=1', 'GET', 200);
-				potion.request('http://localhost/ping', {method: 'GET', search: {pong: true, count: 1}});
+				potion.fetch('http://localhost/ping', {method: 'GET', search: {pong: true, count: 1}});
 				expect(fetchMock.called('http://localhost/ping?pong=true&count=1')).toBe(true);
 			});
 
 			it('should return a Promise', () => {
 				fetchMock.mock('http://localhost/ping', 'GET', {});
-				expect(potion.request('http://localhost/ping') instanceof Promise).toBe(true);
+				expect(potion.fetch('http://localhost/ping') instanceof Promise).toBe(true);
 			});
 
-			it('should return a Promise with a {data, headers} object', (done) => {
-				fetchMock.mock('http://localhost/ping', 'GET', {
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: {
-						pong: true
-					}
-				});
-				potion.request('http://localhost/ping').then(({data, headers}) => {
+			it('should return a Promise with data', (done) => {
+				fetchMock.mock('http://localhost/ping', 'GET', {body: {pong: true}});
+				potion.fetch('http://localhost/ping').then((data) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
-					expect(headers).not.toBeUndefined();
-					expect(headers).toEqual({'content-type': 'application/json'});
 					done();
 				});
 			});
 		});
+	});
 
+	describe('Item()', () => {
 		describe('.fetch()', () => {
 			it('should use a memory cache by default to store and retrieve items', (done) => {
 				let potion = new Potion({prefix: 'http://localhost'});

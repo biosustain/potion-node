@@ -266,7 +266,7 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
-	abstract request(uri, options?: PotionRequestOptions): Promise<any>;
+	protected abstract _fetch(uri, options?: PotionRequestOptions): Promise<any>;
 
 	fetch(uri, options?: PotionRequestOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		// Add the API prefix if not present
@@ -276,7 +276,7 @@ export abstract class PotionBase {
 		}
 
 		return this
-			.request(uri, options)
+			._fetch(uri, options)
 			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 			.then(({headers, data}) => {
 				let {page = null, perPage = null} = options && options.search ? options.search : {};

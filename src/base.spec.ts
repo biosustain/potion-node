@@ -15,7 +15,7 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				request(uri): Promise<any> {
+				protected _fetch(uri): Promise<any> {
 					return (<typeof PotionBase>this.constructor).promise.resolve({});
 				}
 			}
@@ -96,7 +96,7 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					request(uri, options?: PotionRequestOptions): Promise<any> {
+					protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (uri) {
@@ -138,7 +138,7 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					request(uri, options?: PotionRequestOptions): Promise<any> {
+					protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (options.method) {
@@ -185,7 +185,7 @@ describe('potion/base', () => {
 				let john = null;
 
 				class Potion extends PotionBase {
-					request(uri, options?: PotionRequestOptions): Promise<any> {
+					protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (options.method) {
@@ -247,7 +247,7 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				request(uri): Promise<any> {
+				protected _fetch(uri): Promise<any> {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {
@@ -295,7 +295,7 @@ describe('potion/base', () => {
 			potion.register('/user', User);
 			potion.register('/car', Car);
 
-			spyOn(potion, 'request').and.callThrough();
+			spyOn(potion, 'fetch').and.callThrough();
 			spyOn(cache, 'get').and.callThrough();
 		});
 
@@ -313,7 +313,7 @@ describe('potion/base', () => {
 
 		it('should not trigger more requests for consequent requests for the same resource and if the first request is still pending', (done) => {
 			Promise.all([User.fetch(1, {cache: false}), User.fetch(1, {cache: false})]).then(() => {
-				expect(potion.request).toHaveBeenCalledTimes(1);
+				expect(potion.fetch).toHaveBeenCalledTimes(1);
 				done();
 			});
 		});
@@ -349,7 +349,7 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				request(uri, options?: PotionRequestOptions): Promise<any> {
+				protected _fetch(uri, options?: PotionRequestOptions): Promise<any> {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {
@@ -452,7 +452,7 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				request(uri): Promise<any> {
+				protected _fetch(uri): Promise<any> {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {

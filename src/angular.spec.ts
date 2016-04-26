@@ -34,7 +34,7 @@ describe('potion/angular', () => {
 	});
 
 	describe('Potion()', () => {
-		describe('.request()', () => {
+		describe('.fetch()', () => {
 			let $q;
 			let $httpBackend;
 			let potion;
@@ -55,7 +55,7 @@ describe('potion/angular', () => {
 				let response = jasmine.createSpy('response').and.returnValue([200, {}]);
 				$httpBackend.expect('GET', '/ping').respond(response);
 
-				potion.request('/ping');
+				potion.fetch('/ping');
 
 				$httpBackend.flush();
 
@@ -66,7 +66,7 @@ describe('potion/angular', () => {
 				let response = jasmine.createSpy('response').and.returnValue([200, {}]);
 				$httpBackend.expect('PATCH', '/ping').respond(response);
 
-				potion.request('/ping', {method: 'PATCH'});
+				potion.fetch('/ping', {method: 'PATCH'});
 
 				$httpBackend.flush();
 
@@ -82,7 +82,7 @@ describe('potion/angular', () => {
 					return [200, {}];
 				});
 
-				potion.request('/ping', {method: 'POST', data: {pong: true}});
+				potion.fetch('/ping', {method: 'POST', data: {pong: true}});
 
 				$httpBackend.flush();
 
@@ -100,7 +100,7 @@ describe('potion/angular', () => {
 					return [200, {}];
 				});
 
-				potion.request('/ping', {method: 'GET', search: {pong: true}});
+				potion.fetch('/ping', {method: 'GET', search: {pong: true}});
 
 				$httpBackend.flush();
 
@@ -111,24 +111,24 @@ describe('potion/angular', () => {
 
 			it('should return a Promise', () => {
 				$httpBackend.expect('GET', '/ping').respond(200);
-				expect(potion.request('/ping') instanceof $q).toBe(true);
+				expect(potion.fetch('/ping') instanceof $q).toBe(true);
 			});
 
-			it('should return a Promise with a {data, headers} object', (done) => {
-				$httpBackend.expect('GET', '/ping').respond(200, {pong: true}, {'Content-Type': 'application/json'});
+			it('should return a Promise with data', (done) => {
+				$httpBackend.expect('GET', '/ping').respond(200, {pong: true});
 
-				potion.request('/ping').then(({data, headers}) => {
+				potion.fetch('/ping').then((data) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
-					expect(headers).not.toBeUndefined();
-					expect(headers['content-type']).toEqual('application/json');
 					done();
 				});
 
 				$httpBackend.flush();
 			});
 		});
+	});
 
+	describe('Item()', () => {
 		describe('.fetch()', () => {
 			let $cacheFactory;
 			let $httpBackend;

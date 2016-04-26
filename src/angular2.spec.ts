@@ -32,7 +32,6 @@ import {
 	BaseRequestOptions,
 	ResponseOptions,
 	Response,
-	Headers,
 	Http
 } from 'angular2/http';
 
@@ -191,24 +190,21 @@ describe('potion/angular2', () => {
 
 		describe('.request()', () => {
 			it('should return a Promise', () => {
-				expect(potion.request('/ping') instanceof Promise).toBe(true);
+				expect(potion.fetch('/ping') instanceof Promise).toBe(true);
 			});
 
 			it('should make a XHR request', (done: () => void) => {
 				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
-				potion.request('/ping').then(() => {
+				potion.fetch('/ping').then(() => {
 					subscription.unsubscribe();
 					done();
 				});
 			});
 
-			it('should return a Promise with a {data, headers} object', (done: () => void) => {
+			it('should return a Promise with data', (done: () => void) => {
 				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
-					let headers = new Headers();
-					headers.append('Content-Type', 'image/jpeg');
 					connection.mockRespond(new Response(
 						new ResponseOptions({
-							headers,
 							status: 200,
 							body: {
 								pong: true
@@ -216,11 +212,9 @@ describe('potion/angular2', () => {
 						})
 					));
 				});
-				potion.request('/ping').then(({data, headers}) => {
+				potion.fetch('/ping').then((data) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
-					expect(headers).not.toBeUndefined();
-					expect(headers).toEqual({'content-type': 'image/jpeg'});
 					subscription.unsubscribe();
 					done();
 				});
@@ -233,7 +227,7 @@ describe('potion/angular2', () => {
 					connection.mockRespond(response);
 				});
 
-				potion.request('/ping', {method: 'PATCH'}).then(() => {
+				potion.fetch('/ping', {method: 'PATCH'}).then(() => {
 					expect(method).toEqual(RequestMethod.Patch);
 					subscription.unsubscribe();
 					done();
@@ -247,7 +241,7 @@ describe('potion/angular2', () => {
 					connection.mockRespond(response);
 				});
 
-				potion.request('/ping', {method: 'GET', data: {pong: true}}).then(() => {
+				potion.fetch('/ping', {method: 'GET', data: {pong: true}}).then(() => {
 					expect(body).not.toBeNull();
 					expect(JSON.parse(body)).toEqual({pong: true});
 					subscription.unsubscribe();
@@ -262,14 +256,41 @@ describe('potion/angular2', () => {
 					connection.mockRespond(response);
 				});
 
-				potion.request('/ping', {method: 'POST', search: {pong: true}}).then(() => {
+				potion.fetch('/ping', {method: 'POST', search: {pong: true}}).then(() => {
 					expect(url).not.toBeNull();
-					expect(url).toEqual('/ping?pong=true');
+					expect(url).toEqual('/api/ping?pong=true');
 					subscription.unsubscribe();
 					done();
 				});
 			});
 		});
+	});
+
+	describe('Item()', () => {
+		let potion: Potion;
+		let backend: MockBackend;
+
+		beforeEachProviders(() => [
+			POTION_PROVIDERS,
+			provide(Http, {
+				useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+					return new Http(connectionBackend, defaultOptions);
+				},
+				deps: [
+					MockBackend,
+					BaseRequestOptions
+				]
+			}),
+			BaseRequestOptions,
+			MockBackend
+		]);
+
+		beforeEach(inject([MockBackend, Potion], (mb: MockBackend, p: Potion) => {
+			backend = mb;
+			potion = p;
+		}));
+
+		afterEach(() => backend.verifyNoPendingRequests());
 
 		describe('.fetch()', () => {
 			it('should use a memory cache by default to store and retrieve items', (done) => {

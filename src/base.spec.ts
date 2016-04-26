@@ -407,7 +407,7 @@ describe('potion/base', () => {
 				expect(users instanceof Pagination).toBe(true);
 				expect(users.length).toEqual(2);
 				expect(users.page).toEqual(1);
-				expect(users.perPage).toEqual(5); // Default value if not set with options
+				expect(users.perPage).toEqual(25); // Default value if not set with options
 				expect(users.pages).toEqual(1);
 				done();
 			});

@@ -116,35 +116,22 @@ export class Potion extends PotionBase {
 			});
 		}
 
-		/* tslint:disable: align */
-		let obs = new Observable((observer) => {
-			let subscriber = this._http.request(new Request(request)).subscribe((response: Response) => {
-				let headers = {};
+		return this._http.request(new Request(request)).toPromise().then((response: Response) => {
+			let headers = {};
 
-				if (response.headers) {
-					for (let key of response.headers.keys()) {
-						// Angular 2 does not yet lowercase headers.
-						// Make sure we get the first string value of the header instead of the array of values.
-						headers[key.toLowerCase()] = response.headers.get(key);
-					}
+			if (response.headers) {
+				for (let key of response.headers.keys()) {
+					// Angular 2 does not yet lowercase headers.
+					// Make sure we get the first string value of the header instead of the array of values.
+					headers[key.toLowerCase()] = response.headers.get(key);
 				}
+			}
 
-				observer.next({
-					headers: headers,
-					data: response.json()
-				});
-				// Trigger the obs. completion
-				// in order for the promise to be resolved.
-				observer.complete();
-			}, (error) => observer.error(error));
-
-			return () => {
-				subscriber.unsubscribe();
+			return {
+				headers: headers,
+				data: response.json()
 			};
 		});
-		/* tslint:enable: align */
-
-		return obs.toPromise();
 	}
 }
 

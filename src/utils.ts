@@ -1,21 +1,6 @@
-import 'reflect-metadata';
 import {
 	PotionItemCache
 } from './base';
-
-
-/**
- * Quick way of getting/setting constructor metadata
- */
-
-export let reflector = {
-	get(constructor: Function, key: string | symbol) {
-		return Reflect.getOwnMetadata(key, constructor);
-	},
-	set(constructor: Function, key: string | symbol, annotations: any) {
-		Reflect.defineMetadata(key, annotations, constructor);
-	}
-};
 
 
 /**

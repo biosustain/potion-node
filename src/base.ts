@@ -54,7 +54,7 @@ export interface PaginationOptions {
 
 export interface QueryOptions extends PaginationOptions {
 	where?: any;
-	sort?: any
+	sort?: any;
 }
 
 export interface ItemOptions {
@@ -182,7 +182,7 @@ export class Store<T extends Item> {
 				sort
 			}
 		};
-		
+
 		return reflector
 			.get(this._itemConstructor, _potionMetadataKey)
 			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), fetchOptions, paginationObj);

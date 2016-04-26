@@ -1,5 +1,5 @@
 import {
-	FetchOptions,
+	RequestOptions,
 	PotionOptions,
 	PotionBase
 } from './base';
@@ -22,7 +22,7 @@ export class Potion extends PotionBase {
 	// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 	// Polyfill at https://github.com/github/fetch.
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
-	protected _fetch(uri, {method = 'GET', search, data, cache = true}: FetchOptions = {}): Promise<any> {
+	protected _fetch(uri, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
 		let headers: Headers = new Headers();
 		let init: any = {
 			method,

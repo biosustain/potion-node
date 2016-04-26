@@ -39,12 +39,15 @@ export interface URLSearchParams {
 	[key: string]: any;
 }
 
-export interface FetchOptions {
+export interface RequestOptions {
 	method?: string;
 	search?: URLSearchParams;
 	data?: any;
-	paginate?: boolean;
 	cache?: boolean;
+}
+
+export interface FetchOptions extends RequestOptions {
+	paginate?: boolean;
 }
 
 export interface PaginationOptions {
@@ -80,8 +83,8 @@ export abstract class Item {
 		return this.store.fetch(id, {cache});
 	}
 
-	static query(queryOptions?: QueryOptions, fetchOptions?: FetchOptions): Promise<Item[] | Pagination<Item>> {
-		return this.store.query(queryOptions, fetchOptions);
+	static query(queryOptions?: QueryOptions, {paginate = false, cache = true}: FetchOptions = {}): Promise<Item[] | Pagination<Item>> {
+		return this.store.query(queryOptions, {paginate, cache});
 	}
 
 	constructor(properties: any = {}, options?: ItemOptions) {
@@ -170,22 +173,19 @@ export class Store<T extends Item> {
 		return promise;
 	}
 
-	query({page = 1, perPage = 25, where, sort}: QueryOptions = {}, {paginate = false, cache = true}: FetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
-		let fetchOptions: FetchOptions = {
-			paginate,
-			cache,
-			method: 'GET',
-			search: {
-				page,
-				perPage,
-				where,
-				sort
-			}
-		};
-
+	query(queryOptions?: QueryOptions, {paginate = false, cache = true}: FetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
 		return reflector
 			.get(this._itemConstructor, POTION_METADATA_KEY)
-			.fetch(reflector.get(this._itemConstructor, POTION_URI_METADATA_KEY), fetchOptions, paginationObj);
+			.fetch(
+				reflector.get(this._itemConstructor, POTION_URI_METADATA_KEY),
+				{
+					paginate,
+					cache,
+					method: 'GET',
+					search: queryOptions
+				},
+				paginationObj
+			);
 	}
 
 	update(item: Item, data: any = {}): Promise<T> {
@@ -216,13 +216,21 @@ export class Store<T extends Item> {
 }
 
 
-export function route<T>(uri: string, {method}: FetchOptions = {}): (options?: FetchOptions) => Promise<T> {
-	return function (options?: FetchOptions): any {
+export function route<T>(uri: string, {method}: RequestOptions = {}): (params?: any, options?: FetchOptions) => Promise<T> {
+	return function (params?: any, {paginate = false, cache = true}: FetchOptions = {}): any {
 		let isCtor = typeof this === 'function';
 		uri = `${isCtor ? reflector.get(this, POTION_URI_METADATA_KEY) : this.uri}${uri}`;
+
+		let options: FetchOptions = {method, paginate, cache};
+		if (method === 'GET') {
+			options.data = params;
+		} else if ((<any>['POST', 'PUT', 'PATCH']).includes(method)) {
+			options.search = params;
+		}
+
 		return reflector
 			.get(isCtor ? this : this.constructor, POTION_METADATA_KEY)
-			.fetch(uri, Object.assign({method}, options));
+			.fetch(uri, options);
 	};
 }
 
@@ -280,7 +288,7 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
-	protected abstract _fetch(uri, options?: FetchOptions): Promise<any>;
+	protected abstract _fetch(uri, options?: RequestOptions): Promise<any>;
 
 	fetch(uri, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		// Add the API prefix if not present
@@ -291,6 +299,12 @@ export abstract class PotionBase {
 
 		fetchOptions = fetchOptions || {};
 
+		if (fetchOptions.paginate) {
+			// If no page was provided set to first
+			// Default to 25 items per page
+			fetchOptions.search = Object.assign({page: 1, perPage: 25}, fetchOptions.search);
+		}
+
 		return this
 			._fetch(uri, fetchOptions)
 			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
@@ -299,10 +313,10 @@ export abstract class PotionBase {
 				if (fetchOptions.paginate) {
 					let count = headers['x-total-count'] || data.length;
 
-					if (paginationObj) {
-						paginationObj.update(data, count);
-					} else {
+					if (!paginationObj) {
 						return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
+					} else {
+						paginationObj.update(data, count);
 					}
 				}
 

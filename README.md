@@ -100,6 +100,43 @@ let jane = new User({name: 'Jane Doe'});
 jane.save();
 ```
 
+When using the `.query()` method, you can provide additional params:
+```js
+let users = User.query({
+    where: {name: 'John'}, // `where` can have any value
+    sort: {name: false}, // and so can `sort`
+    perPage: 50,
+    page: 1
+});
+
+// Return paginated results
+// Skip cache when making the request
+let freshUsers = User.query(null, {
+    paginate: true,
+    cache: false
+});
+```
+
+Furthermore, all Route methods (besides `DELETE`) accept additional params as well:
+```js
+class Car extends Item {
+    static readEngines = Route.GET('/engines');
+    writeSpecs = Route.POST('/specs');
+}
+
+// Get a car
+let car = Car.fetch(1);
+
+// Get all diesel engines
+// Return paginated results
+let engines = Car.engines({where: {type: 'Diesel'}}, {paginate: true});
+
+// Create the car specs
+car.then((car) => car.writeSpecs({
+    engine: {type: 'Electric'}
+}));
+```
+
 #### AngularJS
 If you decide to use this package as a AngularJS module, there are a few differences from the standalone version, but the API does not change. Use the following example as a starting point:
 ```js

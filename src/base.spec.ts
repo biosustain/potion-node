@@ -1,6 +1,6 @@
 import {
 	PotionItemCache,
-	FetchOptions,
+	RequestOptions,
 	PotionBase,
 	Pagination,
 	Item,
@@ -96,7 +96,7 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: FetchOptions): Promise<any> {
+					protected _fetch(uri, options?: RequestOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (uri) {
@@ -138,7 +138,7 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: FetchOptions): Promise<any> {
+					protected _fetch(uri, options?: RequestOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (options.method) {
@@ -185,7 +185,7 @@ describe('potion/base', () => {
 				let john = null;
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: FetchOptions): Promise<any> {
+					protected _fetch(uri, options?: RequestOptions): Promise<any> {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (options.method) {
@@ -349,7 +349,7 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri, options?: FetchOptions): Promise<any> {
+				protected _fetch(uri, options?: RequestOptions): Promise<any> {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {

@@ -25,7 +25,7 @@ import 'rxjs/add/operator/toPromise';
 
 import {MemCache} from './utils';
 import {
-	FetchOptions,
+	RequestOptions as PotionRequestOptions,
 	PotionOptions,
 	PotionBase
 } from './base';
@@ -88,7 +88,7 @@ export class Potion extends PotionBase {
 		}
 	}
 
-	protected _fetch(uri, {method = 'GET', search, data}: FetchOptions = {}): Promise<any> {
+	protected _fetch(uri, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
 		// Angular Http Request accepts a RequestMethod type for a method,
 		// but the value for that is an integer.
 		// Therefore we need to match the string literals like 'GET' to the enum values for RequestMethod.

@@ -6,20 +6,20 @@ import {
 } from './utils';
 
 
-let _potionMetadataKey = Symbol('potion');
-let _potionURIMetadataKey = Symbol('potion:uri');
+const POTION_METADATA_KEY = Symbol('potion');
+const POTION_URI_METADATA_KEY = Symbol('potion:uri');
 
 
 /**
  * @readonly decorator
  */
 
-let _readonlyMetadataKey = Symbol('potion:readonly');
+const READONLY_METADATA_KEY = Symbol('potion:readonly');
 export function readonly(target, property) {
 	reflector.set(
 		target.constructor,
-		_readonlyMetadataKey,
-		Object.assign(reflector.get(target.constructor, _readonlyMetadataKey) || {}, {[property]: true})
+		READONLY_METADATA_KEY,
+		Object.assign(reflector.get(target.constructor, READONLY_METADATA_KEY) || {}, {[property]: true})
 	);
 }
 
@@ -106,7 +106,7 @@ export abstract class Item {
 
 	toJSON(): any {
 		let properties = {};
-		let metadata = reflector.get(this.constructor, _readonlyMetadataKey);
+		let metadata = reflector.get(this.constructor, READONLY_METADATA_KEY);
 
 		Object
 			.keys(this)
@@ -130,7 +130,7 @@ export class Store<T extends Item> {
 	constructor(itemConstructor: ItemConstructor) {
 		this._itemConstructor = itemConstructor;
 
-		let potion: PotionBase = reflector.get(itemConstructor, _potionMetadataKey);
+		let potion: PotionBase = reflector.get(itemConstructor, POTION_METADATA_KEY);
 
 		this.promise = (<typeof PotionBase>potion.constructor).promise;
 		this.cache = potion.cache;
@@ -138,7 +138,7 @@ export class Store<T extends Item> {
 	}
 
 	fetch(id, {cache}: FetchOptions = {}): Promise<T> {
-		let uri = `${reflector.get(this._itemConstructor, _potionURIMetadataKey)}/${id}`;
+		let uri = `${reflector.get(this._itemConstructor, POTION_URI_METADATA_KEY)}/${id}`;
 
 		// Try to get from cache
 		if (cache && this.cache && this.cache.get) {
@@ -160,7 +160,7 @@ export class Store<T extends Item> {
 		// and parse it.
 		// Enforce GET method
 		promise = this._promises[uri] = reflector
-			.get(this._itemConstructor, _potionMetadataKey)
+			.get(this._itemConstructor, POTION_METADATA_KEY)
 			.fetch(uri, {cache, method: 'GET'})
 			.then((item) => {
 				delete this._promises[uri]; // Remove pending request
@@ -184,27 +184,27 @@ export class Store<T extends Item> {
 		};
 
 		return reflector
-			.get(this._itemConstructor, _potionMetadataKey)
-			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), fetchOptions, paginationObj);
+			.get(this._itemConstructor, POTION_METADATA_KEY)
+			.fetch(reflector.get(this._itemConstructor, POTION_URI_METADATA_KEY), fetchOptions, paginationObj);
 	}
 
 	update(item: Item, data: any = {}): Promise<T> {
 		return reflector
-			.get(this._itemConstructor, _potionMetadataKey)
+			.get(this._itemConstructor, POTION_METADATA_KEY)
 			.fetch(item.uri, {data, cache: true, method: 'PATCH'});
 	}
 
 	save(data: any = {}): Promise<T> {
 		return reflector
-			.get(this._itemConstructor, _potionMetadataKey)
-			.fetch(reflector.get(this._itemConstructor, _potionURIMetadataKey), {data, cache: true, method: 'POST'});
+			.get(this._itemConstructor, POTION_METADATA_KEY)
+			.fetch(reflector.get(this._itemConstructor, POTION_URI_METADATA_KEY), {data, cache: true, method: 'POST'});
 	}
 
 	destroy(item: Item): Promise<T> {
 		let {uri} = item;
 
 		return reflector
-			.get(this._itemConstructor, _potionMetadataKey)
+			.get(this._itemConstructor, POTION_METADATA_KEY)
 			.fetch(uri, {method: 'DELETE'})
 			.then(() => {
 				// Clear the item from cache if exists
@@ -219,9 +219,9 @@ export class Store<T extends Item> {
 export function route<T>(uri: string, {method}: FetchOptions = {}): (options?: FetchOptions) => Promise<T> {
 	return function (options?: FetchOptions): any {
 		let isCtor = typeof this === 'function';
-		uri = `${isCtor ? reflector.get(this, _potionURIMetadataKey) : this.uri}${uri}`;
+		uri = `${isCtor ? reflector.get(this, POTION_URI_METADATA_KEY) : this.uri}${uri}`;
 		return reflector
-			.get(isCtor ? this : this.constructor, _potionMetadataKey)
+			.get(isCtor ? this : this.constructor, POTION_METADATA_KEY)
 			.fetch(uri, Object.assign({method}, options));
 	};
 }
@@ -311,8 +311,8 @@ export abstract class PotionBase {
 	}
 
 	register(uri: string, resource: any) {
-		reflector.set(resource, _potionMetadataKey, this);
-		reflector.set(resource, _potionURIMetadataKey, uri);
+		reflector.set(resource, POTION_METADATA_KEY, this);
+		reflector.set(resource, POTION_URI_METADATA_KEY, uri);
 
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);

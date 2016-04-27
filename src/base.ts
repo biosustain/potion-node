@@ -178,10 +178,20 @@ export class Store<T extends Item> {
 		promise = this._promises[uri] = Reflect
 			.getOwnMetadata(POTION_METADATA_KEY, this._itemConstructor)
 			.fetch(uri, {cache, method: 'GET'})
-			.then((item) => {
-				delete this._promises[uri]; // Remove pending request
-				return item;
-			});
+			.then(
+				(item) => {
+					// Remove pending request
+					delete this._promises[uri];
+					return item;
+				},
+				() => {
+					// If request fails,
+					// make sure to remove the pending request so further requests can be made.
+					// Return is necessary.
+					delete this._promises[uri];
+					return this.promise.reject();
+				}
+			);
 
 		return promise;
 	}

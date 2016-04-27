@@ -32,6 +32,7 @@ import {
 
 
 export {
+	readonly,
 	Item,
 	Route
 } from './base';

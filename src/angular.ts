@@ -6,10 +6,9 @@ import {
 
 
 export {
-	PotionItemCache,
+	readonly,
 	Item,
-	Route,
-	Pagination
+	Route
 } from './base';
 
 export default angular.module('potion', []).provider('potion', function () {

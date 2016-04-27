@@ -7,10 +7,9 @@ import {
 import {MemCache} from './utils';
 
 export {
-	PotionItemCache,
+	readonly,
 	Item,
-	Route,
-	Pagination
+	Route
 } from './base';
 
 export class Potion extends PotionBase {

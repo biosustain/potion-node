@@ -424,7 +424,7 @@ export abstract class PotionBase {
 }
 
 
-export class Pagination<T extends Item> {
+export class Pagination<T extends Item> implements Iterator<T> {
 	get page() {
 		return this._page;
 	}
@@ -449,6 +449,7 @@ export class Pagination<T extends Item> {
 	private _uri: string;
 	private _options: FetchOptions;
 
+	private _pointer = 0;
 	private _items: T[] = [];
 
 	private _page: number;
@@ -468,8 +469,22 @@ export class Pagination<T extends Item> {
 		this._total = parseInt(count, 10);
 	}
 
-	[Symbol.iterator]() {
-		return this._items.values();
+	[Symbol.iterator](): IterableIterator<T> {
+		return this;
+	}
+
+	next(): IteratorResult<T> {
+		if (this._pointer < this._items.length) {
+			return {
+				done: false,
+				value: this._items[this._pointer++]
+			};
+		} else {
+			this._pointer = 0;
+			return {
+				done: true
+			};
+		}
 	}
 
 	changePageTo(page) {

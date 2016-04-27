@@ -414,7 +414,7 @@ describe('potion/base', () => {
 		});
 
 		it('should contain instances of an Item', (done) => {
-			User.query({}, {paginate: true}).then((users: User[]) => {
+			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				for (let user of users) {
 					expect(user instanceof User).toBe(true);
 				}

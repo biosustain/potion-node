@@ -42,7 +42,7 @@ export class MemCache implements PotionItemCache<any> {
 	protected _items: Map<string, any>;
 
 	constructor() {
-		this._items = new Map();
+		this._items = new Map<string, any>();
 	}
 
 	get(key: string) {

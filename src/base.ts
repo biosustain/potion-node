@@ -366,9 +366,9 @@ export abstract class PotionBase {
 		resource.store = new Store(resource);
 	}
 
-	registerAs(uri: string): ClassDecorator {
+	registerAs(uri: string, options?: ItemOptions): ClassDecorator {
 		return (target: any) => {
-			this.register(uri, target);
+			this.register(uri, target, options);
 			return target;
 		};
 	}

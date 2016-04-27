@@ -218,10 +218,10 @@ describe('potion/base', () => {
 		});
 
 		describe('.toJSON()', () => {
-			it('should return a JSON repr. of the Item', () => {
+			it('should return a JSON repr. of the Item without the "id"', () => {
 				let {name, id} = user.toJSON();
 				expect(name).toEqual('John Doe');
-				expect(id).toEqual(null);
+				expect(id).toBeUndefined();
 			});
 
 			it('should omit @readonly properties', () => {

@@ -126,7 +126,7 @@ export abstract class Item {
 
 		Object
 			.keys(this)
-			.filter((key) => !metadata || (metadata && !metadata[key]))
+			.filter((key) => key !== 'id' && (!metadata || (metadata && !metadata[key])))
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
 			});

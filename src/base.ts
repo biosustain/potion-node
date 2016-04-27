@@ -29,10 +29,21 @@ const POTION_URI_METADATA_KEY = Symbol('potion:uri');
 
 const READONLY_METADATA_KEY = Symbol('potion:readonly');
 export function readonly(target, property) {
+	let constructor = typeof target === 'function'
+		? target
+		: typeof target.constructor === 'function'
+			? target.constructor
+			: null;
+
+	if (constructor === null) {
+		// TODO: maybe throw an error here
+		return;
+	}
+
 	Reflect.defineMetadata(
 		READONLY_METADATA_KEY,
-		Object.assign(Reflect.getOwnMetadata(READONLY_METADATA_KEY, target.constructor) || {}, {[property]: true}),
-		target.constructor
+		Object.assign(Reflect.getOwnMetadata(READONLY_METADATA_KEY, constructor) || {}, {[property]: true}),
+		constructor
 	);
 }
 
@@ -100,12 +111,8 @@ export abstract class Item {
 		return this.store.query(queryOptions, {paginate, cache});
 	}
 
-	constructor(properties: any = {}, options?: ItemOptions) {
+	constructor(properties: any = {}) {
 		Object.assign(this, properties);
-
-		if (options && Array.isArray(options.readonly)) {
-			options.readonly.forEach((property) => readonly(this, property));
-		}
 	}
 
 	save(): Promise<Item> {
@@ -347,9 +354,13 @@ export abstract class PotionBase {
 			});
 	}
 
-	register(uri: string, resource: any) {
+	register(uri: string, resource: any, options?: ItemOptions) {
 		Reflect.defineMetadata(POTION_METADATA_KEY, this, resource);
 		Reflect.defineMetadata(POTION_URI_METADATA_KEY, uri, resource);
+
+		if (options && Array.isArray(options.readonly)) {
+			options.readonly.forEach((property) => readonly(resource, property));
+		}
 
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);

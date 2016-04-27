@@ -55,40 +55,29 @@ describe('potion/base', () => {
 	});
 
 	describe('Item()', () => {
-		let user: User;
-		class User extends Item {
-			name: string;
-			weight: number;
-
-			@readonly
-			age: number;
-		}
-
-		beforeEach(() => {
-			user = new User({name: 'John Doe', age: 24, weight: 72}, {
-				readonly: ['weight']
-			});
-		});
-
-		afterEach(() => {
-			user = null;
-		});
-
-		it('should create an instance of Item', () => {
-			expect(user.id).toEqual(null);
-		});
-
 		it('should be an instance of the child class that extended it', () => {
+			class User extends Item {}
+			let user = new User();
 			expect(user instanceof User).toBe(true);
 		});
 
 		it('should have the same attributes it was initialized with', () => {
+			class User extends Item {
+				name: string;
+				weight: number;
+				age: number;
+			}
+			let user = new User({name: 'John Doe', age: 24, weight: 72});
 			expect(user.name).toEqual('John Doe');
 			expect(user.age).toEqual(24);
 			expect(user.weight).toEqual(72);
 		});
 
 		describe('.update()', () => {
+			class User extends Item {
+				name: string;
+			}
+
 			beforeEach(() => {
 				const JOHN = {
 					$uri: '/user/1',
@@ -131,6 +120,10 @@ describe('potion/base', () => {
 		});
 
 		describe('.destroy()', () => {
+			class User extends Item {
+				name: string;
+			}
+
 			beforeEach(() => {
 				let john = {
 					$uri: '/user/1',
@@ -181,6 +174,10 @@ describe('potion/base', () => {
 		});
 
 		describe('.save()', () => {
+			class User extends Item {
+				name: string;
+			}
+
 			beforeEach(() => {
 				let john = null;
 
@@ -218,6 +215,32 @@ describe('potion/base', () => {
 		});
 
 		describe('.toJSON()', () => {
+			class User extends Item {
+				name: string;
+				weight: number;
+
+				@readonly
+				age: number;
+			}
+
+			let user: User;
+
+			beforeEach(() => {
+				class Potion extends PotionBase {
+					protected _fetch(uri, options?: RequestOptions): Promise<any> {
+						let {promise} = (<typeof PotionBase>this.constructor);
+						return promise.resolve({});
+					}
+				}
+
+				let potion = new Potion({prefix: '/api'});
+				potion.register('/user', User, {
+					readonly: ['weight']
+				});
+
+				user = new User({name: 'John Doe', age: 24, weight: 72});
+			});
+
 			it('should return a JSON repr. of the Item without the "id"', () => {
 				let {name, id} = user.toJSON();
 				expect(name).toEqual('John Doe');

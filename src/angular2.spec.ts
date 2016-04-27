@@ -258,7 +258,7 @@ describe('potion/angular2', () => {
 
 				potion.fetch('/ping', {method: 'POST', search: {pong: true}}).then(() => {
 					expect(url).not.toBeNull();
-					expect(url).toEqual('/api/ping?pong=true');
+					expect(url).toEqual('/ping?pong=true');
 					subscription.unsubscribe();
 					done();
 				});

@@ -159,7 +159,6 @@ export const POTION_PROVIDERS = [
 	}),
 	new Provider(POTION_CONFIG, {
 		useValue: {
-			prefix: '/api',
 			cache: new MemCache()
 		}
 	}),

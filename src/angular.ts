@@ -13,7 +13,7 @@ export {
 } from './base';
 
 export default angular.module('potion', []).provider('potion', function () {
-	let options = {prefix: '/api'};
+	let options = {};
 
 	this.config = (config: PotionOptions) => {
 		if (config) {

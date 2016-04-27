@@ -246,9 +246,9 @@ export function route<T>(uri: string, {method}: RequestOptions = {}): (params?: 
 
 		let options: FetchOptions = {method, paginate, cache};
 		if (method === 'GET') {
-			options.data = params;
-		} else if ((<any>['POST', 'PUT', 'PATCH']).includes(method)) {
 			options.search = params;
+		} else if ((<any>['POST', 'PUT', 'PATCH']).includes(method)) {
+			options.data = params;
 		}
 
 		return Reflect

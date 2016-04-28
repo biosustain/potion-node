@@ -52,6 +52,38 @@ describe('potion/base', () => {
 				expect(potion.resources['/user']).not.toBeUndefined();
 			});
 		});
+
+		describe('.fetch()', () => {
+			it('should correctly serialize {data, search} params', (done) => {
+				let search: any;
+				let data: any;
+
+				class Potion extends PotionBase {
+					protected _fetch(uri, options: RequestOptions): Promise<any> {
+						data = options.data;
+						search = options.search;
+
+						return (<typeof PotionBase>this.constructor).promise.resolve({});
+					}
+				}
+
+				let potion = new Potion();
+				let today = new Date();
+
+				potion
+					.fetch('/user', {method: 'POST', data: {firstName: 'John', lastName: 'Doe', birthDate: today, features: [{eyeColor: 'blue'}]}, search: {isAdmin: false}})
+					.then(() => {
+						expect(Object.keys(data)).toEqual(['first_name', 'last_name', 'birth_date', 'features']);
+						expect(Object.keys(search)).toEqual(['is_admin']);
+
+						expect(data.birth_date).toEqual({$date: today.getTime()});
+						expect(data.features).toEqual([{eye_color: 'blue'}]);
+
+						done();
+					});
+
+			});
+		});
 	});
 
 	describe('Item()', () => {
@@ -377,12 +409,12 @@ describe('potion/base', () => {
 
 					switch (uri) {
 						case '/api/user':
-							let {page, perPage} = options.search;
+							let {page, per_page} = options.search;
 							let response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
 
-							if (page && perPage) {
+							if (page && per_page) {
 								Object.assign(response, {
-									data: toPages(response.data, perPage)[page - 1], // If pagination params are sent, return the appropriate page
+									data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
 									headers: {
 										'x-total-count': 2
 									}

@@ -35,6 +35,20 @@ export function pairsToObject(pairs: any[]) {
 
 
 /**
+ * Object.map()
+ */
+
+export function omap(object: Object, callback: (key, value) => any, thisArg?: any) {
+	let map = {};
+	for (let [key, value] of (<any>Object).entries(object)) {
+		let [k, v] = callback.call(thisArg, key, value);
+		map[k] = v;
+	}
+	return map;
+}
+
+
+/**
  * Memory cache
  */
 

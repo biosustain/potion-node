@@ -1,7 +1,8 @@
 import {
 	fromCamelCase,
 	toCamelCase,
-	pairsToObject
+	pairsToObject,
+	omap
 } from './utils';
 
 
@@ -351,7 +352,10 @@ export abstract class PotionBase {
 		}
 
 		return this
-			._fetch(uri, fetchOptions)
+			// Convert camel case props to snake case
+			// Note that only RequestOptions.search and RequestOptions.data need conversion,
+			// but the rest of the props on RequestOptions are not affected anyway if conversion is applied on the whole object
+			._fetch(uri, this._toPotionJSON(fetchOptions))
 			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 			.then(({headers, data}) => {
 
@@ -386,6 +390,22 @@ export abstract class PotionBase {
 			this.register(uri, target, options);
 			return target;
 		};
+	}
+
+	private _toPotionJSON(json: any) {
+		if (typeof json === 'object' && json !== null) {
+			if (json instanceof Item && typeof json.uri === 'string') {
+				return {$ref: `${this.prefix}${json.uri}`};
+			} else if (json instanceof Date) {
+				return {$date: json.getTime()};
+			} else if (json instanceof Array) {
+				return json.map((item) => this._toPotionJSON(item));
+			} else {
+				return omap(json, (key, value) => [fromCamelCase(key), this._toPotionJSON(value)]);
+			}
+		} else {
+			return json;
+		}
 	}
 
 	private _fromPotionJSON(json: any): Promise<any> {

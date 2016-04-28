@@ -54,7 +54,7 @@ describe('potion/base', () => {
 		});
 
 		describe('.fetch()', () => {
-			it('should correctly serialize {data, search} params', (done) => {
+			it('should correctly serialize {data, search} params when making a request', (done) => {
 				let search: any;
 				let data: any;
 
@@ -82,6 +82,100 @@ describe('potion/base', () => {
 						done();
 					});
 
+			});
+		});
+
+		describe('.fetch()', () => {
+			let cache;
+			let memcache = {};
+
+			class User extends Item {
+				createdAt: Date;
+			}
+
+			class Car extends Item {
+				user: User;
+			}
+
+			beforeEach(() => {
+				class Potion extends PotionBase {
+					protected _fetch(uri): Promise<any> {
+						let {promise} = (<typeof PotionBase>this.constructor);
+
+						switch (uri) {
+							case '/api/user/1':
+								return promise.resolve({
+									data: {
+										$uri: '/user/1',
+										created_at: {
+											$date: 1451060269000
+										}
+									}
+								});
+							case '/api/car/1':
+								return promise.resolve({
+									data: {
+										$uri: '/car/1',
+										user: {$ref: '/user/1'}
+									},
+									headers: {}
+								});
+							default:
+								break;
+						}
+					}
+				}
+
+				class MockCache implements PotionItemCache<Item> {
+					get(key: string): Item {
+						return memcache[key];
+					}
+					put(key: string, item: Item): Item {
+						return memcache[key] = item;
+					}
+					remove(key: string) {
+						delete memcache[key];
+					}
+					clear() {
+						memcache = {};
+					}
+				}
+
+				cache = new MockCache();
+				let potion = new Potion({cache, prefix: '/api'});
+
+				potion.register('/user', User);
+				potion.register('/car', Car);
+
+				spyOn(potion, 'fetch').and.callThrough();
+				spyOn(cache, 'get').and.callThrough();
+			});
+
+			afterEach(() => {
+				cache.clear();
+			});
+
+			it('should correctly deserialize Potion server response', (done) => {
+				User.fetch(1).then((user: User) => {
+					expect(user.id).toEqual(1);
+					expect(user.createdAt instanceof Date).toBe(true);
+					done();
+				});
+			});
+
+			it('should always cache the Item(s)', (done) => {
+				User.fetch(1).then(() => {
+					expect(cache.get('/user/1')).not.toBeUndefined();
+					done();
+				});
+			});
+
+			it('should automatically resolve references', (done) => {
+				Car.fetch(1).then((car: Car) => {
+					expect(car.user instanceof User).toBe(true);
+					expect(car.user.id).toEqual(1);
+					done();
+				});
 			});
 		});
 	});
@@ -292,13 +386,7 @@ describe('potion/base', () => {
 		let cache;
 		let memcache = {};
 
-		class User extends Item {
-			createdAt: Date;
-		}
-
-		class Car extends Item {
-			user: User;
-		}
+		class User extends Item {}
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
@@ -314,14 +402,6 @@ describe('potion/base', () => {
 										$date: 1451060269000
 									}
 								}
-							});
-						case '/api/car/1':
-							return promise.resolve({
-								data: {
-									$uri: '/car/1',
-									user: {$ref: '/user/1'}
-								},
-								headers: {}
 							});
 						default:
 							break;
@@ -348,7 +428,6 @@ describe('potion/base', () => {
 			potion = new Potion({cache, prefix: '/api'});
 
 			potion.register('/user', User);
-			potion.register('/car', Car);
 
 			spyOn(potion, 'fetch').and.callThrough();
 			spyOn(cache, 'get').and.callThrough();
@@ -358,10 +437,9 @@ describe('potion/base', () => {
 			cache.clear();
 		});
 
-		it('should correctly deserialize Potion server response', (done) => {
+		it('should return an instance of Item', (done) => {
 			User.fetch(1).then((user: User) => {
-				expect(user.id).toEqual(1);
-				expect(user.createdAt instanceof Date).toBe(true);
+				expect(user instanceof User).toBe(true);
 				done();
 			});
 		});
@@ -373,25 +451,10 @@ describe('potion/base', () => {
 			});
 		});
 
-		it('should always cache the Item(s)', (done) => {
-			User.fetch(1).then(() => {
-				expect(cache.get('/user/1')).not.toBeUndefined();
-				done();
-			});
-		});
-
 		it('should skip retrieval from Item cache if {cache} option is set to false', (done) => {
 			User.fetch(1, {cache: false}).then((user) => {
 				expect(cache.get).not.toHaveBeenCalled();
 				expect(cache.get('/user/1')).not.toBeUndefined();
-				done();
-			});
-		});
-
-		it('should automatically resolve references', (done) => {
-			Car.fetch(1).then((car: Car) => {
-				expect(car.user instanceof User).toBe(true);
-				expect(car.user.id).toEqual(1);
 				done();
 			});
 		});

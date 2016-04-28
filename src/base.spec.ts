@@ -409,7 +409,10 @@ describe('potion/base', () => {
 
 					switch (uri) {
 						case '/api/user':
+							/* tslint:disable: variable-name */
 							let {page, per_page} = options.search;
+							/* tslint:enable: variable-name */
+
 							let response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
 
 							if (page && per_page) {

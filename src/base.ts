@@ -484,7 +484,6 @@ export class Pagination<T extends Item> implements Iterator<T> {
 	get page() {
 		return this._page;
 	}
-
 	set page(page) {
 		this.changePageTo(page);
 	}
@@ -495,6 +494,10 @@ export class Pagination<T extends Item> implements Iterator<T> {
 
 	get pages() {
 		return Math.ceil(this._total / this._perPage);
+	}
+
+	get total() {
+		return this._total;
 	}
 
 	get length() {

@@ -530,6 +530,7 @@ describe('potion/base', () => {
 				expect(users.page).toEqual(1);
 				expect(users.perPage).toEqual(25); // Default value if not set with options
 				expect(users.pages).toEqual(1);
+				expect(users.total).toEqual(2);
 				done();
 			});
 		});
@@ -549,6 +550,7 @@ describe('potion/base', () => {
 				expect(users.page).toEqual(2);
 				expect(users.perPage).toEqual(1);
 				expect(users.pages).toEqual(2);
+				expect(users.total).toEqual(2);
 				expect(users.toArray()[0].id).toEqual(2); // Jane
 				done();
 			});

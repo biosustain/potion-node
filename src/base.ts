@@ -100,8 +100,23 @@ export interface ItemConstructor {
 
 export abstract class Item {
 	static store: Store<any>;
-	id = null;
-	uri: string;
+
+	private _id = null;
+	private _uri: string;
+
+	get id() {
+		return this._id;
+	}
+	set id(id) {
+		this._id = id;
+	}
+
+	get uri() {
+		return this._uri;
+	}
+	set uri(uri) {
+		this._uri = uri;
+	}
 
 	static fetch(id, {cache = true}: FetchOptions = {}): Promise<Item> {
 		return this.store.fetch(id, {cache});
@@ -133,7 +148,7 @@ export abstract class Item {
 
 		Object
 			.keys(this)
-			.filter((key) => key !== 'id' && (!metadata || (metadata && !metadata[key])))
+			.filter((key) => !key.startsWith('_') && (!metadata || (metadata && !metadata[key])))
 			.forEach((key) => {
 				properties[fromCamelCase(key)] = this[key];
 			});

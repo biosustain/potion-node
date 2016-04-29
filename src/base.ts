@@ -25,7 +25,13 @@ const POTION_URI_METADATA_KEY = Symbol('potion:uri');
 
 
 /**
- * @readonly decorator
+ * Mark a resource property as readonly and omit when saved.
+ *
+ * @example
+ * class User extends Item {
+ *     @readonly
+ *     age;
+ * }
  */
 
 const READONLY_METADATA_KEY = Symbol('potion:readonly');
@@ -50,7 +56,8 @@ export function readonly(target, property) {
 
 
 /**
- * Item cache
+ * Item cache.
+ * Dictates the implementation of the item cache.
  */
 
 export interface PotionItemCache<T extends Item> {
@@ -90,15 +97,30 @@ export interface ItemOptions {
 }
 
 
-/**
- * Item
- */
-
 export interface ItemConstructor {
 	new (object: any): Item;
 	store?: Store<Item>;
 }
 
+/**
+ * Base resource class for API resources.
+ * Extending this class will make all resource operations available on the child class.
+ * Note that this is an abstract class and cannot be directly initiated.
+ *
+ * @example
+ * class User extends Item {}
+ *
+ * User.fetch(1).then((user) => {
+ *     user.update({name: 'John Doe'});
+ * });
+ *
+ * let fred = new User({name: 'Fred'});
+ * fred.save();
+ *
+ * User.query().then((users) => {
+ *     users[0].destroy();
+ * });
+ */
 export abstract class Item {
 	static store: Store<any>;
 
@@ -119,14 +141,30 @@ export abstract class Item {
 		this._uri = uri;
 	}
 
-	static fetch(id, {cache = true}: FetchOptions = {}): Promise<Item> {
-		return this.store.fetch(id, {cache});
+	/**
+	 * Get a resource by id.
+	 * @param {Number|String} id
+	 * @param {FetchOptions} fetchOptions - Setting {cache: true} will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
+	 */
+	static fetch(id, fetchOptions?: FetchOptions): Promise<Item> {
+		return this.store.fetch(id, fetchOptions);
 	}
 
-	static query(queryOptions?: QueryOptions, {paginate = false, cache = true}: FetchOptions = {}): Promise<Item[] | Pagination<Item>> {
-		return this.store.query(queryOptions, {paginate, cache});
+	/**
+	 * Query resources.
+	 * @param {QueryOptions} queryOptions - Can be used to manipulate the pagination with {page: number, perPage: number},
+	 * but it can also be used to further filter the results with {sort: any, where: any}.
+	 * @param {FetchOptions} fetchOptions - Setting {paginate: true} will result in the return value to be a Pagination object.
+	 * Caching it this case will only apply for the HTTP request.
+	 */
+	static query(queryOptions?: QueryOptions, fetchOptions?: FetchOptions): Promise<Item[] | Pagination<Item>> {
+		return this.store.query(queryOptions, fetchOptions);
 	}
 
+	/**
+	 * Create an instance of the class that extended the Item.
+	 * @param {Object} properties - An object with any properties that will be added and accessible on the resource.
+	 */
 	constructor(properties: any = {}) {
 		Object.assign(this, properties);
 	}
@@ -135,6 +173,10 @@ export abstract class Item {
 		return (<typeof Item>this.constructor).store.save(this.toJSON());
 	}
 
+	/**
+	 * Update the resource.
+	 * @param {Object} properties - An object with any properties to update.
+	 */
 	update(properties: any = {}): Promise<Item> {
 		return (<typeof Item>this.constructor).store.update(this, properties);
 	}
@@ -176,7 +218,7 @@ export class Store<T extends Item> {
 
 	}
 
-	fetch(id, {cache}: FetchOptions = {}): Promise<T> {
+	fetch(id, {cache = true}: FetchOptions = {}): Promise<T> {
 		let uri = `${Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, this._itemConstructor)}/${id}`;
 
 		// Try to get from cache
@@ -280,7 +322,15 @@ export function route<T>(path: string, {method}: RequestOptions = {}): (params?:
 	};
 }
 
-
+/**
+ * Use the Route object methods to register other REST methods on a resource.
+ *
+ * @example
+ * class User extends Item {
+ *     static readSiblings = Route.GET('/siblings');
+ *     createSibling = Route.POST('/sibling');
+ * }
+ */
 /* tslint:disable: variable-name */
 export let Route = {
 	GET<T>(uri: string) {
@@ -307,6 +357,20 @@ export interface PotionOptions {
 	cache?: PotionItemCache<Item>;
 }
 
+/**
+ * This class contains the main logic for interacting with the Flask Potion backend.
+ * Note that this class does not contain the logic for making the HTTP requests,
+ * it is up to the child class to implement the logic for that through the `_fetch` method.
+ * Furthermore, the child class also needs to provide the Promise class/fn as this class is set to use the native Promise only available from ES6.
+ *
+ * @example
+ * class Potion extends PotionBase {
+ *     static promise = Promise;
+ *     protected _fetch(uri, options?: RequestOptions): Promise<any> {
+ *         // Here we need to implement the actual HTTP request
+ *     };
+ * }
+ */
 export abstract class PotionBase {
 	static promise = (<any>window).Promise;
 	resources = {};
@@ -334,6 +398,12 @@ export abstract class PotionBase {
 		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
 	}
 
+	/**
+	 * Make a HTTP request.
+	 * @param {String} uri
+	 * @param {RequestOptions} options
+	 * @returns {Object} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
+	 */
 	protected abstract _fetch(uri, options?: RequestOptions): Promise<any>;
 
 	fetch(uri, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
@@ -373,6 +443,12 @@ export abstract class PotionBase {
 			});
 	}
 
+	/**
+	 * Register a resource.
+	 * @param {String} uri - Path on which the resource is registered.
+	 * @param {Item} resource
+	 * @param {ItemOptions} options - Set the property options for any instance of the resource (setting a property to readonly for instance).
+	 */
 	register(uri: string, resource: any, options?: ItemOptions) {
 		Reflect.defineMetadata(POTION_METADATA_KEY, this, resource);
 		Reflect.defineMetadata(POTION_URI_METADATA_KEY, uri, resource);
@@ -385,6 +461,15 @@ export abstract class PotionBase {
 		resource.store = new Store(resource);
 	}
 
+	/**
+	 * Register a resource.
+	 * @param {String} uri - Path on which the resource is registered.
+	 * @param {ItemOptions} options - Set the property options for any instance of the resource (setting a property to readonly for instance).
+	 *
+	 * @example
+	 * @potion.registerAs('/user')
+	 * class User extends Item {}
+	 */
 	registerAs(uri: string, options?: ItemOptions): ClassDecorator {
 		return (target: any) => {
 			this.register(uri, target, options);
@@ -480,10 +565,25 @@ export abstract class PotionBase {
 }
 
 
+/**
+ * Array like class with resources.
+ * The class is returned when the {paginate} option is set to `true` when a query is made.
+ * It implements the [Iterator](https://basarat.gitbooks.io/typescript/content/docs/iterators.html) which means that `for..of` and `.next()` can be used to iterate over the items.
+ *
+ * @example
+ * class User extends Item {}
+ *
+ * User.query(null, {paginate: true}).then((users) => {
+ *     for (let user of users) {
+ *         console.log(user);
+ *     }
+ * });
+ */
 export class Pagination<T extends Item> implements Iterator<T> {
 	get page() {
 		return this._page;
 	}
+	// Setting the page will trigger a new query and update the items.
 	set page(page) {
 		this.changePageTo(page);
 	}

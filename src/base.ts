@@ -262,10 +262,10 @@ export class Store<T extends Item> {
 }
 
 
-export function route<T>(uri: string, {method}: RequestOptions = {}): (params?: any, options?: FetchOptions) => Promise<T> {
+export function route<T>(path: string, {method}: RequestOptions = {}): (params?: any, options?: FetchOptions) => Promise<T> {
 	return function (params?: any, {paginate = false, cache = true}: FetchOptions = {}): any {
 		let isCtor = typeof this === 'function';
-		uri = `${isCtor ? Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, this) : this.uri}${uri}`;
+		let uri = `${isCtor ? Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, this) : this.uri}${path}`;
 
 		let options: FetchOptions = {method, paginate, cache};
 		if (method === 'GET') {

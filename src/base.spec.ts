@@ -429,7 +429,7 @@ describe('potion/base', () => {
 
 			potion.register('/user', User);
 
-			spyOn(potion, 'fetch').and.callThrough();
+			spyOn(potion, '_fetch').and.callThrough();
 			spyOn(cache, 'get').and.callThrough();
 		});
 
@@ -446,7 +446,7 @@ describe('potion/base', () => {
 
 		it('should not trigger more requests for consequent requests for the same resource and if the first request is still pending', (done) => {
 			Promise.all([User.fetch(1, {cache: false}), User.fetch(1, {cache: false})]).then(() => {
-				expect(potion.fetch).toHaveBeenCalledTimes(1);
+				expect(potion._fetch).toHaveBeenCalledTimes(1);
 				done();
 			});
 		});

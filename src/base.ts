@@ -206,7 +206,6 @@ export class Store<T extends Item> {
 	promise;
 
 	private _itemConstructor: ItemConstructor;
-	private _promises = [];
 
 	constructor(itemConstructor: ItemConstructor) {
 		this._itemConstructor = itemConstructor;
@@ -219,46 +218,9 @@ export class Store<T extends Item> {
 	}
 
 	fetch(id, {cache = true}: FetchOptions = {}): Promise<T> {
-		let uri = `${Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, this._itemConstructor)}/${id}`;
-
-		// Try to get from cache
-		if (cache && this.cache && this.cache.get) {
-			let item = this.cache.get(uri);
-			if (item) {
-				return this.promise.resolve(item);
-			}
-		}
-
-		// If we already asked for the resource,
-		// return the exiting promise.
-		let promise = this._promises[uri];
-		if (promise) {
-			return promise;
-		}
-
-		// Register a pending request,
-		// get the data,
-		// and parse it.
-		// Enforce GET method
-		promise = this._promises[uri] = Reflect
+		return Reflect
 			.getOwnMetadata(POTION_METADATA_KEY, this._itemConstructor)
-			.fetch(uri, {cache, method: 'GET'})
-			.then(
-				(item) => {
-					// Remove pending request
-					delete this._promises[uri];
-					return item;
-				},
-				() => {
-					// If request fails,
-					// make sure to remove the pending request so further requests can be made.
-					// Return is necessary.
-					delete this._promises[uri];
-					return this.promise.reject();
-				}
-			);
-
-		return promise;
+			.fetch(`${Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, this._itemConstructor)}/${id}`, {cache, method: 'GET'});
 	}
 
 	query(queryOptions?: QueryOptions, {paginate = false, cache = true}: FetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T> | any> {
@@ -377,6 +339,8 @@ export abstract class PotionBase {
 	cache: PotionItemCache<Item>;
 	prefix: string;
 
+	private _pendingGETRequests = [];
+
 	constructor({prefix = '', cache}: PotionOptions = {}) {
 		this.prefix = prefix;
 		this.cache = cache;
@@ -407,40 +371,85 @@ export abstract class PotionBase {
 	protected abstract _fetch(uri, options?: RequestOptions): Promise<any>;
 
 	fetch(uri, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
+		fetchOptions = fetchOptions || {};
+		let {method, cache, search, paginate} = fetchOptions;
+		let {promise} = (<typeof PotionBase>this.constructor);
+		let key = uri;
+
 		// Add the API prefix if not present
 		let {prefix} = this;
 		if (uri.indexOf(prefix) === -1) {
 			uri = `${prefix}${uri}`;
 		}
 
-		fetchOptions = fetchOptions || {};
-
-		if (fetchOptions.paginate) {
+		if (paginate) {
 			// If no page was provided set to first
 			// Default to 25 items per page
-			fetchOptions.search = Object.assign({page: 1, perPage: 25}, fetchOptions.search);
+			search = fetchOptions.search = Object.assign({page: 1, perPage: 25}, search);
 		}
 
-		return this
+		let fetch = () => {
+			return this
 			// Convert camel case props to snake case
 			// Note that only RequestOptions.search and RequestOptions.data need conversion,
 			// but the rest of the props on RequestOptions are not affected anyway if conversion is applied on the whole object
-			._fetch(uri, this._toPotionJSON(fetchOptions))
-			.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
-			.then(({headers, data}) => {
+				._fetch(uri, this._toPotionJSON(fetchOptions))
+				// Convert the data to Potion JSON
+				.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
+				.then(({headers, data}) => {
+					// Return or update Pagination
+					if (paginate) {
+						let count = headers['x-total-count'] || data.length;
 
-				if (fetchOptions.paginate) {
-					let count = headers['x-total-count'] || data.length;
-
-					if (!paginationObj) {
-						return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
-					} else {
-						paginationObj.update(data, count);
+						if (!paginationObj) {
+							return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
+						} else {
+							paginationObj.update(data, count);
+						}
 					}
-				}
 
-				return data;
-			});
+					return data;
+				});
+		};
+
+		if (method === 'GET' && !search) {
+			// If a GET request and {cache: true},
+			// try to get item from cache,
+			// and return a resolved promise with the cached item.
+			// Note that queries are not cached.
+			if  (cache && this.cache && this.cache.get) {
+				let item = this.cache.get(key);
+				if (item) {
+					return promise.resolve(item);
+				}
+			}
+
+			// If we already asked for the resource,
+			// return the exiting pending request promise.
+			let request = this._pendingGETRequests[uri];
+			if (request) {
+				return request;
+			}
+
+			request = this._pendingGETRequests[uri] = fetch().then(
+				(data) => {
+					// Remove pending request
+					delete this._pendingGETRequests[uri];
+					return data;
+				},
+				() => {
+					// If request fails,
+					// make sure to remove the pending request so further requests can be made.
+					// Return is necessary.
+					delete this._pendingGETRequests[uri];
+					return promise.reject();
+				}
+			);
+
+			return request;
+		} else {
+			return fetch();
+		}
 	}
 
 	/**

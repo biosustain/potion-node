@@ -65,6 +65,21 @@ class User extends Item {
 
 ```
 
+Or if you'd like to set some of the properties to read only (meaning any updates will omit those properties), you can do it either directly on the class using property decorators or when the resource is registered:
+```js
+import {readonly} from 'potion';
+
+@potion.registerAs('/user', {
+    readonly: ['weight']
+})
+class User extends Item {
+    weight;
+    
+    @readonly
+    age;
+}
+```
+
 And to use the endpoints that were just created:
 ```js
 // Fetch a user object by id

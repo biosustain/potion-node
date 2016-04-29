@@ -1,8 +1,14 @@
 {
 	"name": "potion-client",
-	"version": "0.14.1",
+	"version": "0.14.2",
 	"description": "A ES6 client for APIs written in Flask-Potion",
-	"keywords": [],
+	"keywords": [
+		"potion",
+		"potion flask",
+		"potion flask client",
+		"potion client",
+		"flask"
+	],
 	"homepage": "",
 	"license": "MIT",
 	"author": {

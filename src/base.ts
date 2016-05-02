@@ -162,6 +162,15 @@ export abstract class Item {
 	}
 
 	/**
+	 * Get the first item.
+	 */
+	static first(queryOptions?: QueryOptions): Promise<Item> {
+		return this.store
+			.query(queryOptions)
+			.then((items) => items[0]);
+	}
+
+	/**
 	 * Create an instance of the class that extended the Item.
 	 * @param {Object} properties - An object with any properties that will be added and accessible on the resource.
 	 */

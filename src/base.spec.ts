@@ -506,18 +506,6 @@ describe('potion/base', () => {
 				}
 			}
 
-			function toPages(items: any[], perPage: number): Array<any[]> {
-				let i;
-				let j;
-				let pages = [];
-
-				for (i = 0, j = items.length; i < j; i += perPage) {
-					pages.push(items.slice(i, i + perPage));
-				}
-
-				return pages;
-			}
-
 			potion = new Potion({prefix: '/api'});
 
 			potion.register('/user', User);
@@ -563,6 +551,67 @@ describe('potion/base', () => {
 					expect(users.toArray()[0].id).toEqual(1); // John
 					done();
 				});
+			});
+		});
+	});
+
+	describe('Item.first()', () => {
+		let potion;
+
+		class User extends Item {}
+
+		beforeEach(() => {
+			class Potion extends PotionBase {
+				protected _fetch(uri, options?: RequestOptions): Promise<any> {
+					let {promise} = (<typeof PotionBase>this.constructor);
+
+					switch (uri) {
+						case '/user':
+							/* tslint:disable: variable-name */
+							let {page, per_page} = options.search || {page: 1, per_page: 25};
+							/* tslint:enable: variable-name */
+
+							let response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
+
+							if (page && per_page) {
+								Object.assign(response, {
+									data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
+									headers: {
+										'x-total-count': 2
+									}
+								});
+							}
+
+							return promise.resolve(response);
+						case '/user/1':
+							return promise.resolve({
+								data: {
+									$uri: '/user/1'
+								}
+							});
+						case '/user/2':
+							return promise.resolve({
+								data: {
+									$uri: '/user/2'
+								}
+							});
+						default:
+							break;
+					}
+				}
+			}
+
+
+
+			potion = new Potion();
+
+			potion.register('/user', User);
+		});
+
+		it('should return the fist Item', (done) => {
+			User.first().then((user: User) => {
+				expect(user instanceof User).toBe(true);
+				done();
 			});
 		});
 	});
@@ -619,3 +668,16 @@ describe('potion/base', () => {
 		});
 	});
 });
+
+
+function toPages(items: any[], perPage: number): Array<any[]> {
+	let i;
+	let j;
+	let pages = [];
+
+	for (i = 0, j = items.length; i < j; i += perPage) {
+		pages.push(items.slice(i, i + perPage));
+	}
+
+	return pages;
+}

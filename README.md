@@ -41,16 +41,19 @@ import {Potion, Item} from 'potion';
 let potion = new Potion({prefix: '/api'});
 ```
 
-Now the API endpoints can be registered:
+Now the API endpoints can be registered either using the `@potion.registerAs()` class decorator:
 ```js
 // `Item` has been imported above,
 // do not forget about it;
 // and `potion` is the instance created in the above example
 @potion.registerAs('/user')
 class User extends Item {}
+```
 
-// If decorators are not something you like,
-// you can use potion.register('/user', User);
+Or by using the `potion.register()` method:
+```js
+class User extends Item {}
+potion.register('/user', User);
 ```
 
 If there are some instance or static routes for an API endpoint that you wish to register, this can be done using:
@@ -62,25 +65,31 @@ class User extends Item {
     static names = Route.GET('/names');
     groups = Route.GET('/groups');
 }
-
 ```
 
-Or if you'd like to set some of the properties to read only (meaning any updates will omit those properties), you can do it either directly on the class using property decorators or when the resource is registered:
+Furthermore, if you'd like to set some of the properties to read only (meaning that any requests to the backend will omit those properties), you can do it either directly on the resource using property decorators:
 ```js
-import {readonly} from 'potion';
+import {Item, readonly} from 'potion';
 
-@potion.registerAs('/user', {
-    readonly: ['weight']
-})
 class User extends Item {
-    weight;
-    
     @readonly
     age;
 }
 ```
 
-And to use the endpoints that were just created:
+Or you can do it when the resource is registered:
+```js
+import {Item} from 'potion';
+
+@potion.registerAs('/user', {
+    readonly: ['age']
+})
+class User extends Item {
+    age;
+}
+```
+
+Finally, to use the endpoints that were just created:
 ```js
 // Fetch a user object by id
 let user = User.fetch(1);
@@ -330,14 +339,15 @@ Make sure that the builds and tests will run successfully, before you make a pul
 **Note**: If you add new files or remove files, make sure to edit the `"files"` field in `tsconfig.json`:
 ```js
 "files": [
-    // these files will always stay here
-	"node_modules/typescript/lib/lib.es6.d.ts",
-	"typings/main.d.ts",
-	// you can change the below as you wish
-	"src/angular.ts",
-	"src/fetch.ts",
-	"src/base.ts",
-	"src/utils.ts"
+    // These files MUST always be here as they provide the type definitions
+    "typings/main.d.ts",
+    "node_modules/typescript/lib/lib.es7.d.ts",
+    // You can change the below as you wish
+    "src/angular.ts",
+    "src/angular2.ts",
+    "src/fetch.ts",
+    "src/base.ts",
+    "src/utils.ts"
 ]
 ```
 

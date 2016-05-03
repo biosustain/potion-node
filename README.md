@@ -36,9 +36,29 @@ You will first need to load `Potion` and create an instance of it in order to be
 ```js
 // It will load from the main module `potion/fetch`,
 // and it will use the fetch API
-import {Potion, Item} from 'potion';
+import {
+    PotionItemCache,
+    Potion,
+    Item
+} from 'potion';
 
-let potion = new Potion({prefix: '/api'});
+class CustomCache<T> implements PotionItemCache<T> {
+    get(key: string): T {
+        // logic to fetch the item from cache
+    }
+    put(key: string, item: T): T {
+        // logic to cache and return the item
+    }
+    remove(key: string): {
+        // logic to remove the item from cache
+    }
+}
+
+let potion = new Potion({
+    host: 'http://localhost:8080', // if you are hosting the api at a different host, defaults to ''
+    prefix: '/api' // if all routes are at a specific path, defaults to ''
+    cache: new CustomCache<Item>() // a custom cache that implements PotionItemCache (note that by default it will use a in memory cache if a custom cache is not provided)
+});
 ```
 
 Now the API endpoints can be registered either using the `@potion.registerAs()` class decorator:

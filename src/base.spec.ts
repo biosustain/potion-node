@@ -20,14 +20,15 @@ describe('potion/base', () => {
 				}
 			}
 
-			potion = new Potion({prefix: '/api', cache: null});
+			potion = new Potion({host: 'http://localhost:8080', prefix: '/api', cache: null});
 		});
 
 		afterEach(() => {
 			potion = null;
 		});
 
-		it('should have {prefix, cache} configurable properties', () => {
+		it('should have {host, prefix, cache} configurable properties', () => {
+			expect(potion.host).toEqual('http://localhost:8080');
 			expect(potion.prefix).toEqual('/api');
 			expect(potion.cache).toBe(null);
 		});
@@ -103,7 +104,7 @@ describe('potion/base', () => {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (uri) {
-							case '/api/user/1':
+							case '/user/1':
 								return promise.resolve({
 									data: {
 										$uri: '/user/1',
@@ -112,7 +113,7 @@ describe('potion/base', () => {
 										}
 									}
 								});
-							case '/api/car/1':
+							case '/car/1':
 								return promise.resolve({
 									data: {
 										$uri: '/car/1',
@@ -142,7 +143,7 @@ describe('potion/base', () => {
 				}
 
 				cache = new MockCache();
-				let potion = new Potion({cache, prefix: '/api'});
+				let potion = new Potion({cache});
 
 				potion.register('/user', User);
 				potion.register('/car', Car);
@@ -215,7 +216,7 @@ describe('potion/base', () => {
 						let {promise} = (<typeof PotionBase>this.constructor);
 
 						switch (uri) {
-							case '/api/user/1':
+							case '/user/1':
 								if (options.method === 'PATCH') {
 									Object.assign(JOHN, {}, options.data);
 								}
@@ -227,7 +228,7 @@ describe('potion/base', () => {
 					}
 				}
 
-				let potion = new Potion({prefix: '/api'});
+				let potion = new Potion();
 				potion.register('/user', User);
 			});
 
@@ -275,7 +276,7 @@ describe('potion/base', () => {
 					}
 				}
 
-				let potion = new Potion({prefix: '/api'});
+				let potion = new Potion();
 				potion.register('/user', User);
 			});
 
@@ -322,7 +323,7 @@ describe('potion/base', () => {
 					}
 				}
 
-				let potion = new Potion({prefix: '/api'});
+				let potion = new Potion();
 				potion.register('/user', User);
 			});
 
@@ -359,7 +360,7 @@ describe('potion/base', () => {
 					}
 				}
 
-				let potion = new Potion({prefix: '/api'});
+				let potion = new Potion();
 				potion.register('/user', User, {
 					readonly: ['weight']
 				});
@@ -394,7 +395,7 @@ describe('potion/base', () => {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {
-						case '/api/user/1':
+						case '/user/1':
 							return promise.resolve({
 								data: {
 									$uri: '/user/1',
@@ -425,7 +426,7 @@ describe('potion/base', () => {
 			}
 
 			cache = new MockCache();
-			potion = new Potion({cache, prefix: '/api'});
+			potion = new Potion({cache});
 
 			potion.register('/user', User);
 
@@ -471,7 +472,7 @@ describe('potion/base', () => {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {
-						case '/api/user':
+						case '/user':
 							/* tslint:disable: variable-name */
 							let {page, per_page} = options.search;
 							/* tslint:enable: variable-name */
@@ -488,13 +489,13 @@ describe('potion/base', () => {
 							}
 
 							return promise.resolve(response);
-						case '/api/user/1':
+						case '/user/1':
 							return promise.resolve({
 								data: {
 									$uri: '/user/1'
 								}
 							});
-						case '/api/user/2':
+						case '/user/2':
 							return promise.resolve({
 								data: {
 									$uri: '/user/2'
@@ -506,8 +507,7 @@ describe('potion/base', () => {
 				}
 			}
 
-			potion = new Potion({prefix: '/api'});
-
+			potion = new Potion();
 			potion.register('/user', User);
 		});
 
@@ -601,10 +601,7 @@ describe('potion/base', () => {
 				}
 			}
 
-
-
 			potion = new Potion();
-
 			potion.register('/user', User);
 		});
 
@@ -628,9 +625,9 @@ describe('potion/base', () => {
 					let {promise} = (<typeof PotionBase>this.constructor);
 
 					switch (uri) {
-						case '/api/user/1':
+						case '/user/1':
 							return promise.resolve({data: {$uri: '/user/1'}});
-						case '/api/user/names':
+						case '/user/names':
 							return promise.resolve({
 								data: ['John Doe'],
 								headers: {}
@@ -641,7 +638,7 @@ describe('potion/base', () => {
 				}
 			}
 
-			let potion = new Potion({prefix: '/api'});
+			let potion = new Potion();
 			potion.register('/user', User);
 
 		});

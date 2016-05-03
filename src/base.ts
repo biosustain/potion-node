@@ -324,6 +324,7 @@ export let Route = {
 
 
 export interface PotionOptions {
+	host?: string;
 	prefix?: string;
 	cache?: PotionItemCache<Item>;
 }
@@ -346,11 +347,13 @@ export abstract class PotionBase {
 	static promise = (<any>window).Promise;
 	resources = {};
 	cache: PotionItemCache<Item>;
+	host: string;
 	prefix: string;
 
 	private _pendingGETRequests = [];
 
-	constructor({prefix = '', cache}: PotionOptions = {}) {
+	constructor({host = '', prefix = '', cache}: PotionOptions = {}) {
+		this.host = host;
 		this.prefix = prefix;
 		this.cache = cache;
 	}
@@ -402,7 +405,7 @@ export abstract class PotionBase {
 			// Convert camel case props to snake case
 			// Note that only RequestOptions.search and RequestOptions.data need conversion,
 			// but the rest of the props on RequestOptions are not affected anyway if conversion is applied on the whole object
-				._fetch(uri, this._toPotionJSON(fetchOptions))
+				._fetch(`${this.host}${uri}`, this._toPotionJSON(fetchOptions))
 				// Convert the data to Potion JSON
 				.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 				.then(({headers, data}) => {

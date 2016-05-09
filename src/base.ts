@@ -545,7 +545,18 @@ export abstract class PotionBase {
 						let {params, uri} = this.parseURI(properties.$uri);
 						Object.assign(obj, {uri, id: parseInt(params[0], 10)});
 
-						let item = Reflect.construct(<any>resource, [obj]);
+						let item;
+						// Try to get existing entry from cache
+						if (this.cache && this.cache.get) {
+							item = this.cache.get(uri);
+						}
+
+						if (item) {
+							Object.assign(item, obj);
+						} else {
+							item = Reflect.construct(<any>resource, [obj]);
+						}
+
 						if (this.cache && this.cache.put) {
 							this.cache.put(uri, <any>item);
 						}

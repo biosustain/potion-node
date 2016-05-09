@@ -454,7 +454,7 @@ describe('potion/base', () => {
 
 		it('should skip retrieval from Item cache if {cache} option is set to false', (done) => {
 			User.fetch(1, {cache: false}).then((user) => {
-				expect(cache.get).not.toHaveBeenCalled();
+				expect(cache.get).toHaveBeenCalledTimes(1); // It will be called once when the deserialization in Potion()._fromPotionJSON() is triggered
 				expect(cache.get('/user/1')).not.toBeUndefined();
 				done();
 			});

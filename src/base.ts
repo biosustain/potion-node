@@ -384,7 +384,7 @@ export abstract class PotionBase {
 
 	fetch(uri, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		fetchOptions = fetchOptions || {};
-		let {method, cache, search, paginate} = fetchOptions;
+		let {method, cache, search, paginate, data} = fetchOptions;
 		let {promise} = (<typeof PotionBase>this.constructor);
 		let key = uri;
 
@@ -402,10 +402,12 @@ export abstract class PotionBase {
 
 		let fetch = () => {
 			return this
-			// Convert camel case props to snake case
-			// Note that only RequestOptions.search and RequestOptions.data need conversion,
-			// but the rest of the props on RequestOptions are not affected anyway if conversion is applied on the whole object
-				._fetch(`${this.host}${uri}`, this._toPotionJSON(fetchOptions))
+				// Convert the {data, search} object props to snake case.
+				// Serialize all values to Potion JSON.
+				._fetch(`${this.host}${uri}`, Object.assign({}, fetchOptions, {
+					search: search ? this._toPotionJSON(search) : null,
+					data: data ? this._toPotionJSON(data) : null
+				}))
 				// Convert the data to Potion JSON
 				.then(({data, headers}) => this._fromPotionJSON(data).then((json) => ({headers, data: json})))
 				.then(({headers, data}) => {

@@ -22,7 +22,7 @@ export default angular.module('potion', []).provider('potion', function () {
 		}
 	};
 
-	this.$get = function ($cacheFactory, $q, $http) {
+	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
 		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
@@ -40,7 +40,7 @@ export default angular.module('potion', []).provider('potion', function () {
 		return new Potion(Object.assign({
 			cache
 		}, options));
-	};
+	}];
 
 	return this;
 });

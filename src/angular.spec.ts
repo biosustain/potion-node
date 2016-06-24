@@ -20,7 +20,9 @@ describe('potion/angular', () => {
 		}));
 
 		it('should provide a Potion instance', () => {
-			expect(provider.$get($cacheFactory, $q, $http)).not.toBeUndefined();
+			// Note that the `.$get` when using strict DI,
+			// is an array with the last element being the fn.
+			expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http)).not.toBeUndefined();
 		});
 
 		describe('.config()', () => {
@@ -28,7 +30,7 @@ describe('potion/angular', () => {
 				let config = {prefix: '/api'};
 				provider.config(config);
 				expect(provider.config()).toEqual(config);
-				expect(provider.$get($cacheFactory, $q, $http).prefix).toEqual('/api');
+				expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http).prefix).toEqual('/api');
 			});
 		});
 	});

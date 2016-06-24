@@ -12,7 +12,7 @@
 		"outDir": "./dist"
 	},
 	"files": [
-		"typings/main.d.ts",
+		"typings/index.d.ts",
 		"node_modules/typescript/lib/lib.es7.d.ts",
 		"src/angular.ts",
 		"src/angular2.ts",

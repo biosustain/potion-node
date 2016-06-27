@@ -525,6 +525,19 @@ export abstract class PotionBase {
 				let {resource, uri} = this.parseURI(json.$uri);
 				let promises = [];
 
+
+				// Cache the resource if it does not exist,
+				// but do it before resolving any possible references (to other resources) on it.
+				if (this.cache && this.cache.get && !this.cache.get(uri)) {
+					this.cache.put(
+						uri,
+						// Create an empty instance
+						<any>Reflect.construct(<any>resource, [])
+					);
+				}
+
+
+				// Resolve possible references
 				for (let key of Object.keys(json)) {
 					if (key === '$uri') {
 						promises.push(promise.resolve([key, uri]));
@@ -532,6 +545,7 @@ export abstract class PotionBase {
 						promises.push(this._fromPotionJSON(json[key]).then((value) => [toCamelCase(key), value]));
 					}
 				}
+
 
 				return promise
 					.all(promises)
@@ -569,15 +583,10 @@ export abstract class PotionBase {
 				if (typeof json.$ref === 'string') {
 					let {uri} = this.parseURI(json.$ref);
 
-					// Try to get from cache
-					if (this.cache && this.cache.get) {
-						let item = this.cache.get(uri);
-						if (item) {
-							return promise.resolve(item);
-						}
-					}
-
-					return this.fetch(uri);
+					return this.fetch(uri, {
+						cache: true,
+						method: 'GET'
+					});
 				} else if (typeof json.$date !== 'undefined') {
 					return promise.resolve(new Date(json.$date));
 				}

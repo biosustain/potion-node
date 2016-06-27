@@ -98,6 +98,10 @@ describe('potion/base', () => {
 				user: User;
 			}
 
+			class Person extends Item {
+				sibling: Person;
+			}
+
 			beforeEach(() => {
 				class Potion extends PotionBase {
 					protected _fetch(uri): Promise<any> {
@@ -120,6 +124,20 @@ describe('potion/base', () => {
 										user: {$ref: '/user/1'}
 									},
 									headers: {}
+								});
+							case '/person/1':
+								return promise.resolve({
+									data: {
+										$uri: '/person/1',
+										sibling: {$ref: '/person/2'}
+									}
+								});
+							case '/person/2':
+								return promise.resolve({
+									data: {
+										$uri: '/person/2',
+										sibling: {$ref: '/person/1'}
+									}
 								});
 							default:
 								break;
@@ -147,6 +165,7 @@ describe('potion/base', () => {
 
 				potion.register('/user', User);
 				potion.register('/car', Car);
+				potion.register('/person', Person);
 
 				spyOn(potion, 'fetch').and.callThrough();
 				spyOn(cache, 'get').and.callThrough();
@@ -175,6 +194,13 @@ describe('potion/base', () => {
 				Car.fetch(1).then((car: Car) => {
 					expect(car.user instanceof User).toBe(true);
 					expect(car.user.id).toEqual(1);
+					done();
+				});
+			});
+
+			it('should work with cross-references', (done) => {
+				Person.fetch(1).then((person: Person) => {
+					expect(person.sibling instanceof Person).toBe(true);
 					done();
 				});
 			});
@@ -454,8 +480,9 @@ describe('potion/base', () => {
 
 		it('should skip retrieval from Item cache if {cache} option is set to false', (done) => {
 			User.fetch(1, {cache: false}).then((user) => {
-				expect(cache.get).toHaveBeenCalledTimes(1); // It will be called once when the deserialization in Potion()._fromPotionJSON() is triggered
-				expect(cache.get('/user/1')).not.toBeUndefined();
+				// `cache.get()` will be called twice during deserialization in Potion()._fromPotionJSON()
+				expect(cache.get).toHaveBeenCalledTimes(2);
+				expect(cache.get('/user/1')).toBeDefined();
 				done();
 			});
 		});

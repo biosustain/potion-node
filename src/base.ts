@@ -482,6 +482,8 @@ export abstract class PotionBase {
 
 		this.resources[uri] = resource;
 		resource.store = new Store(resource);
+
+		return resource;
 	}
 
 	/**

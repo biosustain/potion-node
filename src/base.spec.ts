@@ -45,8 +45,7 @@ describe('potion/base', () => {
 
 			it('should return the added resource', () => {
 				class User extends Item {}
-				let Resource = potion.register('/user', User);
-				expect(Resource.name).toEqual(User.name);
+				expect(potion.register('/user', User).name).toEqual(User.name);
 			});
 		});
 

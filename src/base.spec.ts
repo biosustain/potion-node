@@ -498,6 +498,14 @@ describe('potion/base', () => {
 
 		class User extends Item {}
 
+		class Person extends Item {
+			groups: Group[];
+		}
+
+		class Group extends Item {
+			members: Person[];
+		}
+
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected _fetch(uri, options?: RequestOptions): Promise<any> {
@@ -505,22 +513,20 @@ describe('potion/base', () => {
 
 					switch (uri) {
 						case '/user':
-							/* tslint:disable: variable-name */
-							let {page, per_page} = options.search;
-							/* tslint:enable: variable-name */
-
-							let response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
-
-							if (page && per_page) {
-								Object.assign(response, {
-									data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
-									headers: {
-										'x-total-count': 2
-									}
-								});
-							}
-
-							return promise.resolve(response);
+							return buildQueryResponse([
+									{$ref: '/user/1'},
+									{$ref: '/user/2'}
+								], options, promise);
+						case '/person':
+							return buildQueryResponse([
+								{$ref: '/person/1'},
+								{$ref: '/person/2'}
+								], options, promise);
+						case '/group':
+							return buildQueryResponse([
+								{$ref: '/group/1'},
+								{$ref: '/group/2'}
+								], options, promise);
 						case '/user/1':
 							return promise.resolve({
 								data: {
@@ -533,14 +539,90 @@ describe('potion/base', () => {
 									$uri: '/user/2'
 								}
 							});
+						case '/person/1':
+							return promise.resolve({
+								data: {
+									$uri: '/person/1',
+									groups: [
+										{$ref: '/group/1'},
+										{$ref: '/group/2'}
+									]
+								}
+							});
+						case '/person/2':
+							return promise.resolve({
+								data: {
+									$uri: '/person/2',
+									groups: [
+										{$ref: '/group/1'},
+										{$ref: '/group/2'}
+									]
+								}
+							});
+						case '/group/1':
+							return promise.resolve({
+								data: {
+									$uri: '/group/1',
+									members: [
+										{$ref: '/person/1'},
+										{$ref: '/person/2'}
+									]
+								}
+							});
+						case '/group/2':
+							return promise.resolve({
+								data: {
+									$uri: '/group/2',
+									members: [
+										{$ref: '/person/1'},
+										{$ref: '/person/2'}
+									]
+								}
+							});
 						default:
 							break;
 					}
 				}
 			}
 
-			potion = new Potion();
+			let memcache = new Map();
+			class MockCache implements PotionItemCache<Item> {
+				get(key: string): Item {
+					return memcache.get(key);
+				}
+				put(key: string, item: Item): Item {
+					memcache.set(key, item);
+					return item;
+				}
+				remove(key: string) {
+					memcache.delete(key);
+				}
+			}
+
+			potion = new Potion({cache: new MockCache()});
+
 			potion.register('/user', User);
+			potion.register('/person', Person);
+			potion.register('/group', Group);
+
+			function buildQueryResponse(data, options, promise) {
+				/* tslint:disable: variable-name */
+				let {page, per_page} = options.search;
+				/* tslint:enable: variable-name */
+
+				let response = {data};
+
+				if (page && per_page) {
+					Object.assign(response, {
+						data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
+						headers: {
+							'x-total-count': 2
+						}
+					});
+				}
+
+				return promise.resolve(response);
+			}
 		});
 
 		it('should return a Pagination object', (done) => {
@@ -583,6 +665,23 @@ describe('potion/base', () => {
 					expect(users.toArray()[0].id).toEqual(1); // John
 					done();
 				});
+			});
+		});
+
+		it('should work with cross-references', (done) => {
+			Person.query(null, {paginate: true}).then((people: Person[]) => {
+				expect(people.length).toEqual(2);
+				for (let person of people) {
+					expect(person.groups.length).toEqual(2);
+					for (let group of person.groups) {
+						expect(group instanceof Group).toBe(true);
+						expect(group.members.length).toEqual(2);
+						for (let member of group.members) {
+							expect(member instanceof Person).toBe(true);
+						}
+					}
+				}
+				done();
 			});
 		});
 	});

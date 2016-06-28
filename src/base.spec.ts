@@ -513,20 +513,32 @@ describe('potion/base', () => {
 
 					switch (uri) {
 						case '/user':
-							return buildQueryResponse([
+							return buildQueryResponse(
+								[
 									{$ref: '/user/1'},
 									{$ref: '/user/2'}
-								], options, promise);
+								],
+								options,
+								promise
+							);
 						case '/person':
-							return buildQueryResponse([
-								{$ref: '/person/1'},
-								{$ref: '/person/2'}
-								], options, promise);
+							return buildQueryResponse(
+								[
+									{$ref: '/person/1'},
+									{$ref: '/person/2'}
+								],
+								options,
+								promise
+							);
 						case '/group':
-							return buildQueryResponse([
-								{$ref: '/group/1'},
-								{$ref: '/group/2'}
-								], options, promise);
+							return buildQueryResponse(
+								[
+									{$ref: '/group/1'},
+									{$ref: '/group/2'}
+								],
+								options,
+								promise
+							);
 						case '/user/1':
 							return promise.resolve({
 								data: {

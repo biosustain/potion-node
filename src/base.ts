@@ -350,7 +350,7 @@ export abstract class PotionBase {
 	host: string;
 	prefix: string;
 
-	private _pendingGETRequests = [];
+	private _pendingGETRequests = new Map();
 
 	constructor({host = '', prefix = '', cache}: PotionOptions = {}) {
 		this.host = host;
@@ -440,25 +440,26 @@ export abstract class PotionBase {
 
 			// If we already asked for the resource,
 			// return the exiting pending request promise.
-			let request = this._pendingGETRequests[uri];
-			if (request) {
-				return request;
+			if (this._pendingGETRequests.has(uri)) {
+				return this._pendingGETRequests.get(uri);
 			}
 
-			request = this._pendingGETRequests[uri] = fetch().then(
+			let request = fetch().then(
 				(data) => {
 					// Remove pending request
-					delete this._pendingGETRequests[uri];
+					this._pendingGETRequests.delete(uri);
 					return data;
 				},
 				() => {
 					// If request fails,
 					// make sure to remove the pending request so further requests can be made.
 					// Return is necessary.
-					delete this._pendingGETRequests[uri];
+					this._pendingGETRequests.delete(uri);
 					return promise.reject();
 				}
 			);
+
+			this._pendingGETRequests.set(uri, request);
 
 			return request;
 		} else {

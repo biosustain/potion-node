@@ -172,6 +172,100 @@ describe('potion/angular', () => {
 
 				$httpBackend.flush();
 			});
+
+			it('should work with cross references', (done) => {
+				$httpBackend.expect('GET', '/user/1').respond(200, {$uri: '/user/1', sibling: {$ref: '/user/2'}});
+				$httpBackend.expect('GET', '/user/2').respond(200, {$uri: '/user/2', sibling: {$ref: '/user/1'}});
+
+				User.fetch(1).then((user: User) => {
+					expect(user instanceof User).toBe(true);
+					expect(user.sibling instanceof User).toBe(true);
+					done();
+				});
+
+				$httpBackend.flush();
+			});
+		});
+	});
+
+	describe('Item.query()', () => {
+		let $httpBackend;
+
+		// Make sure tslint does not complain about the var names
+		/* tslint:disable: variable-name */
+		let User;
+		let Group;
+		/* tslint:enable: variable-name */
+
+		beforeEach(angular.mock.module('test'));
+
+		beforeEach(angular.mock.inject(function ($injector) {
+			$httpBackend = $injector.get('$httpBackend');
+
+			User = $injector.get('User');
+			Group = $injector.get('Group');
+		}));
+
+		afterEach(() => {
+			$httpBackend.verifyNoOutstandingRequest();
+		});
+
+		it('should work with cross references', (done) => {
+			$httpBackend.when('GET', '/user').respond(200, [{$ref: '/user/1'}, {$ref: '/user/2'}]);
+			$httpBackend.when('GET', '/group').respond(200, [{$ref: '/group/1'}, {$ref: '/group/2'}]);
+
+
+			$httpBackend.when('GET', '/user/1').respond(200, {
+				$uri: '/user/1',
+				// sibling: {$ref: '/user/2'},
+				groups: [
+					{$ref: '/group/1'},
+					{$ref: '/group/2'}
+				]
+			});
+
+			$httpBackend.when('GET', '/user/2').respond(200, {
+				$uri: '/user/2',
+				// sibling: {$ref: '/user/1'},
+				groups: [
+					{$ref: '/group/1'},
+					{$ref: '/group/2'}
+				]
+			});
+
+
+			$httpBackend.when('GET', '/group/1').respond(200, {
+				$uri: '/group/1',
+				members: [
+					{$ref: '/user/1'},
+					{$ref: '/user/2'}
+				]
+			});
+
+			$httpBackend.when('GET', '/group/2').respond(200, {
+				$uri: '/group/2',
+				members: [
+					{$ref: '/user/1'},
+					{$ref: '/user/2'}
+				]
+			});
+
+			User.query().then((users: User[]) => {
+				expect(users.length).toEqual(2);
+				for (let user of users) {
+					expect(user.groups.length).toEqual(2);
+					for (let group of user.groups) {
+						expect(group instanceof Group).toBe(true);
+						expect(group.members.length).toEqual(2);
+						for (let member of group.members) {
+							expect(member instanceof User).toBe(true);
+						}
+					}
+				}
+				done();
+			});
+
+			$httpBackend.flush();
 		});
 	});
 });
@@ -180,6 +274,12 @@ describe('potion/angular', () => {
 // Resources
 class User extends Item {
 	name: string;
+	sibling: User;
+	groups: Group[]
+}
+
+class Group extends Item {
+	members: User[]
 }
 
 // Configure Potion,
@@ -190,6 +290,8 @@ angular
 		potionProvider.config({prefix: ''});
 	}])
 	.factory('User', ['potion', (potion) => {
-		potion.register('/user', User);
-		return User;
+		return potion.register('/user', User);
+	}])
+	.factory('Group', ['potion', (potion) => {
+		return potion.register('/group', Group);
 	}]);

@@ -275,11 +275,11 @@ describe('potion/angular', () => {
 class User extends Item {
 	name: string;
 	sibling: User;
-	groups: Group[]
+	groups: Group[];
 }
 
 class Group extends Item {
-	members: User[]
+	members: User[];
 }
 
 // Configure Potion,

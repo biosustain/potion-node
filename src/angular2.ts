@@ -2,7 +2,8 @@ import {
 	APP_INITIALIZER,
 	Injectable,
 	Inject,
-	OpaqueToken
+	OpaqueToken,
+	isDevMode
 } from '@angular/core';
 import 'rxjs/add/operator/toPromise';
 import {
@@ -15,7 +16,13 @@ import {
 } from '@angular/http';
 
 import {MemCache} from './utils';
-import {RequestOptions as PotionRequestOptions, PotionOptions, PotionBase} from './core';
+import {
+	RequestOptions as PotionRequestOptions,
+	PotionOptions,
+	PotionBase,
+	Item,
+	ItemOptions
+} from './core';
 
 
 export {Item, Route, readonly} from './core';
@@ -92,13 +99,78 @@ export class Potion extends PotionBase {
 }
 
 
+export interface Resources {
+	[key: string]: typeof Item | [typeof Item, ItemOptions];
+}
+
+/**
+ * Provide a way to register resources when the app is bootstrapped.
+ *
+ * @example
+ * bootstrap(App, [
+ * 	   providePotion({
+ * 	       '/engine': Engine,
+ * 	       '/car': [Car, {
+ * 	           readonly: ['production']
+ * 	       }]
+ * 	   })
+ * ])
+ */
+export function providePotion(resources: Resources, config?: PotionConfig): any[] {
+	return [
+		{
+			// We do this because we want to initialize Potion before it is used by any component,
+			// and register resources.
+			provide: APP_INITIALIZER,
+			useFactory: (potion: Potion) => {
+				return () => {
+					if (isDevMode()) {
+						console.info('Potion resources have been registered.');
+					}
+
+					for (let [uri, type] of (Object as any).entries(resources)) {
+						// Tuple with resource type and a configuration
+						if (Array.isArray(type)) {
+							let [resource, config] = type;
+							potion.register(uri, resource, config);
+						} else {
+							potion.register(uri, type);
+						}
+					}
+				};
+			},
+			deps: [
+				Potion
+			],
+			multi: true
+		},
+		{
+			provide: POTION_CONFIG,
+			useValue: config || {
+				cache: new MemCache()
+			}
+		},
+		{
+			provide: Potion,
+			useClass: Potion,
+			deps: [
+				Http,
+				POTION_CONFIG
+			]
+		}
+	];
+}
+
+
 export const POTION_PROVIDERS = [
 	{
 		// We do this because we want to initialize Potion before it is used by any component.
 		provide: APP_INITIALIZER,
 		useFactory: (potion: Potion) => {
 			return () => {
-				console.info('Potion has been initialized.');
+				if (isDevMode()) {
+					console.info('Potion has been initialized.');
+				}
 			};
 		},
 		deps: [

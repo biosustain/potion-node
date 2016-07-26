@@ -1,4 +1,12 @@
-import {addProviders, setBaseTestProviders, inject} from '@angular/core/testing';
+// `async` needs this
+import 'zone.js/dist/async-test.js';
+
+import {
+	async,
+	addProviders,
+	setBaseTestProviders,
+	inject
+} from '@angular/core/testing';
 import {TEST_BROWSER_PLATFORM_PROVIDERS, TEST_BROWSER_APPLICATION_PROVIDERS} from '@angular/platform-browser/testing';
 import {
 	MockBackend,
@@ -8,6 +16,19 @@ import {
 
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
+
+
+import {
+	ExceptionHandler,
+	ComponentRef,
+	Component,
+	disposePlatform
+} from '@angular/core';
+// TODO: the next two lines are not ideal, we should avoid importing from private locations
+import {Console} from '@angular/core/src/console';
+import {getDOM} from '@angular/platform-browser/src/dom/dom_adapter';
+import {DOCUMENT} from '@angular/platform-browser';
+import {bootstrap} from '@angular/platform-browser-dynamic';
 
 
 import {
@@ -26,11 +47,13 @@ setBaseTestProviders(
 	TEST_BROWSER_APPLICATION_PROVIDERS
 );
 
+
 import {
 	POTION_CONFIG,
 	POTION_PROVIDERS,
 	Potion,
-	Item
+	Item,
+	providePotion
 } from './angular2';
 
 
@@ -87,6 +110,85 @@ describe('potion/angular2', () => {
 
 		it('should configure Potion({prefix, cache}) properties', inject([Potion], (potion: Potion) => {
 			expect(potion.prefix).toEqual('/test');
+		}));
+	});
+
+	describe('providePotion()', () => {
+		let bindings;
+
+		class User extends Item {}
+
+		beforeEach(() => {
+			disposePlatform();
+		});
+
+		beforeEach(() => {
+			const fakeDoc = getDOM().createHtmlDocument();
+			const el = getDOM().createElement('potion-test', fakeDoc);
+			getDOM().appendChild(fakeDoc.body, el);
+
+			const logger = new ArrayLogger();
+			const exceptionHandler = new ExceptionHandler(logger, false);
+
+			bindings = [
+				{provide: DOCUMENT, useValue: fakeDoc},
+				{provide: ExceptionHandler, useValue: exceptionHandler},
+				{
+					provide: Console,
+					useClass: DummyConsole
+				},
+				providePotion({
+					'/user': User
+				}),
+				{
+					provide: Http,
+					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+						return new Http(connectionBackend, defaultOptions);
+					},
+					deps: [
+						MockBackend,
+						BaseRequestOptions
+					]
+				},
+				BaseRequestOptions,
+				MockBackend
+			];
+		});
+
+		afterEach(() => {
+			disposePlatform();
+		});
+
+		it('should register any passed resources', async(() => {
+			bootstrap(PotionTestComponent, bindings).then((applicationRef: ComponentRef<PotionTestComponent>) => {
+				const {injector} = applicationRef;
+				const potion = injector.get(Potion);
+				expect(potion).not.toBeUndefined();
+				expect(potion.resources.hasOwnProperty('/user')).toBeTruthy();
+			});
+		}));
+
+		it('should allow Potion().request() to use Http', async(() => {
+			bootstrap(PotionTestComponent, bindings).then((applicationRef: ComponentRef<PotionTestComponent>) => {
+				const {injector} = applicationRef;
+				const backend = injector.get(MockBackend);
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
+					new Response(
+						new ResponseOptions({
+							status: 200,
+							body: {
+								$uri: '/user/1'
+							}
+						})
+					)
+				));
+
+				User.fetch(1).then((user) => {
+					subscription.unsubscribe();
+					expect(user).not.toBeUndefined();
+					expect(user.id).toEqual(1);
+				});
+			});
 		}));
 	});
 
@@ -263,4 +365,32 @@ describe('potion/angular2', () => {
 });
 
 
-class User extends Item {}
+// Mock Console
+class DummyConsole implements Console {
+	log(message: any): void {}
+	warn(message: any): void {}
+}
+
+
+// Mock component
+@Component({
+	selector: 'potion-test',
+	template: `<div>Hello</div>`
+})
+class PotionTestComponent {}
+
+
+// Mock exception handler logger
+class ArrayLogger {
+	res: any[] = [];
+	logGroup(s: any): void {
+		this.res.push(s);
+	}
+	logGroupEnd(): void {};
+	logError(s: any): void {
+		this.res.push(s);
+	}
+	log(s: any): void {
+		this.res.push(s);
+	}
+}

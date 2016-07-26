@@ -30,7 +30,7 @@ describe('potion/fetch', () => {
 			it('should use \'no-cache\' for the window.fetch() request {cache} option if {cache} option is set to false', () => {
 				fetchMock.mock('http://localhost/ping', 'GET', {});
 				potion.fetch('http://localhost/ping', {cache: false});
-				expect((<any>fetchMock.lastOptions('http://localhost/ping')).cache).toEqual('no-cache');
+				expect((fetchMock.lastOptions('http://localhost/ping') as any).cache).toEqual('no-cache');
 			});
 
 			it('should use the appropriate request method set by the {method} option', () => {

@@ -18,7 +18,7 @@
 		"src/angular.ts",
 		"src/angular2.ts",
 		"src/fetch.ts",
-		"src/base.ts",
+		"src/core.ts",
 		"src/utils.ts"
 	]
 }

@@ -1,17 +1,10 @@
-import {
-	PotionOptions,
-	RequestOptions,
-	PotionBase
-} from './base';
+import {PotionOptions, RequestOptions, PotionBase} from './core';
 
 
-export {
-	readonly,
-	Item,
-	Route
-} from './base';
+export {readonly, Item,	Route} from './core';
 
-export default angular.module('potion', []).provider('potion', function () {
+
+const potion = angular.module('potion', []).provider('potion', function (): any {
 	let options = {};
 
 	this.config = (config: PotionOptions) => {
@@ -22,14 +15,16 @@ export default angular.module('potion', []).provider('potion', function () {
 		}
 	};
 
-	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory, $q, $http) {
+	this.$get = ['$cacheFactory', '$q', '$http', function ($cacheFactory: angular.ICacheFactoryService, $q: angular.IQService, $http: angular.IHttpService): any {
 		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
-			static promise = $q;
+			// noinspection TypeScriptUnresolvedVariable
+			static promise: any = $q;
 
-			protected _fetch(url, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
-				return $http(Object.assign({url, method, data, cache}, {params: search})).then(({headers, data}) => ({headers: headers(), data}));
+			protected request(url: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
+				return $http(Object.assign({url, method, data, cache}, {params: search}))
+					.then(({headers, data}) => ({headers: headers(), data})) as any;
 			}
 		}
 
@@ -44,3 +39,6 @@ export default angular.module('potion', []).provider('potion', function () {
 
 	return this;
 });
+
+
+export {potion};

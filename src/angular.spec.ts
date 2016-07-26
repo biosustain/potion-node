@@ -13,7 +13,7 @@ describe('potion/angular', () => {
 			provider = potionProvider;
 		}]));
 
-		beforeEach(angular.mock.inject(function ($injector) {
+		beforeEach(angular.mock.inject(function ($injector: any): any {
 			$cacheFactory = $injector.get('$cacheFactory');
 			$q = $injector.get('$q');
 			$http = $injector.get('$http');
@@ -43,7 +43,7 @@ describe('potion/angular', () => {
 
 			beforeEach(angular.mock.module('test'));
 
-			beforeEach(angular.mock.inject(function ($injector) {
+			beforeEach(angular.mock.inject(function ($injector: any): any {
 				$q = $injector.get('$q');
 				$httpBackend = $injector.get('$httpBackend');
 				potion = $injector.get('potion');
@@ -142,7 +142,7 @@ describe('potion/angular', () => {
 
 			beforeEach(angular.mock.module('test'));
 
-			beforeEach(angular.mock.inject(function ($injector) {
+			beforeEach(angular.mock.inject(function ($injector: any): any {
 				$cacheFactory = $injector.get('$cacheFactory');
 				$httpBackend = $injector.get('$httpBackend');
 
@@ -199,7 +199,7 @@ describe('potion/angular', () => {
 
 		beforeEach(angular.mock.module('test'));
 
-		beforeEach(angular.mock.inject(function ($injector) {
+		beforeEach(angular.mock.inject(function ($injector: any): any {
 			$httpBackend = $injector.get('$httpBackend');
 
 			User = $injector.get('User');

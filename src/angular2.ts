@@ -24,18 +24,10 @@ import {
 import 'rxjs/add/operator/toPromise';
 
 import {MemCache} from './utils';
-import {
-	RequestOptions as PotionRequestOptions,
-	PotionOptions,
-	PotionBase
-} from './base';
+import {RequestOptions as PotionRequestOptions, PotionOptions, PotionBase} from './core'; // tslint:disable-line:whitespace
 
 
-export {
-	readonly,
-	Item,
-	Route
-} from './base';
+export {readonly, Item, Route} from './core';
 
 
 export let POTION_CONFIG = new OpaqueToken('PotionConfig');
@@ -68,7 +60,7 @@ export class Potion extends PotionBase {
 		this._http = http;
 	}
 
-	registerFromComponent(component: any) {
+	registerFromComponent(component: any): void {
 		if (!isType(component)) {
 			return;
 		}
@@ -77,7 +69,7 @@ export class Potion extends PotionBase {
 			let annotations = reflector.annotations(component);
 			for (let annotation of annotations) {
 				if (annotation instanceof PotionResourcesAnnotation) {
-					for (let [path, type] of (<any>Object).entries(annotation.resources)) {
+					for (let [path, type] of (Object as any).entries(annotation.resources)) {
 						if (this.resources[path] === undefined) {
 							this.register(path, type);
 						} else {
@@ -89,12 +81,12 @@ export class Potion extends PotionBase {
 		}
 	}
 
-	protected _fetch(uri, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
+	protected request(uri: string, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
 		// Angular Http Request accepts a RequestMethod type for a method,
 		// but the value for that is an integer.
 		// Therefore we need to match the string literals like 'GET' to the enum values for RequestMethod.
 		let request = new RequestOptions({
-			method: parseInt((<any>Object).entries(RequestMethod).find((entry) => entry[1].toLowerCase() === (<string>method).toLowerCase())[0], 10),
+			method: parseInt((Object as any).entries(RequestMethod).find((entry) => entry[1].toLowerCase() === (method as string).toLowerCase())[0], 10),
 			url: uri
 		});
 
@@ -107,7 +99,7 @@ export class Potion extends PotionBase {
 		if (search) {
 			let params = new URLSearchParams();
 
-			for (let [key, value] of (<any>Object).entries(search)) {
+			for (let [key, value] of (Object as any).entries(search)) {
 				params.append(key, value);
 			}
 
@@ -163,11 +155,11 @@ export const POTION_PROVIDERS = [
 			cache: new MemCache()
 		}
 	}),
-	new Provider(Potion, <any>{
+	new Provider(Potion, {
 		useClass: Potion,
 		deps: [
 			Http,
 			POTION_CONFIG
 		]
-	})
+	} as any)
 ];

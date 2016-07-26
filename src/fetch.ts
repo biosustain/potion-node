@@ -1,16 +1,9 @@
-import {
-	RequestOptions,
-	PotionOptions,
-	PotionBase
-} from './base';
-
+import {RequestOptions, PotionOptions, PotionBase} from './core';
 import {MemCache} from './utils';
 
-export {
-	readonly,
-	Item,
-	Route
-} from './base';
+
+export {readonly, Item, Route} from './core';
+
 
 export class Potion extends PotionBase {
 	constructor(options?: PotionOptions) {
@@ -21,7 +14,7 @@ export class Potion extends PotionBase {
 	// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 	// Polyfill at https://github.com/github/fetch.
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
-	protected _fetch(uri, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
+	protected request(uri: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
 		let headers: Headers = new Headers();
 		let init: any = {
 			method,
@@ -44,7 +37,7 @@ export class Potion extends PotionBase {
 		// TODO: when URL will be supported we will switch to it
 		if (search) {
 			let count = 1;
-			let entries = (<any>Object).entries(search);
+			let entries = (Object as any).entries(search);
 			let size = entries.length;
 
 			for (let [key, value] of entries) {

@@ -1,13 +1,10 @@
-import {
-	PotionItemCache
-} from './base';
+import {ItemCache} from './core';
 
 
 /**
  * Camel case to snake case
  */
-
-export function fromCamelCase(str, separator = '_') {
+export function toSnakeCase(str: string, separator: string = '_'): string {
 	return str.replace(/([a-z][A-Z])/g, (g) => `${g[0]}${separator}${g[1].toLowerCase()}`);
 }
 
@@ -15,8 +12,7 @@ export function fromCamelCase(str, separator = '_') {
 /**
  * Snake case to camel case
  */
-
-export function toCamelCase(str) {
+export function toCamelCase(str: string): string {
 	return str.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
 }
 
@@ -24,8 +20,7 @@ export function toCamelCase(str) {
 /**
  * Transform pairs of [[key, value]] to {[key]: value}
  */
-
-export function pairsToObject(pairs: any[]) {
+export function pairsToObject(pairs: any[]): any {
 	let obj = {};
 	for (let [key, value] of pairs) {
 		obj[key] = value;
@@ -37,11 +32,10 @@ export function pairsToObject(pairs: any[]) {
 /**
  * Object.map()
  */
-
-export function omap(object: Object, callback: (key, value) => any, thisArg?: any) {
+export function omap(object: Object, callback: (key: string, value: any) => any, context?: any): any {
 	let map = {};
-	for (let [key, value] of (<any>Object).entries(object)) {
-		let [k, v] = callback.call(thisArg, key, value);
+	for (let [key, value] of (Object as any).entries(object)) {
+		let [k, v] = callback.call(context, key, value);
 		map[k] = v;
 	}
 	return map;
@@ -49,25 +43,25 @@ export function omap(object: Object, callback: (key, value) => any, thisArg?: an
 
 
 /**
- * Memory cache
+ * In-Memory cache
+ * Will be used by default by Potion for caching resources.
  */
-
-export class MemCache implements PotionItemCache<any> {
-	protected _items: Map<string, any>;
+export class MemCache implements ItemCache<any> {
+	protected items: Map<string, any>;
 
 	constructor() {
-		this._items = new Map<string, any>();
+		this.items = new Map<string, any>();
 	}
 
-	get(key: string) {
-		return this._items.get(key);
+	get(key: string): any {
+		return this.items.get(key);
 	}
 
-	put(key, item) {
-		return this._items.set(key, item).get(key);
+	put(key: string, item: any): any {
+		return this.items.set(key, item).get(key);
 	}
 
-	remove(key: string) {
-		this._items.delete(key);
+	remove(key: string): void {
+		this.items.delete(key);
 	}
 }

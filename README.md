@@ -37,12 +37,12 @@ You will first need to load `Potion` and create an instance of it in order to be
 // It will load from the main module `potion/fetch`,
 // and it will use the fetch API
 import {
-    PotionItemCache,
+    ItemCache,
     Potion,
     Item
 } from 'potion';
 
-class CustomCache<T> implements PotionItemCache<T> {
+class CustomCache<T> implements ItemCache<T> {
     get(key: string): T {
         // logic to fetch the item from cache
     }
@@ -57,11 +57,11 @@ class CustomCache<T> implements PotionItemCache<T> {
 let potion = new Potion({
     host: 'http://localhost:8080', // if you are hosting the api at a different host, defaults to ''
     prefix: '/api' // if all routes are at a specific path, defaults to ''
-    cache: new CustomCache<Item>() // a custom cache that implements PotionItemCache (note that by default it will use a in memory cache if a custom cache is not provided)
+    cache: new CustomCache<Item>() ItemCache
 });
 ```
 
-Now the API endpoints can be registered either using the `@potion.registerAs()` class decorator:
+Now the API endItemCacheegistered either using the `@potion.registerAs()` class decorator:
 ```js
 // `Item` has been imported above,
 // do not forget about it;
@@ -185,10 +185,13 @@ car.then((car) => car.writeSpecs({
 If you decide to use this package as a AngularJS module, there are a few differences from the standalone version, but the API does not change. Use the following example as a starting point:
 ```js
 import angular from 'angular';
-import {Item, Route} from 'potion/angular';
+import potion, {Item, Route} from 'potion/angular';
 
 angular
-    .module('myApp', ['potion'])
+    .module('myApp', [
+    	// `potion` is exported as an angular module
+    	potion.name
+    ])
     // Config the Potion client
     .config(['potionProvider', (potionProvider) => {
     	potionProvider.config({prefix: ''});
@@ -366,7 +369,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
     "src/angular.ts",
     "src/angular2.ts",
     "src/fetch.ts",
-    "src/base.ts",
+    core.ts,
     "src/utils.ts"
 ]
 ```

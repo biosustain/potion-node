@@ -147,7 +147,7 @@ describe('potion/angular2', () => {
 		});
 
 		it('should register all resources passed as params', (done: () => void) => {
-			bootstrap(<Type>App, providers).then((appRef: ComponentRef) => {
+			bootstrap(App as Type, providers).then((appRef: ComponentRef) => {
 				let {potion} = appRef.instance;
 				expect(potion.resources['/user']).not.toBeUndefined();
 				done();
@@ -194,7 +194,7 @@ describe('potion/angular2', () => {
 			});
 
 			it('should make a XHR request', (done: () => void) => {
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => connection.mockRespond(response));
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(response));
 				potion.fetch('/ping').then(() => {
 					subscription.unsubscribe();
 					done();
@@ -202,7 +202,7 @@ describe('potion/angular2', () => {
 			});
 
 			it('should return a Promise with data', (done: () => void) => {
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					connection.mockRespond(new Response(
 						new ResponseOptions({
 							status: 200,
@@ -222,7 +222,7 @@ describe('potion/angular2', () => {
 
 			it('should use the appropriate request method set by the {method} option', (done: () => void) => {
 				let method = null;
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					method = connection.request.method;
 					connection.mockRespond(response);
 				});
@@ -236,7 +236,7 @@ describe('potion/angular2', () => {
 
 			it('should pass anything set on {data} option as the {body} property of the request in JSON format', (done: () => void) => {
 				let body = null;
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					body = connection.request.text();
 					connection.mockRespond(response);
 				});
@@ -251,7 +251,7 @@ describe('potion/angular2', () => {
 
 			it('should pass on the query params from the {search} option', (done: () => void) => {
 				let url = null;
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					url = connection.request.url;
 					connection.mockRespond(response);
 				});
@@ -297,7 +297,7 @@ describe('potion/angular2', () => {
 				@potion.registerAs('/user')
 				class User extends Item {}
 
-				let subscription: Subscription = (<Observable<any>>backend.connections).subscribe((connection: MockConnection) => {
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					connection.mockRespond(new Response(
 						new ResponseOptions({
 							status: 200,

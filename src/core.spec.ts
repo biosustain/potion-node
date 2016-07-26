@@ -1,12 +1,12 @@
 import {
-	PotionItemCache,
+	ItemCache,
 	RequestOptions,
 	PotionBase,
 	Pagination,
 	Item,
 	readonly,
 	Route
-} from './base';
+} from './core';
 
 
 describe('potion/base', () => {
@@ -15,8 +15,8 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri): Promise<any> {
-					return (<typeof PotionBase>this.constructor).promise.resolve({});
+				protected request(uri: string): Promise<any> {
+					return (this.constructor as typeof PotionBase).promise.resolve({});
 				}
 			}
 
@@ -65,11 +65,11 @@ describe('potion/base', () => {
 				let data: any;
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options: RequestOptions): Promise<any> {
+					protected request(uri: string, options: RequestOptions): Promise<any> {
 						data = options.data;
 						search = options.search;
 
-						return (<typeof PotionBase>this.constructor).promise.resolve({});
+						return (this.constructor as typeof PotionBase).promise.resolve({});
 					}
 				}
 
@@ -109,8 +109,8 @@ describe('potion/base', () => {
 
 			beforeEach(() => {
 				class Potion extends PotionBase {
-					protected _fetch(uri): Promise<any> {
-						let {promise} = (<typeof PotionBase>this.constructor);
+					protected request(uri: string): Promise<any> {
+						let {promise} = this.constructor as typeof PotionBase;
 
 						switch (uri) {
 							case '/user/1':
@@ -150,17 +150,17 @@ describe('potion/base', () => {
 					}
 				}
 
-				class MockCache implements PotionItemCache<Item> {
+				class MockCache implements ItemCache<Item> {
 					get(key: string): Item {
 						return memcache[key];
 					}
 					put(key: string, item: Item): Item {
 						return memcache[key] = item;
 					}
-					remove(key: string) {
+					remove(key: string): void {
 						delete memcache[key];
 					}
-					clear() {
+					clear(): void {
 						memcache = {};
 					}
 				}
@@ -243,8 +243,8 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: RequestOptions): Promise<any> {
-						let {promise} = (<typeof PotionBase>this.constructor);
+					protected request(uri: string, options?: RequestOptions): Promise<any> {
+						let {promise} = this.constructor as typeof PotionBase;
 
 						switch (uri) {
 							case '/user/1':
@@ -289,8 +289,8 @@ describe('potion/base', () => {
 				};
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: RequestOptions): Promise<any> {
-						let {promise} = (<typeof PotionBase>this.constructor);
+					protected request(uri: string, options?: RequestOptions): Promise<any> {
+						let {promise} = this.constructor as typeof PotionBase;
 
 						switch (options.method) {
 							case 'GET':
@@ -340,8 +340,8 @@ describe('potion/base', () => {
 				let john = null;
 
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: RequestOptions): Promise<any> {
-						let {promise} = (<typeof PotionBase>this.constructor);
+					protected request(uri: string, options?: RequestOptions): Promise<any> {
+						let {promise} = this.constructor as typeof PotionBase;
 
 						switch (options.method) {
 							case 'POST':
@@ -385,8 +385,8 @@ describe('potion/base', () => {
 
 			beforeEach(() => {
 				class Potion extends PotionBase {
-					protected _fetch(uri, options?: RequestOptions): Promise<any> {
-						let {promise} = (<typeof PotionBase>this.constructor);
+					protected request(uri: string, options?: RequestOptions): Promise<any> {
+						let {promise} = this.constructor as typeof PotionBase;
 						return promise.resolve({});
 					}
 				}
@@ -422,8 +422,8 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri): Promise<any> {
-					let {promise} = (<typeof PotionBase>this.constructor);
+				protected request(uri: string): Promise<any> {
+					let {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user/1':
@@ -441,17 +441,17 @@ describe('potion/base', () => {
 				}
 			}
 
-			class MockCache implements PotionItemCache<Item> {
+			class MockCache implements ItemCache<Item> {
 				get(key: string): Item {
 					return memcache[key];
 				}
 				put(key: string, item: Item): Item {
 					return memcache[key] = item;
 				}
-				remove(key: string) {
+				remove(key: string): void {
 					delete memcache[key];
 				}
-				clear() {
+				clear(): void {
 					memcache = {};
 				}
 			}
@@ -461,7 +461,7 @@ describe('potion/base', () => {
 
 			potion.register('/user', User);
 
-			spyOn(potion, '_fetch').and.callThrough();
+			spyOn(potion, 'request').and.callThrough();
 			spyOn(cache, 'get').and.callThrough();
 		});
 
@@ -478,7 +478,7 @@ describe('potion/base', () => {
 
 		it('should not trigger more requests for consequent requests for the same resource and if the first request is still pending', (done) => {
 			Promise.all([User.fetch(1, {cache: false}), User.fetch(1, {cache: false})]).then(() => {
-				expect(potion._fetch).toHaveBeenCalledTimes(1);
+				expect(potion.request).toHaveBeenCalledTimes(1);
 				done();
 			});
 		});
@@ -508,8 +508,8 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri, options?: RequestOptions): Promise<any> {
-					let {promise} = (<typeof PotionBase>this.constructor);
+				protected request(uri: string, options?: RequestOptions): Promise<any> {
+					let {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user':
@@ -598,7 +598,7 @@ describe('potion/base', () => {
 			}
 
 			let memcache = new Map();
-			class MockCache implements PotionItemCache<Item> {
+			class MockCache implements ItemCache<Item> {
 				get(key: string): Item {
 					return memcache.get(key);
 				}
@@ -606,7 +606,7 @@ describe('potion/base', () => {
 					memcache.set(key, item);
 					return item;
 				}
-				remove(key: string) {
+				remove(key: string): void {
 					memcache.delete(key);
 				}
 			}
@@ -617,7 +617,7 @@ describe('potion/base', () => {
 			potion.register('/person', Person);
 			potion.register('/group', Group);
 
-			function buildQueryResponse(data, options, promise) {
+			function buildQueryResponse(data: any, options: any, promise: any): Promise<any> {
 				/* tslint:disable: variable-name */
 				let {page, per_page} = options.search;
 				/* tslint:enable: variable-name */
@@ -705,8 +705,8 @@ describe('potion/base', () => {
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri, options?: RequestOptions): Promise<any> {
-					let {promise} = (<typeof PotionBase>this.constructor);
+				protected request(uri: string, options?: RequestOptions): Promise<any> {
+					let {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user':
@@ -758,14 +758,14 @@ describe('potion/base', () => {
 
 	describe('Route', () => {
 		class User extends Item {
-			static names = Route.GET<string[]>('/names');
-			attributes = Route.GET<{height: number, weight: number}>('/attributes');
+			static names: any = Route.GET<string[]>('/names');
+			attributes: any = Route.GET<{height: number, weight: number}>('/attributes');
 		}
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
-				protected _fetch(uri): Promise<any> {
-					let {promise} = (<typeof PotionBase>this.constructor);
+				protected request(uri: string): Promise<any> {
+					let {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user/1':

@@ -360,7 +360,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
 - lint the code with `npm run lint`.
 
 **Note**: If you add/remove files, make sure to edit the `"files"` field in `tsconfig.json`:
-```json
+```js
 {
     "files": [
         // These files MUST always be here as they provide the type definitions

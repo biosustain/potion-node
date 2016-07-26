@@ -8,7 +8,7 @@
 		"no-internal-module": true,
 		"no-namespace": [true, "allow-declarations"],
 		"no-reference": true,
-		"no-var-requires": true,
+		"no-var-requires": false,
 		"typedef": [true, "call-signature", "parameter", "member-variable-declaration"], // http://palantir.github.io/tslint/rules/typedef/
 		"typedef-whitespace": [true, {
 			"call-signature": "nospace",
@@ -48,7 +48,7 @@
 		"max-line-length": [true, 180],
 		"no-default-export": true,
 		"no-mergeable-namespace": true,
-		"no-require-imports": true,
+		"no-require-imports": false,
 		"no-trailing-whitespace": true,
 		"object-literal-sort-keys": false,
 		"trailing-comma": [true, {

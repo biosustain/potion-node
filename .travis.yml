@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "5.10"
+  - "6.3"
 
 addons:
   # Node 5 requires a C++11 standard compliant compiler, so we'll use gcc.

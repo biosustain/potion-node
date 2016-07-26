@@ -1,17 +1,10 @@
 import {
 	APP_INITIALIZER,
-	ApplicationRef,
 	Injectable,
 	Inject,
-	OpaqueToken,
-	Provider,
-	Type
-} from 'angular2/core';
-
-import {isType} from 'angular2/src/facade/lang';
-import {reflector} from 'angular2/src/core/reflection/reflection';
-import {makeDecorator} from 'angular2/src/core/util/decorators';
-
+	OpaqueToken
+} from '@angular/core';
+import 'rxjs/add/operator/toPromise';
 import {
 	Http,
 	RequestOptions,
@@ -19,97 +12,68 @@ import {
 	Request,
 	Response,
 	URLSearchParams
-} from 'angular2/http';
-
-import 'rxjs/add/operator/toPromise';
+} from '@angular/http';
 
 import {MemCache} from './utils';
-import {RequestOptions as PotionRequestOptions, PotionOptions, PotionBase} from './core'; // tslint:disable-line:whitespace
+import {RequestOptions as PotionRequestOptions, PotionOptions, PotionBase} from './core';
 
 
-export {readonly, Item, Route} from './core';
+export {Item, Route, readonly} from './core';
 
 
 export let POTION_CONFIG = new OpaqueToken('PotionConfig');
 export interface PotionConfig extends PotionOptions {}
 
 
-export interface Resources {
-	[key: string]: Type;
-}
-
-class PotionResourcesAnnotation {
-	resources: Resources;
-	constructor(resources: Resources) {
-		this.resources = resources;
-	}
-}
-
-/* tslint:disable: variable-name */
-export let PotionResources: (resources: Resources) => ClassDecorator  = makeDecorator(PotionResourcesAnnotation);
-/* tslint:enable: variable-name */
-
-
 @Injectable()
 export class Potion extends PotionBase {
-	private _http: Http;
+	private http: Http;
 
 	constructor(http: Http, @Inject(POTION_CONFIG) config: PotionConfig) {
 		super(config);
 		// Use Angular 2 Http for requests
-		this._http = http;
-	}
-
-	registerFromComponent(component: any): void {
-		if (!isType(component)) {
-			return;
-		}
-
-		if (component) {
-			let annotations = reflector.annotations(component);
-			for (let annotation of annotations) {
-				if (annotation instanceof PotionResourcesAnnotation) {
-					for (let [path, type] of (Object as any).entries(annotation.resources)) {
-						if (this.resources[path] === undefined) {
-							this.register(path, type);
-						} else {
-							throw new TypeError(`Cannot register ${type.name} for "${path}". A resource has already been registered on "${path}"`);
-						}
-					}
-				}
-			}
-		}
+		this.http = http;
 	}
 
 	protected request(uri: string, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
 		// Angular Http Request accepts a RequestMethod type for a method,
 		// but the value for that is an integer.
-		// Therefore we need to match the string literals like 'GET' to the enum values for RequestMethod.
-		let request = new RequestOptions({
-			method: parseInt((Object as any).entries(RequestMethod).find((entry) => entry[1].toLowerCase() === (method as string).toLowerCase())[0], 10),
+		// Therefore we need to match the string literals like 'GET' (coming from Potion) to the enum values for RequestMethod.
+		let requestOptions = new RequestOptions({
+			method: parseInt(
+				(Object as any)
+					.entries(RequestMethod)
+					.find((entry) => entry[1].toLowerCase() === (method as string).toLowerCase())[0],
+				10
+			),
 			url: uri
 		});
 
+		// We need to convert the {body} to proper JSON when making POST requests.
 		if (data) {
-			request = request.merge({
+			requestOptions = requestOptions.merge({
 				body: JSON.stringify(data)
 			});
 		}
 
+		// Convert {search} to URLSearchParams.
 		if (search) {
-			let params = new URLSearchParams();
+			const params = new URLSearchParams();
 
 			for (let [key, value] of (Object as any).entries(search)) {
 				params.append(key, value);
 			}
 
-			request = request.merge({
+			requestOptions = requestOptions.merge({
 				search: params
 			});
 		}
 
-		return this._http.request(new Request(request)).toPromise().then((response: Response) => {
-			let headers = {};
+		// Create Request object.
+		const request = new Request(requestOptions);
+
+		return this.http.request(request).toPromise().then((response: Response) => {
+			const headers = {};
 
 			if (response.headers) {
 				for (let key of response.headers.keys()) {
@@ -120,8 +84,8 @@ export class Potion extends PotionBase {
 			}
 
 			return {
-				headers: headers,
-				data: response.json()
+				data: response.json(),
+				headers
 			};
 		});
 	}
@@ -129,37 +93,31 @@ export class Potion extends PotionBase {
 
 
 export const POTION_PROVIDERS = [
-	new Provider(APP_INITIALIZER, {
-		useFactory: (appRef: ApplicationRef, potion: Potion) => {
-			// Do not remove this,
-			// having it run on app init,
-			// will ensure that whatever resources were added via `@PotionResources` decorator,
-			// will be registered with Potion.
+	{
+		// We do this because we want to initialize Potion before it is used by any component.
+		provide: APP_INITIALIZER,
+		useFactory: (potion: Potion) => {
 			return () => {
-				appRef.registerBootstrapListener(() => {
-					// Register resources added via `@PotionResources` decorator
-					for (let component of appRef.componentTypes) {
-						potion.registerFromComponent(component);
-					}
-				});
+				console.info('Potion has been initialized.');
 			};
 		},
-		multi: true,
 		deps: [
-			ApplicationRef,
 			Potion
-		]
-	}),
-	new Provider(POTION_CONFIG, {
+		],
+		multi: true
+	},
+	{
+		provide: POTION_CONFIG,
 		useValue: {
 			cache: new MemCache()
 		}
-	}),
-	new Provider(Potion, {
+	},
+	{
+		provide: Potion,
 		useClass: Potion,
 		deps: [
 			Http,
 			POTION_CONFIG
 		]
-	} as any)
+	}
 ];

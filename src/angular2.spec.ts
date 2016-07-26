@@ -1,29 +1,13 @@
-import {
-	afterEach,
-	beforeEachProviders,
-	beforeEach,
-	describe,
-	expect,
-	setBaseTestProviders,
-	inject
-} from 'angular2/testing';
-import {TEST_BROWSER_PLATFORM_PROVIDERS, TEST_BROWSER_APPLICATION_PROVIDERS} from 'angular2/platform/testing/browser';
+import {addProviders, setBaseTestProviders, inject} from '@angular/core/testing';
+import {TEST_BROWSER_PLATFORM_PROVIDERS, TEST_BROWSER_APPLICATION_PROVIDERS} from '@angular/platform-browser/testing';
 import {
 	MockBackend,
 	MockConnection
-} from 'angular2/http/testing';
+} from '@angular/http/testing';
 
-import {
-	ComponentRef,
-	Component,
-	provide,
-	Type
-} from 'angular2/core';
 
-import {bootstrap} from 'angular2/platform/browser';
-import {Console} from 'angular2/src/core/console';
-import {DOM} from 'angular2/src/platform/dom/dom_adapter';
-import {DOCUMENT} from 'angular2/src/platform/dom/dom_tokens';
+import {Observable} from 'rxjs/Observable';
+import {Subscription} from 'rxjs/Subscription';
 
 
 import {
@@ -33,10 +17,8 @@ import {
 	ResponseOptions,
 	Response,
 	Http
-} from 'angular2/http';
+} from '@angular/http';
 
-import {Observable} from 'rxjs/Observable';
-import {Subscription} from 'rxjs/Subscription';
 
 // Prepare for tests
 setBaseTestProviders(
@@ -48,91 +30,17 @@ import {
 	POTION_CONFIG,
 	POTION_PROVIDERS,
 	Potion,
-	PotionResources,
 	Item
 } from './angular2';
 
 
 describe('potion/angular2', () => {
 	describe('POTION_PROVIDERS', () => {
-		let potion: Potion;
-
-		beforeEachProviders(() => [
-			POTION_PROVIDERS,
-			provide(Http, {
-				useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
-					return new Http(connectionBackend, defaultOptions);
-				},
-				deps: [
-					MockBackend,
-					BaseRequestOptions
-				]
-			}),
-			BaseRequestOptions,
-			MockBackend
-		]);
-
-		beforeEach(inject([Potion], (p: Potion) => {
-			potion = p;
-		}));
-
-		it('should provide a Potion instance', () => {
-			expect(potion).not.toBeUndefined();
-			expect(potion instanceof Potion).toBe(true);
-		});
-	});
-
-	describe('POTION_CONFIG', () => {
-		let potion: Potion;
-
-		beforeEachProviders(() => [
-			POTION_PROVIDERS,
-			provide(Http, {
-				useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
-					return new Http(connectionBackend, defaultOptions);
-				},
-				deps: [
-					MockBackend,
-					BaseRequestOptions
-				]
-			}),
-			provide(POTION_CONFIG, {
-				useValue: {
-					prefix: '/test'
-				}
-			}),
-			BaseRequestOptions,
-			MockBackend
-		]);
-
-		beforeEach(inject([Potion], (p: Potion) => {
-			potion = p;
-		}));
-
-		it('should configure Potion({prefix, cache}) properties', () => {
-			expect(potion.prefix).toEqual('/test');
-		});
-	});
-
-	describe('@PotionResources()', () => {
-		let providers;
-
 		beforeEach(() => {
-			let fakeDoc = DOM.createHtmlDocument();
-			let el = DOM.createElement('app', fakeDoc);
-			DOM.appendChild(fakeDoc.body, el);
-
-			providers = [
+			addProviders([
 				POTION_PROVIDERS,
-				provide(DOCUMENT, {useValue: fakeDoc}),
-				provide(Console, {
-					useFactory: () => {
-						return {
-							log: () => {}
-						};
-					}
-				}),
-				provide(Http, {
+				{
+					provide: Http,
 					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
 						return new Http(connectionBackend, defaultOptions);
 					},
@@ -140,19 +48,46 @@ describe('potion/angular2', () => {
 						MockBackend,
 						BaseRequestOptions
 					]
-				}),
+				},
 				BaseRequestOptions,
 				MockBackend
-			];
+			]);
 		});
 
-		it('should register all resources passed as params', (done: () => void) => {
-			bootstrap(App as Type, providers).then((appRef: ComponentRef) => {
-				let {potion} = appRef.instance;
-				expect(potion.resources['/user']).not.toBeUndefined();
-				done();
-			});
+		it('should provide a Potion instance', inject([Potion], (potion: Potion) => {
+			expect(potion).not.toBeUndefined();
+			expect(potion instanceof Potion).toBe(true);
+		}));
+	});
+
+	describe('POTION_CONFIG', () => {
+		beforeEach(() => {
+			addProviders([
+				POTION_PROVIDERS,
+				{
+					provide: POTION_CONFIG,
+					useValue: {
+						prefix: '/test'
+					}
+				},
+				{
+					provide: Http,
+					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+						return new Http(connectionBackend, defaultOptions);
+					},
+					deps: [
+						MockBackend,
+						BaseRequestOptions
+					]
+				},
+				BaseRequestOptions,
+				MockBackend
+			]);
 		});
+
+		it('should configure Potion({prefix, cache}) properties', inject([Potion], (potion: Potion) => {
+			expect(potion.prefix).toEqual('/test');
+		}));
 	});
 
 	describe('Potion()', () => {
@@ -160,20 +95,23 @@ describe('potion/angular2', () => {
 		let backend: MockBackend;
 		let response: Response;
 
-		beforeEachProviders(() => [
-			POTION_PROVIDERS,
-			provide(Http, {
-				useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
-					return new Http(connectionBackend, defaultOptions);
+		beforeEach(() => {
+			addProviders([
+				POTION_PROVIDERS,
+				{
+					provide: Http,
+					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+						return new Http(connectionBackend, defaultOptions);
+					},
+					deps: [
+						MockBackend,
+						BaseRequestOptions
+					]
 				},
-				deps: [
-					MockBackend,
-					BaseRequestOptions
-				]
-			}),
-			BaseRequestOptions,
-			MockBackend
-		]);
+				BaseRequestOptions,
+				MockBackend
+			]);
+		});
 
 		beforeEach(inject([MockBackend, Potion], (mb: MockBackend, p: Potion) => {
 			backend = mb;
@@ -270,20 +208,23 @@ describe('potion/angular2', () => {
 		let potion: Potion;
 		let backend: MockBackend;
 
-		beforeEachProviders(() => [
-			POTION_PROVIDERS,
-			provide(Http, {
-				useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
-					return new Http(connectionBackend, defaultOptions);
+		beforeEach(() => {
+			addProviders([
+				POTION_PROVIDERS,
+				{
+					provide: Http,
+					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+						return new Http(connectionBackend, defaultOptions);
+					},
+					deps: [
+						MockBackend,
+						BaseRequestOptions
+					]
 				},
-				deps: [
-					MockBackend,
-					BaseRequestOptions
-				]
-			}),
-			BaseRequestOptions,
-			MockBackend
-		]);
+				BaseRequestOptions,
+				MockBackend
+			]);
+		});
 
 		beforeEach(inject([MockBackend, Potion], (mb: MockBackend, p: Potion) => {
 			backend = mb;
@@ -323,17 +264,3 @@ describe('potion/angular2', () => {
 
 
 class User extends Item {}
-
-@Component({
-	selector: 'app',
-	template: ''
-})
-
-@PotionResources({'/user': User})
-
-class App {
-	potion: Potion;
-	constructor(potion: Potion) {
-		this.potion = potion;
-	}
-}

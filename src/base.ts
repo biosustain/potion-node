@@ -625,7 +625,7 @@ export abstract class PotionBase {
  *     }
  * });
  */
-export class Pagination<T extends Item> implements Iterator<T> {
+export class Pagination<T extends Item> {
 	get page() {
 		return this._page;
 	}
@@ -654,7 +654,6 @@ export class Pagination<T extends Item> implements Iterator<T> {
 	private _uri: string;
 	private _options: FetchOptions;
 
-	private _pointer = 0;
 	private _items: T[] = [];
 
 	private _page: number;
@@ -675,21 +674,7 @@ export class Pagination<T extends Item> implements Iterator<T> {
 	}
 
 	[Symbol.iterator](): IterableIterator<T> {
-		return this;
-	}
-
-	next(): IteratorResult<T> {
-		if (this._pointer < this._items.length) {
-			return {
-				done: false,
-				value: this._items[this._pointer++]
-			};
-		} else {
-			this._pointer = 0;
-			return {
-				done: true
-			};
-		}
+		return this._items.values();
 	}
 
 	changePageTo(page) {

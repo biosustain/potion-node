@@ -57,11 +57,11 @@ class CustomCache<T> implements ItemCache<T> {
 let potion = new Potion({
     host: 'http://localhost:8080', // if you are hosting the api at a different host, defaults to ''
     prefix: '/api' // if all routes are at a specific path, defaults to ''
-    cache: new CustomCache<Item>() ItemCache
+    cache: new CustomCache<Item>()
 });
 ```
 
-Now the API endItemCacheegistered either using the `@potion.registerAs()` class decorator:
+Now the API endpoints can be registered either using the `@potion.registerAs()` class decorator:
 ```js
 // `Item` has been imported above,
 // do not forget about it;
@@ -185,7 +185,7 @@ car.then((car) => car.writeSpecs({
 If you decide to use this package as a AngularJS module, there are a few differences from the standalone version, but the API does not change. Use the following example as a starting point:
 ```js
 import angular from 'angular';
-import potion, {Item, Route} from 'potion/angular';
+import {Item, Route, potion} from 'potion/angular';
 
 angular
     .module('myApp', [
@@ -209,9 +209,7 @@ angular
 
         // If the `@potion.registerAs('/user')` decorator is used,
         // this is no longer needed.
-        potion.register('/user', User);
-
-        return User;
+        return potion.register('/user', User);
     }])
     .controller('MyAppController', ['User', (User) => {
         // Fetch a user object by id
@@ -249,104 +247,106 @@ angular
 #### Angular 2
 Using the package in an Angular 2 app is very similar to the above, as in there are no API changes, but a few differences in the way resources are registered:
 ```js
-import {bootstrap} from 'angular2/platform/browser';
-import {Component} from 'angular2/core';
-import {HTTP_PROVIDERS} from 'angular2/http';
+// ./main.ts
+import {bootstrap} from '@angular/platform-browser-dynamic';
+import {HTTP_PROVIDERS} from '@angular/http';
 
-// Load the providers
-import {
-    POTION_PROVIDERS,
-    PotionResources,
-    Resource,
-    Item
-} from 'potion/angular2';
+// Load the Potion providers
+import {providePotion} from 'potion/angular2';
 
-class User extends Item {}
+// Load the App component
+import {App} from './app.component';
+import {Engine, Car} from './vehicle';
+
+
+// Bootstrap and inject the Potion providers
+bootstrap(App, [
+    HTTP_PROVIDERS,
+    providePotion({
+        '/engine': Engine,
+        '/car': [Car, {
+            readonly: ['registered']
+         }]
+     })
+]);
+
+
+
+// ./app.component.ts
+import {Component} from '@angular/core';
+import {Engine, Car} from './vehicle';
+
 
 @Component({
     selector: 'my-app',
     template: '<h1>My Angular 2 App</h1>'
 })
-
-@PotionResources({
-    '/user': User
-})
-
-class App {
+export class App {
     constructor() {    
-        let user = new User({name: 'John Doe'});
-        user.save();
+        let car = new Car({brand: 'Opel'});
+        car.save();
     }
 }
 
-// Add the providers
-bootstrap(App, [
-    HTTP_PROVIDERS,
-    POTION_PROVIDERS
-]);
+
+
+// ./vehicle.ts
+import {Item} from 'potion/angular2';
+
+export class Engine extends Item {}
+export class Car extends Item {}
 ```
-It is important that `HTTP_PROVIDERS` is provided as `Potion` internally uses `Http`. Moreover, `@PotionResources` can be used on multiple components, but be aware that you cannot register a resource for the same path, if you do you will get an exception.
 
+**NOTE**: It is **important** that `HTTP_PROVIDERS` is provided as `Potion` internally uses `Http`.
 
-If you wish to override either of the config values, you can use `POTION_CONFIG`:
+If you wish to override either one of the config values, you can use the second param of `providePotion()`:
 ```js
-import {
-    Component,
-    provide
-} from 'angular2/core';
-import {bootstrap} from 'angular2/platform/browser';
+import {Component} from '@angular/core';
+import {bootstrap} from '@angular/platform-browser-dynamic';
 
-import {
-    POTION_PROVIDERS,
-    POTION_CONFIG
-} from 'potion/angular2';
+import {POTION_CONFIG, providePotion} from 'potion/angular2';
+
 
 @Component({
     selector: 'my-app',
     template: '<h1>My Angular 2 App</h1>'
 })
-
 class App {}
 
-// Add the providers
+
+// Bootstrap and inject the Potion providers
 bootstrap(App, [
-    POTION_PROVIDERS,
-    provide(POTION_CONFIG, {
-        useValue: {
-            prefix: '/api-endpoint'
-        }
+    providePotion([...resources], {
+    	prefix: '/api-endpoint'
     })
 ]);
 ```
-Note that you can still register new resources at a later point by using the `Potion` instance provided by `POTION_PROVIDERS`:
-```js
-import {
-    Component,
-    provide
-} from 'angular2/core';
-import {bootstrap} from 'angular2/platform/browser';
 
-import {
-    POTION_PROVIDERS,
-    Potion,
-    Item
-} from 'potion/angular2';
+Note that you can still register new resources at a later point by using the `Potion` instance (though I advise against it):
+```js
+import {Component} from '@angular/core';
+import {bootstrap} from '@angular/platform-browser-dynamic';
+
+import {Potion, Item, providePotion} from 'potion/angular2';
+
+
+export class Engine extends Item {}
+
 
 @Component({
     selector: 'my-app',
     template: '<h1>My Angular 2 App</h1>'
 })
-
 class App {
     constructor(potion: Potion) {
-        class Engine extends Item {}
         potion.register('/engine', Engine);
     }
 }
 
-// Add the providers
+
+// Bootstrap and inject the Potion providers
 bootstrap(App, [
-    POTION_PROVIDERS
+    providePotion([...resources])
 ]);
 ```
 
@@ -359,22 +359,25 @@ Make sure that the builds and tests will run successfully, before you make a pul
 - run the tests using `npm test` (*if you wish to run tests on file change, use `$(npm bin)/karma start karma.config.ts`.*);
 - lint the code with `npm run lint`.
 
-**Note**: If you add new files or remove files, make sure to edit the `"files"` field in `tsconfig.json`:
+**Note**: If you add/remove files, make sure to edit the `"files"` field in `tsconfig.json`:
 ```js
-"files": [
-    // These files MUST always be here as they provide the type definitions
-    "typings/main.d.ts",
-    "node_modules/typescript/lib/lib.es7.d.ts",
-    // You can change the below as you wish
-    "src/angular.ts",
-    "src/angular2.ts",
-    "src/fetch.ts",
-    core.ts,
-    "src/utils.ts"
-]
+{
+    "files": [
+        // These files MUST always be here as they provide the type definitions
+        "typings/index.d.ts",
+        "node_modules/typescript/lib/lib.dom.d.ts",
+        "node_modules/typescript/lib/lib.es2017.d.ts",
+        // You can change the below as you wish
+        "src/angular.ts",
+        "src/angular2.ts",
+        "src/fetch.ts",
+        "src/core.ts",
+        "src/utils.ts"
+    ]
+}
 ```
 
-If you are a contributor for the package on npm and have publish rights, you can use the following script to publish the package:
+Use the following script to publish the package:
 ```shell
 sh scripts/npm_publish.sh
 ```

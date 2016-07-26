@@ -54,10 +54,10 @@ import {
 	Potion,
 	Item,
 	providePotion
-} from './angular2';
+} from './@angular';
 
 
-describe('potion/angular2', () => {
+describe('potion/@angular', () => {
 	describe('POTION_PROVIDERS', () => {
 		beforeEach(() => {
 			addProviders([

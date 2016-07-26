@@ -252,7 +252,7 @@ import {bootstrap} from '@angular/platform-browser-dynamic';
 import {HTTP_PROVIDERS} from '@angular/http';
 
 // Load the Potion providers
-import {providePotion} from 'potion/angular2';
+import {providePotion} from 'potion/@angular';
 
 // Load the App component
 import {App} from './app.component';
@@ -291,7 +291,7 @@ export class App {
 
 
 // ./vehicle.ts
-import {Item} from 'potion/angular2';
+import {Item} from 'potion/@angular';
 
 export class Engine extends Item {}
 export class Car extends Item {}
@@ -304,7 +304,7 @@ If you wish to override either one of the config values, you can use the second 
 import {Component} from '@angular/core';
 import {bootstrap} from '@angular/platform-browser-dynamic';
 
-import {POTION_CONFIG, providePotion} from 'potion/angular2';
+import {POTION_CONFIG, providePotion} from 'potion/@angular';
 
 
 @Component({
@@ -327,7 +327,7 @@ Note that you can still register new resources at a later point by using the `Po
 import {Component} from '@angular/core';
 import {bootstrap} from '@angular/platform-browser-dynamic';
 
-import {Potion, Item, providePotion} from 'potion/angular2';
+import {Potion, Item, providePotion} from 'potion/@angular';
 
 
 export class Engine extends Item {}
@@ -360,7 +360,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
 - lint the code with `npm run lint`.
 
 **Note**: If you add/remove files, make sure to edit the `"files"` field in `tsconfig.json`:
-```js
+```json
 {
     "files": [
         // These files MUST always be here as they provide the type definitions
@@ -369,7 +369,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
         "node_modules/typescript/lib/lib.es2017.d.ts",
         // You can change the below as you wish
         "src/angular.ts",
-        "src/angular2.ts",
+        "src/@angular.ts",
         "src/fetch.ts",
         "src/core.ts",
         "src/utils.ts"

@@ -89,19 +89,28 @@ export class Potion extends PotionBase {
 		// Create Request object.
 		const request = new Request(requestOptions);
 
-		return this.http.request(request).toPromise().then((response: Response) => {
-			const headers = {};
+		return this.http.request(request).toPromise().then((response: any) => {
+			let headers = {};
 
-			if (response.headers) {
+			// If `response` has is a Response object,
+			// we might also have a Headers instance which we need to convert into an object.
+			if (response.headers instanceof Headers) {
 				for (let key of response.headers.keys()) {
 					// Angular 2 does not yet lowercase headers.
 					// Make sure we get the first string value of the header instead of the array of values.
 					headers[key.toLowerCase()] = response.headers.get(key);
 				}
+			} else {
+				headers = response.headers;
 			}
 
+			// `response` might be something other than a Response object
+			const data = response instanceof Response
+				? response.json()
+				: response;
+
 			return {
-				data: response.json(),
+				data,
 				headers
 			};
 		});

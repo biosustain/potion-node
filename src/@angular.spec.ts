@@ -16,6 +16,8 @@ import {
 
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
+// RxJs Statics
+import 'rxjs/add/observable/of';
 
 
 import {
@@ -50,6 +52,7 @@ setBaseTestProviders(
 
 import {
 	POTION_CONFIG,
+	POTION_HTTP,
 	POTION_PROVIDERS,
 	Potion,
 	Item,
@@ -80,36 +83,6 @@ describe('potion/@angular', () => {
 		it('should provide a Potion instance', inject([Potion], (potion: Potion) => {
 			expect(potion).not.toBeUndefined();
 			expect(potion instanceof Potion).toBe(true);
-		}));
-	});
-
-	describe('POTION_CONFIG', () => {
-		beforeEach(() => {
-			addProviders([
-				POTION_PROVIDERS,
-				{
-					provide: POTION_CONFIG,
-					useValue: {
-						prefix: '/test'
-					}
-				},
-				{
-					provide: Http,
-					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
-						return new Http(connectionBackend, defaultOptions);
-					},
-					deps: [
-						MockBackend,
-						BaseRequestOptions
-					]
-				},
-				BaseRequestOptions,
-				MockBackend
-			]);
-		});
-
-		it('should configure Potion({prefix, cache}) properties', inject([Potion], (potion: Potion) => {
-			expect(potion.prefix).toEqual('/test');
 		}));
 	});
 
@@ -188,6 +161,73 @@ describe('potion/@angular', () => {
 					expect(user).not.toBeUndefined();
 					expect(user.id).toEqual(1);
 				});
+			});
+		}));
+	});
+
+	describe('POTION_CONFIG', () => {
+		const POTION_HOST = 'https://localhost';
+		const POTION_PREFIX = '/test';
+
+		beforeEach(() => {
+			addProviders([
+				providePotion({}),
+				{
+					provide: POTION_CONFIG,
+					useValue: {
+						host: POTION_HOST,
+						prefix: POTION_PREFIX
+					}
+				},
+				{
+					provide: Http,
+					useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+						return new Http(connectionBackend, defaultOptions);
+					},
+					deps: [
+						MockBackend,
+						BaseRequestOptions
+					]
+				},
+				BaseRequestOptions,
+				MockBackend
+			]);
+		});
+
+		it('should configure Potion({host, prefix, cache}) properties', inject([Potion], (potion: Potion) => {
+			expect(potion.host).toEqual(POTION_HOST);
+			expect(potion.prefix).toEqual(POTION_PREFIX);
+		}));
+	});
+
+	describe('POTION_HTTP', () => {
+		const body =  {
+			pong: true
+		};
+		class Http {
+			request(): Observable<any> {
+				return Observable.of(new Response(
+					new ResponseOptions({
+						status: 200,
+						body
+					})
+				));
+			}
+		}
+
+		beforeEach(() => {
+			addProviders([
+				providePotion({}),
+				{
+					provide: POTION_HTTP,
+					useClass: Http
+				}
+			]);
+		});
+
+		it('should change the underlying Potion() Http engine', inject([Potion], (potion: Potion) => {
+			potion.fetch('/ping').then((res) => {
+				expect(res).toEqual(body);
 			});
 		}));
 	});

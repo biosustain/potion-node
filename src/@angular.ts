@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import 'rxjs/add/operator/toPromise';
 import {
+	HTTP_PROVIDERS,
 	Http,
 	RequestOptions,
 	RequestMethod,
@@ -32,9 +33,15 @@ export const POTION_CONFIG = new OpaqueToken('PotionConfig');
 export interface PotionConfig extends PotionOptions {}
 
 
+export const POTION_HTTP = new OpaqueToken('PotionHttp');
+
+
 @Injectable()
 export class Potion extends PotionBase {
-	constructor(private http: Http, @Inject(POTION_CONFIG) config: PotionConfig) {
+	constructor(
+		@Inject(POTION_HTTP) private http: Http,
+		@Inject(POTION_CONFIG) config: PotionConfig
+	) {
 		super(config);
 	}
 
@@ -112,7 +119,7 @@ export interface Resources {
  * 	   })
  * ])
  */
-export function providePotion(resources: Resources, config?: PotionConfig): any[] {
+export function providePotion(resources: Resources): any[] {
 	return [
 		{
 			// We do this because we want to initialize Potion before it is used by any component,
@@ -140,7 +147,7 @@ export function providePotion(resources: Resources, config?: PotionConfig): any[
 		},
 		{
 			provide: POTION_CONFIG,
-			useValue: config || {
+			useValue: {
 				cache: new MemCache()
 			}
 		},
@@ -148,8 +155,15 @@ export function providePotion(resources: Resources, config?: PotionConfig): any[
 			provide: Potion,
 			useClass: Potion,
 			deps: [
-				Http,
+				POTION_HTTP,
 				POTION_CONFIG
+			]
+		},
+		{
+			provide: POTION_HTTP,
+			useExisting: Http,
+			deps: [
+				HTTP_PROVIDERS
 			]
 		}
 	];
@@ -182,8 +196,15 @@ export const POTION_PROVIDERS = [
 		provide: Potion,
 		useClass: Potion,
 		deps: [
-			Http,
+			POTION_HTTP,
 			POTION_CONFIG
+		]
+	},
+	{
+		provide: POTION_HTTP,
+		useExisting: Http,
+		deps: [
+			HTTP_PROVIDERS
 		]
 	}
 ];

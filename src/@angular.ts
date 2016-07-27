@@ -5,11 +5,15 @@ import {
 	OpaqueToken,
 	isDevMode
 } from '@angular/core';
+
+import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/toPromise';
+
 import {
 	HTTP_PROVIDERS,
 	Http,
 	RequestOptions,
+	RequestOptionsArgs,
 	RequestMethod,
 	Request,
 	Response,
@@ -34,12 +38,15 @@ export interface PotionConfig extends PotionOptions {}
 
 
 export const POTION_HTTP = new OpaqueToken('PotionHttp');
+export interface PotionHttp {
+	request(url: string | Request, options?: RequestOptionsArgs): Observable<Response>;
+}
 
 
 @Injectable()
 export class Potion extends PotionBase {
 	constructor(
-		@Inject(POTION_HTTP) private http: Http,
+		@Inject(POTION_HTTP) private http: PotionHttp,
 		@Inject(POTION_CONFIG) config: PotionConfig
 	) {
 		super(config);

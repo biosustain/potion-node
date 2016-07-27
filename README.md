@@ -297,14 +297,14 @@ export class Engine extends Item {}
 export class Car extends Item {}
 ```
 
-**NOTE**: It is **important** that `HTTP_PROVIDERS` is provided as `Potion` internally uses `Http`.
+**NOTE**: It is **important** that `HTTP_PROVIDERS` is provided as `Potion` uses `Http` as default http engine to make requests.
 
-If you wish to override either one of the config values, you can use the second param of `providePotion()`:
+If you wish to override either one of the config values or provide your own http engine, you can use the following:
 ```js
 import {Component} from '@angular/core';
 import {bootstrap} from '@angular/platform-browser-dynamic';
 
-import {POTION_CONFIG, providePotion} from 'potion/@angular';
+import {POTION_HTTP, POTION_CONFIG, PotionHttp, providePotion} from 'potion/@angular';
 
 
 @Component({
@@ -314,11 +314,22 @@ import {POTION_CONFIG, providePotion} from 'potion/@angular';
 class App {}
 
 
+class MyHttp implements PotionHttp {}
+
+
 // Bootstrap and inject the Potion providers
 bootstrap(App, [
-    providePotion([...resources], {
-    	prefix: '/api-endpoint'
-    })
+    providePotion([...resources]),
+    {
+    	provide: POTION_CONFIG,
+    	useValue: {
+            prefix: '/api'
+        }
+    },
+    {
+        provide: POTION_HTTP,
+        useClass: MyHttp
+    }
 ]);
 ```
 

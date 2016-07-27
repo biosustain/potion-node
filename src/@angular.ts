@@ -20,7 +20,6 @@ import {
 	URLSearchParams
 } from '@angular/http';
 
-import {MemCache} from './utils';
 import {
 	RequestOptions as PotionRequestOptions,
 	PotionOptions,
@@ -163,9 +162,7 @@ export function providePotion(resources: Resources): any[] {
 		},
 		{
 			provide: POTION_CONFIG,
-			useValue: {
-				cache: new MemCache()
-			}
+			useValue: {}
 		},
 		{
 			provide: Potion,
@@ -204,9 +201,7 @@ export const POTION_PROVIDERS = [
 	},
 	{
 		provide: POTION_CONFIG,
-		useValue: {
-			cache: new MemCache()
-		}
+		useValue: {}
 	},
 	{
 		provide: Potion,

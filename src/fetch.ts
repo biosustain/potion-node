@@ -1,5 +1,4 @@
 import {RequestOptions, PotionOptions, PotionBase} from './core';
-import {MemCache} from './utils';
 
 
 export {readonly, Item, Route} from './core';
@@ -7,7 +6,7 @@ export {readonly, Item, Route} from './core';
 
 export class Potion extends PotionBase {
 	constructor(options?: PotionOptions) {
-		super(Object.assign({cache: new MemCache()}, options));
+		super(Object.assign({}, options));
 	}
 
 	// Use window.fetch for making requests,

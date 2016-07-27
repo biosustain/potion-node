@@ -1,4 +1,5 @@
 import {
+	MemCache,
 	toSnakeCase,
 	toCamelCase,
 	pairsToObject,
@@ -277,7 +278,7 @@ export class Store<T extends Item> {
 			.fetch(uri, {method: 'DELETE'})
 			.then(() => {
 				// Clear the item from cache if exists
-				if (this.cache && this.cache.get && this.cache.get(uri)) {
+				if (this.cache.get(uri)) {
 					this.cache.remove(uri);
 				}
 			});
@@ -364,7 +365,7 @@ export abstract class PotionBase {
 	constructor({host = '', prefix = '', cache}: PotionOptions = {}) {
 		this.host = host;
 		this.prefix = prefix;
-		this.cache = cache;
+		this.cache = cache || new MemCache();
 	}
 
 	fetch(uri: string, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
@@ -416,7 +417,7 @@ export abstract class PotionBase {
 			// try to get item from cache,
 			// and return a resolved promise with the cached item.
 			// Note that queries are not cached.
-			if  (cache && this.cache && this.cache.get) {
+			if  (cache) {
 				let item = this.cache.get(key);
 				if (item) {
 					return promise.resolve(item);
@@ -550,7 +551,7 @@ export abstract class PotionBase {
 
 				// Cache the resource if it does not exist,
 				// but do it before resolving any possible references (to other resources) on it.
-				if (this.cache && this.cache.get && !this.cache.get(uri)) {
+				if (!this.cache.get(uri)) {
 					this.cache.put(
 						uri,
 						// Create an empty instance
@@ -594,11 +595,8 @@ export abstract class PotionBase {
 
 						Object.assign(obj, {uri, id: parseInt(params[0], 10)});
 
-						let item;
 						// Try to get existing entry from cache
-						if (this.cache && this.cache.get) {
-							item = this.cache.get(uri);
-						}
+						let item = this.cache.get(uri);
 
 						if (item) {
 							Object.assign(item, obj);
@@ -606,9 +604,7 @@ export abstract class PotionBase {
 							item = Reflect.construct(resource as any, [obj]);
 						}
 
-						if (this.cache && this.cache.put) {
-							this.cache.put(uri, item as any);
-						}
+						this.cache.put(uri, item as any);
 
 						return item;
 					});

@@ -28,18 +28,14 @@ import {
 export {Item, Route, readonly} from './core';
 
 
-export let POTION_CONFIG = new OpaqueToken('PotionConfig');
+export const POTION_CONFIG = new OpaqueToken('PotionConfig');
 export interface PotionConfig extends PotionOptions {}
 
 
 @Injectable()
 export class Potion extends PotionBase {
-	private http: Http;
-
-	constructor(http: Http, @Inject(POTION_CONFIG) config: PotionConfig) {
+	constructor(private http: Http, @Inject(POTION_CONFIG) config: PotionConfig) {
 		super(config);
-		// Use Angular 2 Http for requests
-		this.http = http;
 	}
 
 	protected request(uri: string, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
@@ -131,7 +127,7 @@ export function providePotion(resources: Resources, config?: PotionConfig): any[
 					for (let [uri, type] of (Object as any).entries(resources)) {
 						// Tuple with resource type and a configuration
 						if (Array.isArray(type)) {
-							let [resource, config] = type;
+							const [resource, config] = type;
 							potion.register(uri, resource, config);
 						} else {
 							potion.register(uri, type);
@@ -139,9 +135,7 @@ export function providePotion(resources: Resources, config?: PotionConfig): any[
 					}
 				};
 			},
-			deps: [
-				Potion
-			],
+			deps: [Potion],
 			multi: true
 		},
 		{

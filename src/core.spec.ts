@@ -20,7 +20,7 @@ describe('potion/core', () => {
 				}
 			}
 
-			potion = new Potion({host: 'http://localhost:8080', prefix: '/api', cache: null});
+			potion = new Potion({host: 'http://localhost:8080', prefix: '/api'});
 		});
 
 		afterEach(() => {
@@ -30,7 +30,6 @@ describe('potion/core', () => {
 		it('should have {host, prefix, cache} configurable properties', () => {
 			expect(potion.host).toEqual('http://localhost:8080');
 			expect(potion.prefix).toEqual('/api');
-			expect(potion.cache).toBe(null);
 		});
 
 		describe('.register()', () => {

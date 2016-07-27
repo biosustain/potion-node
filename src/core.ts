@@ -534,9 +534,19 @@ export abstract class PotionBase {
 			if (json instanceof Array) {
 				return promise.all(json.map((item) => this.fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string') {
-				let {resource, uri} = this.parseURI(json.$uri);
-				let promises = [];
+				// Try to parse the URI,
+				// otherwise reject with the exception thrown from parseURI.
+				let resource;
+				let uri;
+				try {
+					const parsedURI = this.parseURI(json.$uri);
+					resource = parsedURI.resource;
+					uri = parsedURI.uri;
+				} catch (parseURIError) {
+					return promise.reject(parseURIError);
+				}
 
+				let promises = [];
 
 				// Cache the resource if it does not exist,
 				// but do it before resolving any possible references (to other resources) on it.
@@ -570,7 +580,18 @@ export abstract class PotionBase {
 							.filter((key) => key !== '$uri')
 							.forEach((key) => obj[key] = properties[key]);
 
-						let {params, uri} = this.parseURI(properties.$uri);
+						// Try to parse the URI,
+						// otherwise reject with the exception thrown from parseURI.
+						let params;
+						let uri;
+						try {
+							const parsedURI = this.parseURI(properties.$uri);
+							params = parsedURI.params;
+							uri = parsedURI.uri;
+						} catch (parseURIError) {
+							return promise.reject(parseURIError);
+						}
+
 						Object.assign(obj, {uri, id: parseInt(params[0], 10)});
 
 						let item;
@@ -593,7 +614,15 @@ export abstract class PotionBase {
 					});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
-					let {uri} = this.parseURI(json.$ref);
+					// Try to parse the URI,
+					// otherwise reject with the exception thrown from parseURI.
+					let uri;
+					try {
+						const parsedURI = this.parseURI(json.$ref);
+						uri = parsedURI.uri;
+					} catch (parseURIError) {
+						return promise.reject(parseURIError);
+					}
 
 					return this.fetch(uri, {
 						cache: true,

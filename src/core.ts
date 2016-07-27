@@ -367,22 +367,6 @@ export abstract class PotionBase {
 		this.cache = cache;
 	}
 
-	parseURI(uri: string): ParsedURI {
-		uri = decodeURIComponent(uri);
-
-		if (uri.indexOf(this.prefix) === 0) {
-			uri = uri.substring(this.prefix.length);
-		}
-
-		for (let [resourceURI, resource] of (Object as any).entries(this.resources)) {
-			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return {uri, resource, params: uri.substring(resourceURI.length + 1).split('/')};
-			}
-		}
-
-		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
-	}
-
 	fetch(uri: string, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		fetchOptions = fetchOptions || {};
 		let {method, cache, search, paginate, data} = fetchOptions;
@@ -511,6 +495,22 @@ export abstract class PotionBase {
 	 * @returns {Object} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<any>;
+
+	private parseURI(uri: string): ParsedURI {
+		uri = decodeURIComponent(uri);
+
+		if (uri.indexOf(this.prefix) === 0) {
+			uri = uri.substring(this.prefix.length);
+		}
+
+		for (let [resourceURI, resource] of (Object as any).entries(this.resources)) {
+			if (uri.indexOf(`${resourceURI}/`) === 0) {
+				return {uri, resource, params: uri.substring(resourceURI.length + 1).split('/')};
+			}
+		}
+
+		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
+	}
 
 	private toPotionJSON(json: any): any {
 		if (typeof json === 'object' && json !== null) {

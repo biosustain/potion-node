@@ -9,7 +9,7 @@ import {
 } from './core';
 
 
-describe('potion/base', () => {
+describe('potion/core', () => {
 	describe('Potion()', () => {
 		let potion;
 

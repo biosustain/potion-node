@@ -436,12 +436,18 @@ export abstract class PotionBase {
 					this.pendingGETRequests.delete(uri);
 					return data;
 				},
-				() => {
+				(error) => {
 					// If request fails,
 					// make sure to remove the pending request so further requests can be made.
 					// Return is necessary.
 					this.pendingGETRequests.delete(uri);
-					return promise.reject();
+					return promise.reject(
+						error instanceof Error
+							? error.message
+							: typeof error === 'string'
+								? error
+								: `An error occurred while Potion tried to retrieve resource from '${uri}'.`
+					);
 				}
 			);
 
@@ -510,7 +516,7 @@ export abstract class PotionBase {
 			}
 		}
 
-		throw new Error(`Uninterpretable or unknown resource URI: ${uri}`);
+		throw new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`);
 	}
 
 	private toPotionJSON(json: any): any {
@@ -544,7 +550,7 @@ export abstract class PotionBase {
 					resource = parsedURI.resource;
 					uri = parsedURI.uri;
 				} catch (parseURIError) {
-					return promise.reject(parseURIError);
+					return promise.reject(parseURIError.message);
 				}
 
 				let promises = [];
@@ -590,7 +596,7 @@ export abstract class PotionBase {
 							params = parsedURI.params;
 							uri = parsedURI.uri;
 						} catch (parseURIError) {
-							return promise.reject(parseURIError);
+							return promise.reject(parseURIError.message);
 						}
 
 						Object.assign(obj, {uri, id: parseInt(params[0], 10)});
@@ -617,7 +623,7 @@ export abstract class PotionBase {
 						const parsedURI = this.parseURI(json.$ref);
 						uri = parsedURI.uri;
 					} catch (parseURIError) {
-						return promise.reject(parseURIError);
+						return promise.reject(parseURIError.message);
 					}
 
 					return this.fetch(uri, {

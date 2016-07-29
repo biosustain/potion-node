@@ -190,10 +190,6 @@ export abstract class Item {
 		return properties;
 	}
 
-	static [Symbol.hasInstance](instance: any): boolean {
-		return instance.isPrototypeOf(Item);
-	}
-
 	/**
 	 * Get a resource by id.
 	 * @param {Number|String} id

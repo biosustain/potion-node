@@ -20,6 +20,3 @@ NPM_DIR=${ROOT_DIR}/dist
 cp ./package.json ${NPM_DIR}
 cp ./LICENSE ${NPM_DIR}
 cp ./README.md ${NPM_DIR}
-
-# Publish to npm
-npm publish ${NPM_DIR}

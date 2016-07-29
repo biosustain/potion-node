@@ -388,7 +388,7 @@ Make sure that the builds and tests will run successfully, before you make a pul
 }
 ```
 
-Use the following script to publish the package:
+Use the following command to publish the package:
 ```shell
-sh scripts/npm_publish.sh
+npm publish
 ```

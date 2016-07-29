@@ -37,11 +37,11 @@ node_modules
 
 
 ## Typings
-typings
+/typings/
 
 
 ## JSPM
-jspm_packages
+/jspm_packages/
 
 
 ## Direnv
@@ -49,8 +49,4 @@ jspm_packages
 
 
 ## Dist
-dist/*
-
-
-## Temp
-tmp
+/lib/

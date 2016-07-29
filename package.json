@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.18.6",
+	"version": "0.18.7",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [
 		"potion",
@@ -21,7 +21,6 @@
 		"url": "https://github.com/biosustain/potion-node"
 	},
 	"scripts": {
-		"prepublish": "sh ./scripts/npm_prepublish.sh",
 		"clean": "rm -rf dist",
 		"lint": "tslint src/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish",
 		"test": "karma start karma.config.ts --browsers PhantomJS --single-run --log-level error",

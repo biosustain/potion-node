@@ -390,5 +390,5 @@ Make sure that the builds and tests will run successfully, before you make a pul
 
 Use the following command to publish the package:
 ```shell
-npm publish
+make publish
 ```

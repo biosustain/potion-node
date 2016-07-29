@@ -196,7 +196,7 @@ describe('potion/core', () => {
 
 			it('should automatically resolve references', (done) => {
 				Car.fetch(1).then((car: Car) => {
-					expect(car.user instanceof User).toBe(true);
+					expect(car.user instanceof (User as any)).toBe(true);
 					expect(car.user.id).toEqual(1);
 					done();
 				});
@@ -204,7 +204,7 @@ describe('potion/core', () => {
 
 			it('should work with cross-references', (done) => {
 				Person.fetch(1).then((person: Person) => {
-					expect(person.sibling instanceof Person).toBe(true);
+					expect(person.sibling instanceof (Person as any)).toBe(true);
 					done();
 				});
 			});
@@ -212,10 +212,16 @@ describe('potion/core', () => {
 	});
 
 	describe('Item()', () => {
+		it('should be an instance of Item', () => {
+			class User extends Item {}
+			let user = new User();
+			expect(user instanceof (Item as any)).toBe(true);
+		});
+
 		it('should be an instance of the child class that extended it', () => {
 			class User extends Item {}
 			let user = new User();
-			expect(user instanceof User).toBe(true);
+			expect(user instanceof (User as any)).toBe(true);
 		});
 
 		it('should have the same attributes it was initialized with', () => {
@@ -470,7 +476,7 @@ describe('potion/core', () => {
 
 		it('should return an instance of Item', (done) => {
 			User.fetch(1).then((user: User) => {
-				expect(user instanceof User).toBe(true);
+				expect(user instanceof (User as any)).toBe(true);
 				done();
 			});
 		});
@@ -651,7 +657,7 @@ describe('potion/core', () => {
 		it('should contain instances of an Item', (done) => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				for (let user of users) {
-					expect(user instanceof User).toBe(true);
+					expect(user instanceof (User as any)).toBe(true);
 				}
 				done();
 			});
@@ -685,10 +691,10 @@ describe('potion/core', () => {
 				for (let person of people) {
 					expect(person.groups.length).toEqual(2);
 					for (let group of person.groups) {
-						expect(group instanceof Group).toBe(true);
+						expect(group instanceof (Group as any)).toBe(true);
 						expect(group.members.length).toEqual(2);
 						for (let member of group.members) {
-							expect(member instanceof Person).toBe(true);
+							expect(member instanceof (Person as any)).toBe(true);
 						}
 					}
 				}
@@ -749,7 +755,7 @@ describe('potion/core', () => {
 
 		it('should return the fist Item', (done) => {
 			User.first().then((user: User) => {
-				expect(user instanceof User).toBe(true);
+				expect(user instanceof (User as any)).toBe(true);
 				done();
 			});
 		});

@@ -190,6 +190,10 @@ export abstract class Item {
 		return properties;
 	}
 
+	static [Symbol.hasInstance](instance: any): boolean {
+		return instance.isPrototypeOf(Item);
+	}
+
 	/**
 	 * Get a resource by id.
 	 * @param {Number|String} id
@@ -522,7 +526,7 @@ export abstract class PotionBase {
 
 	private toPotionJSON(json: any): any {
 		if (typeof json === 'object' && json !== null) {
-			if (json instanceof Item && typeof json.uri === 'string') {
+			if (json instanceof (Item as any) && typeof json.uri === 'string') {
 				return {$ref: `${this.prefix}${json.uri}`};
 			} else if (json instanceof Date) {
 				return {$date: json.getTime()};

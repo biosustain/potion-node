@@ -1,8 +1,0 @@
-# NPM https://docs.npmjs.com/misc/developers
-# http://stackoverflow.com/a/24942436/1092007
-
-# Source files
-/src/
-
-# Typings
-/typings/

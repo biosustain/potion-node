@@ -33,4 +33,4 @@ copy:
 
 # Publish to NPM
 publish: clean test build copy
-	npm publish
+	npm publish ${NPM_DIR}

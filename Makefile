@@ -1,8 +1,8 @@
-NPM_DIR = ./dist
+NPM_DIR = ./lib
 
 usage:
 	@echo "Available Commands: \n \
-		clean              Cleanup the dist files\n \
+		clean              Cleanup the lib files\n \
 		test               Run code linting and unit tests\n \
 		build              Compile source code\n \
 		copy               Copy NPM package files (LICENSE, README.md and package.json)\n \

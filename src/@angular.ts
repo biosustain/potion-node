@@ -94,13 +94,7 @@ export class Potion extends PotionBase {
 				// We need to `encodeURIComponent()` when we have complex search queries.
 				// E.g. `search: {where: {foo: 1, bar: 2}}`, when URLSearchParams will be sent with the request,
 				// it will end up as `[object Object]`, thus, we need to encode the value.
-				params.append(
-					key,
-					encodeURIComponent(
-						// Convert the value to JSON as well.
-						JSON.stringify(value)
-					)
-				);
+				params.append(key, value);
 			}
 
 			// TODO(rolandjitsu): Check https://github.com/angular/angular/issues/10235,

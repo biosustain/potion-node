@@ -110,7 +110,7 @@ export class Potion extends PotionBase {
 			requestOptions = new RequestOptions({
 				url,
 				method,
-				search,
+				search: params,
 				body
 			});
 			// requestOptions = requestOptions.merge({

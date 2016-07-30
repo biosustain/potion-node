@@ -106,7 +106,7 @@ export class Potion extends PotionBase {
 			// TODO(rolandjitsu): Check https://github.com/angular/angular/issues/10235,
 			// merging will cause our PotionQueryEncoder to never actually get called,
 			// use merging when the bug it's fixed.
-			const {url, method, body} = requestOptions;
+			const {url, method, body} = requestOptions as any;
 			requestOptions = new RequestOptions({
 				url,
 				method,

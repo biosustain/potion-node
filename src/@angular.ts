@@ -103,9 +103,20 @@ export class Potion extends PotionBase {
 				);
 			}
 
-			requestOptions = requestOptions.merge({
-				search: params
+			// TODO(rolandjitsu): Check https://github.com/angular/angular/issues/10235,
+			// merging will cause our PotionQueryEncoder to never actually get called,
+			// use merging when the bug it's fixed.
+			const {url, method, body} = requestOptions;
+			requestOptions = new RequestOptions({
+				url,
+				method,
+				search,
+				body
 			});
+			// requestOptions = requestOptions.merge({
+			// 	search: params
+			// });
+
 		}
 
 		return this.http.request(uri, requestOptions).toPromise().then((response: any) => {

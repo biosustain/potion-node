@@ -17,7 +17,8 @@ import {
 	RequestMethod,
 	Request,
 	Response,
-	URLSearchParams
+	URLSearchParams,
+	QueryEncoder
 } from '@angular/http';
 
 import {
@@ -39,6 +40,19 @@ export interface PotionConfig extends PotionOptions {}
 export const POTION_HTTP = new OpaqueToken('PotionHttp');
 export interface PotionHttp {
 	request(url: string | Request, options?: RequestOptionsArgs): Observable<Response>;
+}
+
+
+export class PotionQueryEncoder extends QueryEncoder {
+	encodeKey(key: string): string {
+		return encodeURIComponent(key);
+	}
+
+	encodeValue(value: string): string {
+		return encodeURIComponent(
+			JSON.stringify(value)
+		);
+	}
 }
 
 
@@ -74,7 +88,7 @@ export class Potion extends PotionBase {
 
 		// Convert {search} to URLSearchParams.
 		if (search) {
-			const params = new URLSearchParams();
+			const params = new URLSearchParams('', new PotionQueryEncoder());
 
 			for (let [key, value] of (Object as any).entries(search)) {
 				// We need to `encodeURIComponent()` when we have complex search queries.
@@ -94,10 +108,7 @@ export class Potion extends PotionBase {
 			});
 		}
 
-		// Create Request object.
-		const request = new Request(requestOptions);
-
-		return this.http.request(request).toPromise().then((response: any) => {
+		return this.http.request(uri, requestOptions).toPromise().then((response: any) => {
 			let headers = {};
 
 			// If `response` has is a Response object,

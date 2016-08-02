@@ -366,9 +366,9 @@ bootstrap(App, [
 ----------------
 Clone the repository `git clone https://github.com/biosustain/potion-node`, install all the deps (`npm install`, `$(npm bin)/typings install`) and start hacking.
 Make sure that the builds and tests will run successfully, before you make a pull request. Follow the next steps:
-- use `npm run build` to build the `.ts` files and see if any errors have occurred;
-- run the tests using `npm test` (*if you wish to run tests on file change, use `$(npm bin)/karma start karma.config.ts`.*);
-- lint the code with `npm run lint`.
+- use `make build` to build the `.ts` files and see if any errors have occurred;
+- run the tests using `make test` (*if you wish to run tests on file change, use `$(npm bin)/karma start karma.config.ts`.*);
+- lint the code with `make lint`.
 
 **Note**: If you add/remove files, make sure to edit the `"files"` field in `tsconfig.json`:
 ```js
@@ -379,10 +379,10 @@ Make sure that the builds and tests will run successfully, before you make a pul
         "node_modules/typescript/lib/lib.dom.d.ts",
         "node_modules/typescript/lib/lib.es2017.d.ts",
         // You can change the below as you wish
-        "src/angular.ts",
         "src/@angular.ts",
-        "src/fetch.ts",
+        "src/angular.ts",
         "src/core.ts",
+        "src/fetch.ts",
         "src/utils.ts"
     ]
 }

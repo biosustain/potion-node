@@ -388,6 +388,9 @@ Make sure that the builds and tests will run successfully, before you make a pul
 }
 ```
 
+**NOTE**: If you use the `prepublish` hook, it will also execute every time you do a `npm install` (see [scripts](https://docs.npmjs.com/misc/scripts)).
+Thus, it is advised to use the command below to publish and build artifacts before publish, otherwise the TS compiler will throw errors.
+
 Use the following command to publish the package:
 ```shell
 make publish

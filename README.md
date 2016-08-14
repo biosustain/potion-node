@@ -280,10 +280,10 @@ export class AppModule {}
 import {PotionResources, PotionModule} from 'potion-client/@angular';
 import {Engine, Car} from './vehicle';
 const appResources: PotionResources = {
-'/engine': Engine,
-'/car': [Car, {
-    readonly: ['production']
-}]
+    '/engine': Engine,
+    '/car': [Car, {
+        readonly: ['production']
+    }]
 };
 export const resources = PotionModule.forRoot(appResources);
 

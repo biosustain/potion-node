@@ -45,7 +45,7 @@
 		"eofline": true,
 		"indent": [true, "tabs"],
 		"linebreak-style": [true, "LF"],
-		"max-line-length": [true, 180],
+		"max-line-length": [true, 210],
 		"no-default-export": true,
 		"no-mergeable-namespace": true,
 		"no-require-imports": false,

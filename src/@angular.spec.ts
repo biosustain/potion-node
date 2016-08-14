@@ -146,7 +146,7 @@ describe('potion/@angular', () => {
 		});
 
 		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
-			backend.verifyNoPendingRequests()
+			backend.verifyNoPendingRequests();
 		}));
 
 		describe('.request()', () => {
@@ -240,7 +240,7 @@ describe('potion/@angular', () => {
 		});
 
 		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
-			backend.verifyNoPendingRequests()
+			backend.verifyNoPendingRequests();
 		}));
 
 		describe('.fetch()', () => {

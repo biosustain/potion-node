@@ -20,7 +20,7 @@ Before you use this package, make sure you include [reflect-metadata](https://ww
 Furthermore, this package has multiple implementations available, it can be used as:
 * [standalone](#standalone) package using [Fetch API](https://developer.mozilla.org/en/docs/Web/API/Fetch_API) (make sure to include a polyfill such as [whatwg-fetch](https://github.com/github/fetch) if you are targeting a browser that does not implement the API);
 * as a [AngularJS](#angularjs) module;
-* as a [Angular 2](#angular-2) package.
+* as a [Angular 2](#angular-2) module.
 
 Note that any routes created with `Route.<method>` and the following methods on `Item` return a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise):
 * `.save()`
@@ -276,16 +276,16 @@ import {resources} from './app.resources';
 export class AppModule {}
 
 
- // ./app.resources.ts
- import {PotionResources, PotionModule} from 'potion-client/@angular';
- import {Engine, Car} from './vehicle';
- const appResources: PotionResources = {
-    '/engine': Engine,
-    '/car': [Car, {
-        readonly: ['production']
-    }]
- };
- export const resources = PotionModule.forRoot(appResources);
+// ./app.resources.ts
+import {PotionResources, PotionModule} from 'potion-client/@angular';
+import {Engine, Car} from './vehicle';
+const appResources: PotionResources = {
+'/engine': Engine,
+'/car': [Car, {
+    readonly: ['production']
+}]
+};
+export const resources = PotionModule.forRoot(appResources);
 
 
 // ./app.component.ts

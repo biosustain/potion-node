@@ -1,25 +1,27 @@
 import {
-	APP_INITIALIZER,
+	NgModule,
+	ModuleWithProviders,
 	Injectable,
 	Inject,
-	OpaqueToken,
-	isDevMode
+	OpaqueToken
 } from '@angular/core';
-
-import {Observable} from 'rxjs/Observable';
-import 'rxjs/add/operator/toPromise';
-
 import {
-	HTTP_PROVIDERS,
 	Http,
+	ConnectionBackend,
+	BaseRequestOptions,
 	RequestOptions,
 	RequestOptionsArgs,
 	RequestMethod,
 	Request,
 	Response,
 	URLSearchParams,
-	QueryEncoder
+	QueryEncoder,
+	HttpModule
 } from '@angular/http';
+import {MockBackend} from '@angular/http/testing';
+
+import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/operator/toPromise';
 
 import {
 	RequestOptions as PotionRequestOptions,
@@ -29,20 +31,44 @@ import {
 	ItemOptions
 } from './core';
 
+import {merge, isEmpty} from './utils';
 
+
+/**
+ * Export Potion's core classes/fns.
+ */
 export {Item, Route, readonly} from './core';
 
 
-export const POTION_CONFIG = new OpaqueToken('PotionConfig');
+/**
+ * Angular 2 Potion resources interface.
+ */
+export const POTION_RESOURCES = new OpaqueToken('POTION_RESOURCES');
+export interface PotionResources {
+	[key: string]: typeof Item | [typeof Item, ItemOptions];
+}
+
+
+/**
+ * Provide a way to configure Potion in Angular 2.
+ */
+export const POTION_CONFIG = new OpaqueToken('POTION_CONFIG');
 export interface PotionConfig extends PotionOptions {}
 
 
-export const POTION_HTTP = new OpaqueToken('PotionHttp');
+/**
+ * Potion can also be configured to use various Angular 2 Http implementations.
+ * This is useful when there is a wrapper around the core Angular 2 Http module (mostly needed when creating interceptors).
+ */
+export const POTION_HTTP = new OpaqueToken('POTION_HTTP');
 export interface PotionHttp {
 	request(url: string | Request, options?: RequestOptionsArgs): Observable<Response>;
 }
 
 
+/**
+ * Potion queries need special encoding (some queries have JSON objects as values for keys).
+ */
 export class PotionQueryEncoder extends QueryEncoder {
 	encodeKey(key: string): string {
 		return encodeURIComponent(key);
@@ -56,19 +82,40 @@ export class PotionQueryEncoder extends QueryEncoder {
 }
 
 
+/**
+ * Angular 2 Potion provider.
+ */
 @Injectable()
-export class Potion extends PotionBase {
+export class PotionProvider extends PotionBase {
 	constructor(
-		@Inject(POTION_HTTP) private http: PotionHttp,
-		@Inject(POTION_CONFIG) config: PotionConfig
+		@Inject(POTION_RESOURCES) resources: PotionResources[],
+		@Inject(POTION_CONFIG) config: PotionConfig,
+		@Inject(POTION_HTTP) private http: PotionHttp
 	) {
 		super(config);
+
+		resources = merge(
+			// Remove any values that contain no resources
+			resources.filter((item) => !isEmpty(item))
+		);
+
+		if (!isEmpty(resources)) {
+			for (let [uri, type] of (Object as any).entries(resources)) {
+				// Tuple with resource type and a configuration for the resource type
+				if (Array.isArray(type)) {
+					const [resource, config] = type;
+					this.register(uri, resource, config);
+				} else {
+					this.register(uri, type);
+				}
+			}
+		}
 	}
 
 	protected request(uri: string, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
 		// Angular Http Request accepts a RequestMethod type for a method,
 		// but the value for that is an integer.
-		// Therefore we need to match the string literals like 'GET' (coming from Potion) to the enum values for RequestMethod.
+		// Therefore we need to match the string literals like 'GET' (coming from PotionProvider) to the enum values for RequestMethod.
 		let requestOptions = new RequestOptions({
 			method: parseInt(
 				(Object as any)
@@ -142,86 +189,73 @@ export class Potion extends PotionBase {
 }
 
 
-export interface Resources {
-	[key: string]: typeof Item | [typeof Item, ItemOptions];
-}
-
 /**
- * Provide a way to register resources when the app is bootstrapped.
+ * Provide a way to register Potion resources when the app is bootstrapped.
  *
  * @example
- * bootstrap(App, [
- * 	   providePotion({
- * 	       '/engine': Engine,
- * 	       '/car': [Car, {
- * 	           readonly: ['production']
- * 	       }]
- * 	   })
- * ])
+ * // app.resources.ts
+ * import {PotionResources, PotionModule} from 'potion-client/@angular';
+ * const appResources: PotionResources = {
+ *     '/engine': Engine,
+ * 	   '/car': [Car, {
+ * 	       readonly: ['production']
+ * 	   }]
+ * };
+ * export const resources = PotionModule.forRoot(appResources);
+ *
+ * // app.module.ts
+ * import {AppComponent} from './app.component'
+ * import {resources} from './app.resources';
+ * @NgModule({
+ *     imports: [
+ *       resources
+ *     ],
+ *     bootstrap: [AppComponent]
+ * }
+ * export class AppModule {}
  */
-export function providePotion(resources: Resources): any[] {
-	return [
-		{
-			// We do this because we want to initialize Potion before it is used by any component,
-			// and register resources.
-			provide: APP_INITIALIZER,
-			useFactory: (potion: Potion) => {
-				return () => {
-					if (isDevMode()) {
-						console.info('Potion resources have been registered.');
-					}
-
-					for (let [uri, type] of (Object as any).entries(resources)) {
-						// Tuple with resource type and a configuration
-						if (Array.isArray(type)) {
-							const [resource, config] = type;
-							potion.register(uri, resource, config);
-						} else {
-							potion.register(uri, type);
-						}
-					}
-				};
-			},
-			deps: [Potion],
-			multi: true
-		},
-		{
-			provide: POTION_CONFIG,
-			useValue: {}
-		},
-		{
-			provide: Potion,
-			useClass: Potion,
-			deps: [
-				POTION_HTTP,
-				POTION_CONFIG
+@NgModule({
+	imports: [HttpModule],
+	providers: []
+})
+export class PotionModule {
+	static forRoot(resources: PotionResources): ModuleWithProviders {
+		return {
+			ngModule: PotionModule,
+			// App-wide service singletons
+			providers: [
+				{
+					provide: POTION_RESOURCES,
+					useValue: resources,
+					multi: true
+				},
+				{
+					provide: POTION_CONFIG,
+					useValue: {}
+				},
+				{
+					provide: POTION_HTTP,
+					useExisting: Http
+				},
+				{
+					provide: PotionProvider,
+					useClass: PotionProvider,
+					deps: [
+						POTION_RESOURCES,
+						POTION_CONFIG,
+						POTION_HTTP
+					]
+				}
 			]
-		},
-		{
-			provide: POTION_HTTP,
-			useExisting: Http,
-			deps: [
-				HTTP_PROVIDERS
-			]
-		}
-	];
+		};
+	}
 }
 
 
 export const POTION_PROVIDERS = [
 	{
-		// We do this because we want to initialize Potion before it is used by any component.
-		provide: APP_INITIALIZER,
-		useFactory: (potion: Potion) => {
-			return () => {
-				if (isDevMode()) {
-					console.info('Potion has been initialized.');
-				}
-			};
-		},
-		deps: [
-			Potion
-		],
+		provide: POTION_RESOURCES,
+		useValue: {},
 		multi: true
 	},
 	{
@@ -229,18 +263,43 @@ export const POTION_PROVIDERS = [
 		useValue: {}
 	},
 	{
-		provide: Potion,
-		useClass: Potion,
-		deps: [
-			POTION_HTTP,
-			POTION_CONFIG
-		]
+		provide: POTION_HTTP,
+		useExisting: Http
 	},
 	{
-		provide: POTION_HTTP,
-		useExisting: Http,
+		provide: PotionProvider,
+		useClass: PotionProvider,
 		deps: [
-			HTTP_PROVIDERS
+			POTION_RESOURCES,
+			POTION_CONFIG,
+			POTION_HTTP
 		]
 	}
 ];
+
+
+/**
+ * PotionTestingModule can be used for testing the PotionModule.
+ */
+// TODO(rolandjitsu): this should be moved to a `@angular_testing.ts` file or similar (rethink structure).
+@NgModule({
+	imports: [HttpModule],
+	exports: [PotionModule],
+	providers: [
+		POTION_PROVIDERS,
+		{
+			provide: Http,
+			useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
+				return new Http(connectionBackend, defaultOptions);
+			},
+			deps: [
+				MockBackend,
+				BaseRequestOptions
+			]
+		},
+		BaseRequestOptions,
+		MockBackend
+	]
+})
+export class PotionTestingModule {
+}

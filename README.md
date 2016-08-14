@@ -248,46 +248,60 @@ angular
 Using the package in an Angular 2 app is very similar to the above, as in there are no API changes, but a few differences in the way resources are registered:
 ```js
 // ./main.ts
-import {bootstrap} from '@angular/platform-browser-dynamic';
-import {HTTP_PROVIDERS} from '@angular/http';
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import {AppModule} from './app.module.ts';
 
-// Load the Potion providers
-import {providePotion} from 'potion/@angular';
+platformBrowserDynamic().bootstrapModule(AppModule);
 
+
+// ./app.module.ts
+import {NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
+import {HttpModule} from '@angular/http';
 // Load the App component
-import {App} from './app.component';
-import {Engine, Car} from './vehicle';
+import {AppComponent} from './app.component';
+// Load resources
+import {resources} from './app.resources';
+
+@NgModule({
+	imports: [
+		BrowserModule,
+		HttpModule,
+		// Potion resources registration
+		resources
+	],
+	declarations: [AppComponent],
+	bootstrap: [AppComponent]
+})
+export class AppModule {}
 
 
-// Bootstrap and inject the Potion providers
-bootstrap(App, [
-    HTTP_PROVIDERS,
-    providePotion({
-        '/engine': Engine,
-        '/car': [Car, {
-            readonly: ['registered']
-         }]
-     })
-]);
-
+ // ./app.resources.ts
+ import {PotionResources, PotionModule} from 'potion-client/@angular';
+ import {Engine, Car} from './vehicle';
+ const appResources: PotionResources = {
+    '/engine': Engine,
+    '/car': [Car, {
+        readonly: ['production']
+    }]
+ };
+ export const resources = PotionModule.forRoot(appResources);
 
 
 // ./app.component.ts
 import {Component} from '@angular/core';
-import {Engine, Car} from './vehicle';
-
+import {Car} from './vehicle';
 
 @Component({
     selector: 'my-app',
     template: '<h1>My Angular 2 App</h1>'
 })
-export class App {
+export class AppComponent {
     constructor() {    
         let car = new Car({brand: 'Opel'});
         car.save();
     }
 }
-
 
 
 // ./vehicle.ts
@@ -297,68 +311,60 @@ export class Engine extends Item {}
 export class Car extends Item {}
 ```
 
-**NOTE**: It is **important** that `HTTP_PROVIDERS` is provided as `Potion` uses `Http` as default http engine to make requests.
+**NOTE**: It is **important** that `HttpModule` is provided as `Potion` uses `Http` as default http engine to make requests.
 
 If you wish to override either one of the config values or provide your own http engine, you can use the following:
 ```js
-import {Component} from '@angular/core';
-import {bootstrap} from '@angular/platform-browser-dynamic';
+import {NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
+import {HttpModule} from '@angular/http';
+import {POTION_HTTP, POTION_CONFIG, PotionHttp} from 'potion/@angular';
+import {resources} from './app.resources';
 
-import {POTION_HTTP, POTION_CONFIG, PotionHttp, providePotion} from 'potion/@angular';
-
-
-@Component({
-    selector: 'my-app',
-    template: '<h1>My Angular 2 App</h1>'
-})
-class App {}
-
-
+// Custom Http
 class MyHttp implements PotionHttp {}
 
-
-// Bootstrap and inject the Potion providers
-bootstrap(App, [
-    providePotion([...resources]),
-    {
-    	provide: POTION_CONFIG,
-    	useValue: {
-            prefix: '/api'
+@NgModule({
+	imports: [
+		BrowserModule,
+		HttpModule,
+		// Potion resources registration
+		resources,
+		...
+	],
+	providers: [
+        {
+            provide: POTION_CONFIG,
+            useValue: {
+                prefix: '/api'
+            }
+        },
+        {
+            provide: POTION_HTTP,
+            useClass: MyHttp
         }
-    },
-    {
-        provide: POTION_HTTP,
-        useClass: MyHttp
-    }
-]);
+    ],
+	...
+})
+export class AppModule {}
 ```
 
 Note that you can still register new resources at a later point by using the `Potion` instance (though I advise against it):
 ```js
 import {Component} from '@angular/core';
-import {bootstrap} from '@angular/platform-browser-dynamic';
-
-import {Potion, Item, providePotion} from 'potion/@angular';
-
+import {Potion, Item} from 'potion/@angular';
 
 export class Engine extends Item {}
-
 
 @Component({
     selector: 'my-app',
     template: '<h1>My Angular 2 App</h1>'
 })
-class App {
+class AppComponent {
     constructor(potion: Potion) {
         potion.register('/engine', Engine);
     }
 }
-
-
-// Bootstrap and inject the Potion providers
-bootstrap(App, [
-    providePotion([...resources])
-]);
 ```
 
 

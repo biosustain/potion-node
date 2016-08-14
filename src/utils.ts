@@ -43,6 +43,27 @@ export function omap(object: Object, callback: (key: string, value: any) => any,
 
 
 /**
+ * Merge array of objects into one object.
+ */
+export function merge(objects: any[]): any {
+	const result = {};
+	for (let obj of objects) {
+		Object.assign(result, obj);
+	}
+	return result;
+}
+
+
+/**
+ * Check if an object is empty
+ */
+export function isEmpty(obj: Object): boolean {
+	return Object.keys(obj).length === 0;
+}
+
+
+
+/**
  * In-Memory cache
  * Will be used by default by Potion for caching resources.
  */

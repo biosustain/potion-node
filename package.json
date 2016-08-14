@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.18.19",
+	"version": "0.19.0",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [
 		"potion",
@@ -31,12 +31,12 @@
 	},
 	"devDependencies": {
 		"angular": "^1.5.8",
-		"@angular/common": "^2.0.0-rc.4",
-		"@angular/compiler": "^2.0.0-rc.4",
-		"@angular/core": "^2.0.0-rc.4",
-		"@angular/platform-browser": "^2.0.0-rc.4",
-		"@angular/platform-browser-dynamic": "^2.0.0-rc.4",
-		"@angular/http": "^2.0.0-rc.4",
+		"@angular/common": "^2.0.0-rc.5",
+		"@angular/compiler": "^2.0.0-rc.5",
+		"@angular/core": "^2.0.0-rc.5",
+		"@angular/platform-browser": "^2.0.0-rc.5",
+		"@angular/platform-browser-dynamic": "^2.0.0-rc.5",
+		"@angular/http": "^2.0.0-rc.5",
 		"angular-mocks": "^1.5.8",
 		"babel-plugin-transform-object-assign": "^6.8.0",
 		"babel-preset-stage-0": "^6.5.0",
@@ -67,8 +67,8 @@
 	},
 	"optionalDependencies": {
 		"angular": "^1.5.8",
-		"@angular/core": "^2.0.0-rc.4",
-		"@angular/http": "^2.0.0-rc.4",
+		"@angular/core": "^2.0.0-rc.5",
+		"@angular/http": "^2.0.0-rc.5",
 		"whatwg-fetch": "^1.0.0"
 	},
 	"engines": {

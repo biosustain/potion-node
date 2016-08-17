@@ -20,7 +20,7 @@ import {
 	POTION_CONFIG,
 	POTION_HTTP,
 	Potion
-} from './potion_module';
+} from './potion';
 
 
 // Prepare for tests

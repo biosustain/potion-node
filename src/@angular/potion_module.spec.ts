@@ -13,14 +13,14 @@ import 'rxjs/add/observable/of';
 
 import {RequestMethod, ResponseOptions, Response} from '@angular/http';
 
+import {PotionTestingModule} from './testing/potion_testing_module';
+import {Item} from '../core';
 import {
 	POTION_RESOURCES,
 	POTION_CONFIG,
 	POTION_HTTP,
-	PotionProvider,
-	Item,
-	PotionTestingModule
-} from './@angular';
+	Potion
+} from './potion_module';
 
 
 // Prepare for tests
@@ -49,17 +49,17 @@ describe('potion/@angular', () => {
 			});
 		});
 
-		it('should provide a PotionProvider instance', inject([PotionProvider], (potion: PotionProvider) => {
+		it('should provide a Potion instance', inject([Potion], (potion: Potion) => {
 			expect(potion).not.toBeUndefined();
-			expect(potion instanceof PotionProvider).toBe(true);
+			expect(potion instanceof Potion).toBe(true);
 		}));
 
-		it('should register any passed resources', inject([PotionProvider], (potion: PotionProvider) => {
+		it('should register any passed resources', inject([Potion], (potion: Potion) => {
 			expect(potion).not.toBeUndefined();
 			expect(potion.resources.hasOwnProperty('/user')).toBeTruthy();
 		}));
 
-		it('should allow PotionProvider().request() to use Http', async(inject([MockBackend], (backend: MockBackend) => {
+		it('should allow Potion().request() to use Http', async(inject([MockBackend], (backend: MockBackend) => {
 			const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 				new Response(
 					new ResponseOptions({
@@ -98,7 +98,7 @@ describe('potion/@angular', () => {
 			});
 		});
 
-		it('should configure PotionProvider({host, prefix, cache}) properties', inject([PotionProvider], (potion: PotionProvider) => {
+		it('should configure Potion({host, prefix, cache}) properties', inject([Potion], (potion: Potion) => {
 			expect(potion.host).toEqual(POTION_HOST);
 			expect(potion.prefix).toEqual(POTION_PREFIX);
 		}));
@@ -131,14 +131,14 @@ describe('potion/@angular', () => {
 			});
 		});
 
-		it('should change the underlying PotionProvider() Http engine', async(inject([PotionProvider], (potion: PotionProvider) => {
+		it('should change the underlying Potion() Http engine', async(inject([Potion], (potion: Potion) => {
 			potion.fetch('/ping').then((res) => {
 				expect(res).toEqual(body);
 			});
 		})));
 	});
 
-	describe('PotionProvider()', () => {
+	describe('Potion()', () => {
 		beforeEach(() => {
 			TestBed.configureTestingModule({
 				imports: [PotionTestingModule]
@@ -150,11 +150,11 @@ describe('potion/@angular', () => {
 		}));
 
 		describe('.request()', () => {
-			it('should return a Promise', inject([PotionProvider], (potion: PotionProvider) => {
+			it('should return a Promise', inject([Potion], (potion: Potion) => {
 				expect(potion.fetch('/ping') instanceof Promise).toBe(true);
 			}));
 
-			it('should make a XHR request', async(inject([MockBackend, PotionProvider], (backend: MockBackend, potion: PotionProvider) => {
+			it('should make a XHR request', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
 				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 					new Response(
 						new ResponseOptions({status: 200})
@@ -165,7 +165,7 @@ describe('potion/@angular', () => {
 				});
 			})));
 
-			it('should return a Promise with data', async(inject([MockBackend, PotionProvider], (backend: MockBackend, potion: PotionProvider) => {
+			it('should return a Promise with data', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
 				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 					new Response(
 						new ResponseOptions({
@@ -183,7 +183,7 @@ describe('potion/@angular', () => {
 				});
 			})));
 
-			it('should use the appropriate request method set by the {method} option', async(inject([MockBackend, PotionProvider], (backend: MockBackend, potion: PotionProvider) => {
+			it('should use the appropriate request method set by the {method} option', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
 				let method = null;
 				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					method = connection.request.method;
@@ -198,7 +198,7 @@ describe('potion/@angular', () => {
 				});
 			})));
 
-			it('should pass anything set on {data} option as the {body} property of the request in JSON format', async(inject([MockBackend, PotionProvider], (backend: MockBackend, potion: PotionProvider) => {
+			it('should pass anything set on {data} option as the {body} property of the request in JSON format', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
 				let body = null;
 				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					body = connection.request.text();
@@ -214,7 +214,7 @@ describe('potion/@angular', () => {
 				});
 			})));
 
-			it('should pass on the query params from the {search} option', async(inject([MockBackend, PotionProvider], (backend: MockBackend, potion: PotionProvider) => {
+			it('should pass on the query params from the {search} option', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
 				let url = null;
 				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					url = connection.request.url;
@@ -244,7 +244,7 @@ describe('potion/@angular', () => {
 		}));
 
 		describe('.fetch()', () => {
-			it('should use a memory cache by default to store and retrieve items', async(inject([MockBackend, PotionProvider], (backend: MockBackend, potion: PotionProvider) => {
+			it('should use a memory cache by default to store and retrieve items', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
 				@potion.registerAs('/user')
 				class User extends Item {}
 

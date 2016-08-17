@@ -14,7 +14,7 @@ module.exports = function (config) {
 			'node_modules/angular/angular.js',
 			'node_modules/angular-mocks/angular-mocks.js',
 			'node_modules/zone.js/dist/zone.js',
-			'src/*.spec.ts'
+			'src/**/*.spec.ts'
 		],
 		reporters: ['spec'],
 		browserify: {

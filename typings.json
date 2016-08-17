@@ -3,12 +3,12 @@
 		"fetch-mock": "registry:npm/fetch-mock#4.1.1+20160712175252"
 	},
 	"globalDependencies": {
-		"angular": "registry:dt/angular#1.5.0+20160725073351",
+		"angular": "registry:dt/angular#1.5.0+20160809151918",
 		"angular-mocks": "registry:dt/angular-mocks#1.5.0+20160608104721",
 		"jasmine": "registry:dt/jasmine#2.2.0+20160621224255",
 		"jquery": "registry:dt/jquery#1.10.0+20160704162008",
-		"node": "registry:env/node#6.0.0+20160723033700",
+		"node": "registry:env/node#6.0.0+20160813135048",
 		"reflect-metadata": "https://raw.githubusercontent.com/rbuckton/ReflectDecorators/master/Reflect.d.ts",
-		"whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160524142046"
+		"whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160728142841"
 	}
 }

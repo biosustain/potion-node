@@ -7,7 +7,13 @@ import {
 } from '@angular/http';
 import {MockBackend} from '@angular/http/testing';
 
-import {POTION_PROVIDERS, PotionModule} from '../potion_module';
+import {PotionModule} from '../potion_module';
+import {
+	POTION_RESOURCES,
+	POTION_HTTP,
+	POTION_CONFIG,
+	Potion
+} from '../potion';
 
 
 /**
@@ -17,7 +23,29 @@ import {POTION_PROVIDERS, PotionModule} from '../potion_module';
 	imports: [HttpModule],
 	exports: [PotionModule],
 	providers: [
-		POTION_PROVIDERS,
+		{
+			provide: POTION_RESOURCES,
+			useValue: {},
+			multi: true
+		},
+		{
+			provide: POTION_CONFIG,
+			useValue: {}
+		},
+		{
+			provide: POTION_HTTP,
+			useExisting: Http
+		},
+		{
+			provide: Potion,
+			useClass: Potion,
+			deps: [
+				POTION_RESOURCES,
+				POTION_CONFIG,
+				POTION_HTTP
+			]
+		},
+		// Angular 2 Http
 		{
 			provide: Http,
 			useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {

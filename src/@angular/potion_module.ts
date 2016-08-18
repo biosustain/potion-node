@@ -1,8 +1,5 @@
-// TODO: we need to cleanup a bit, it's starting to get messy
 import {NgModule, ModuleWithProviders} from '@angular/core';
 import {Http, HttpModule} from '@angular/http';
-// TODO: see if somehow it could be removed
-import {OpaqueToken} from '@angular/core'; // tslint:disable-line:no-unused-variable
 
 import {
 	POTION_RESOURCES,
@@ -39,27 +36,7 @@ import {
  * export class AppModule {}
  */
 @NgModule({
-	imports: [HttpModule],
-	providers: [
-		Potion,
-		{
-			provide: POTION_CONFIG,
-			useValue: {}
-		},
-		{
-			provide: POTION_HTTP,
-			useExisting: Http
-		}
-		// {
-		// 	provide: Potion,
-		// 	useClass: Potion,
-		// 	deps: [
-		// 		POTION_RESOURCES,
-		// 		POTION_CONFIG,
-		// 		POTION_HTTP
-		// 	]
-		// }
-	]
+	imports: [HttpModule]
 })
 export class PotionModule {
 	static forRoot(resources: PotionResources): ModuleWithProviders {
@@ -68,37 +45,28 @@ export class PotionModule {
 			// App-wide service singletons
 			providers: [
 				{
+					provide: Potion,
+					useClass: Potion,
+					deps: [
+						POTION_RESOURCES,
+						POTION_CONFIG,
+						POTION_HTTP
+					]
+				},
+				{
 					provide: POTION_RESOURCES,
 					useValue: resources,
 					multi: true
+				},
+				{
+					provide: POTION_CONFIG,
+					useValue: {}
+				},
+				{
+					provide: POTION_HTTP,
+					useExisting: Http
 				}
 			]
 		};
 	}
 }
-
-
-export const POTION_PROVIDERS = [
-	{
-		provide: POTION_RESOURCES,
-		useValue: {},
-		multi: true
-	},
-	{
-		provide: POTION_CONFIG,
-		useValue: {}
-	},
-	{
-		provide: POTION_HTTP,
-		useExisting: Http
-	},
-	{
-		provide: Potion,
-		useClass: Potion,
-		deps: [
-			POTION_RESOURCES,
-			POTION_CONFIG,
-			POTION_HTTP
-		]
-	}
-];

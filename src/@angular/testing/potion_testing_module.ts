@@ -40,7 +40,6 @@ import {
 			provide: Potion,
 			useClass: Potion,
 			deps: [
-				POTION_RESOURCES,
 				POTION_CONFIG,
 				POTION_HTTP
 			]

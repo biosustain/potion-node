@@ -71,12 +71,13 @@ export class PotionQueryEncoder extends QueryEncoder {
 @Injectable()
 export class Potion extends PotionBase {
 	constructor(
-		@Inject(POTION_RESOURCES) resources: PotionResources[],
 		@Inject(POTION_CONFIG) config: PotionConfig,
 		@Inject(POTION_HTTP) private http: PotionHttp
 	) {
 		super(config);
+	}
 
+	registerFromProvider(resources: PotionResources[]): void {
 		resources = merge(
 			// Remove any values that contain no resources
 			resources.filter((item) => !isEmpty(item))
@@ -84,7 +85,7 @@ export class Potion extends PotionBase {
 
 		if (!isEmpty(resources)) {
 			for (let [uri, type] of (Object as any).entries(resources)) {
-				// Tuple with resource type and a configuration for the resource type
+				// `type` can be a tuple with resource type and a configuration for the resource type
 				if (Array.isArray(type)) {
 					const [resource, config] = type;
 					this.register(uri, resource, config);

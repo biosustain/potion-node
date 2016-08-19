@@ -1,12 +1,12 @@
-import {NgModule, ModuleWithProviders} from '@angular/core';
+import {NgModule, ModuleWithProviders, Inject} from '@angular/core';
 import {Http, HttpModule} from '@angular/http';
 
 import {
 	POTION_RESOURCES,
 	POTION_CONFIG,
 	POTION_HTTP,
-	Potion,
-	PotionResources
+	PotionResources,
+	Potion
 } from './potion';
 
 
@@ -39,29 +39,35 @@ import {
 	imports: [HttpModule]
 })
 export class PotionModule {
+	constructor(
+		@Inject(POTION_RESOURCES) resources: PotionResources[],
+		potion: Potion
+	) {
+		potion.registerFromProvider(resources);
+	}
 	static forRoot(resources: PotionResources): ModuleWithProviders {
 		return {
 			ngModule: PotionModule,
-			// App-wide service singletons
+			// These providers will be available as singletons (only initialized once per app) throughout the app.
 			providers: [
-				{
-					provide: Potion,
-					useClass: Potion,
-					deps: [
-						POTION_RESOURCES,
-						POTION_CONFIG,
-						POTION_HTTP
-					]
-				},
 				{
 					provide: POTION_RESOURCES,
 					useValue: resources,
 					multi: true
 				},
 				{
+					provide: Potion,
+					useClass: Potion,
+					deps: [
+						POTION_CONFIG,
+						POTION_HTTP
+					]
+				},
+				{
 					provide: POTION_CONFIG,
 					useValue: {}
 				},
+				// Use Angular 2 Http by default
 				{
 					provide: POTION_HTTP,
 					useExisting: Http

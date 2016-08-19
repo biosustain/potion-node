@@ -14,7 +14,7 @@ import 'rxjs/add/observable/of';
 import {RequestMethod, ResponseOptions, Response} from '@angular/http';
 
 import {PotionTestingModule} from './testing/potion_testing_module';
-import {Item} from '../core';
+import {Item, Route} from '../core';
 import {
 	POTION_RESOURCES,
 	POTION_CONFIG,
@@ -265,6 +265,54 @@ describe('potion/@angular', () => {
 						expect(user).not.toBeUndefined();
 						subscription.unsubscribe();
 					});
+				});
+			})));
+		});
+	});
+
+	describe('Route', () => {
+		class User extends Item {
+			static names: any = Route.GET<string[]>('/names');
+		}
+
+		beforeEach(() => {
+			TestBed.configureTestingModule({
+				imports: [PotionTestingModule],
+				providers: [
+					{
+						provide: POTION_RESOURCES,
+						useValue: {
+							'/user': User
+						},
+						multi: true
+					}
+				]
+			});
+		});
+
+		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
+			backend.verifyNoPendingRequests();
+		}));
+
+		describe('.GET()', () => {
+			it('should return valid JSON', async(inject([MockBackend], (backend: MockBackend) => {
+				const body = [
+					'John Doe',
+					'Jane Doe'
+				];
+				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
+					new Response(
+						new ResponseOptions({
+							status: 200,
+							body
+						})
+					)
+				));
+
+				User.names().then((names: any) => {
+					expect(names instanceof Array).toBe(true);
+					expect(names).toEqual(body);
+					subscription.unsubscribe();
 				});
 			})));
 		});

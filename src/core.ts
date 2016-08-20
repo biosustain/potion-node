@@ -132,6 +132,8 @@ export interface ItemConstructor {
  *     users[0].destroy();
  * });
  */
+// TODO: we should keep $id and $uri instead of having _id, _uri, it's easier to recognize that the fields are coming from the backend
+// TODO: we should make all $<key> props available without the $ character, the the above will be taken care of.
 export abstract class Item {
 	static store: Store<any>;
 
@@ -541,6 +543,8 @@ export abstract class PotionBase {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Array) {
 				return promise.all(json.map((item) => this.fromPotionJSON(item)));
+				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
+				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.
 			} else if (typeof json.$uri === 'string') {
 				// Try to parse the URI,
 				// otherwise reject with the exception thrown from parseURI.

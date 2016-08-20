@@ -621,6 +621,12 @@ export abstract class PotionBase {
 					});
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
+					// Hack to not try to resolve self references.
+					// TODO: we need to fix this in some way
+					if (json.$ref === '#') {
+						return promise.resolve(json.$ref);
+					}
+
 					// Try to parse the URI,
 					// otherwise reject with the exception thrown from parseURI.
 					let uri;

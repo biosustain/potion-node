@@ -102,6 +102,10 @@ describe('potion/core', () => {
 				user: User;
 			}
 
+			class Engine extends Item {
+				car: any;
+			}
+
 			class Person extends Item {
 				sibling: Person;
 			}
@@ -128,6 +132,13 @@ describe('potion/core', () => {
 										user: {$ref: '/user/1'}
 									},
 									headers: {}
+								});
+							case '/engine/1':
+								return promise.resolve({
+									data: {
+										car: {$ref: '#'},
+										type: 'Diesel'
+									}
 								});
 							case '/person/1':
 								return promise.resolve({
@@ -169,6 +180,7 @@ describe('potion/core', () => {
 
 				potion.register('/user', User);
 				potion.register('/car', Car);
+				potion.register('/engine', Engine);
 				potion.register('/person', Person);
 
 				spyOn(potion, 'fetch').and.callThrough();
@@ -205,6 +217,15 @@ describe('potion/core', () => {
 			it('should work with cross-references', (done) => {
 				Person.fetch(1).then((person: Person) => {
 					expect(person.sibling instanceof (Person as any)).toBe(true);
+					done();
+				});
+			});
+
+			// TODO: this may behave different at some point,
+			// but for now we need to test the lib works properly when such values are parsed.
+			it('should skip {$ref: "#"} references', (done) => {
+				Engine.fetch(1).then((engine: Engine) => {
+					expect(engine.car).toEqual('#');
 					done();
 				});
 			});

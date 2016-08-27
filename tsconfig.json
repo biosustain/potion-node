@@ -1,4 +1,13 @@
 {
+	"files": [
+		"node_modules/typescript/lib/lib.dom.d.ts",
+		"node_modules/typescript/lib/lib.es2017.d.ts",
+		"src/@angular.ts",
+		"src/angular.ts",
+		"src/fetch.ts",
+		"src/core.ts",
+		"src/utils.ts"
+	],
 	"compilerOptions": {
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
@@ -9,16 +18,16 @@
 		"noEmitOnError": true,
 		"sourceMap": true,
 		"target": "es6",
-		"outDir": "./lib"
-	},
-	"files": [
-		"typings/index.d.ts",
-		"node_modules/typescript/lib/lib.dom.d.ts",
-		"node_modules/typescript/lib/lib.es2017.d.ts",
-		"src/@angular.ts",
-		"src/angular.ts",
-		"src/fetch.ts",
-		"src/core.ts",
-		"src/utils.ts"
-	]
+		"outDir": "./lib",
+		"types" : [
+			"angular",
+			"angular-mocks",
+			"fetch-mock",
+			"jasmine",
+			"jquery",
+			"node",
+			"reflect-metadata",
+			"whatwg-fetch"
+		]
+	}
 }

@@ -8,12 +8,14 @@ module.exports = function (config) {
 			'**/*.ts': ['browserify']
 		},
 		files: [
+			// ES6 shims.
+			// Could be removed when everything in ES6 is implemented.
 			'node_modules/core-js/client/shim.js',
+			// Potion/Angular 2 dependency.
 			'node_modules/reflect-metadata/Reflect.js',
+			// Fetch should be available in the browser.
+			// This is here just to shim it in PhantomJS or browsers that do not have it.
 			'node_modules/whatwg-fetch/fetch.js',
-			'node_modules/angular/angular.js',
-			'node_modules/angular-mocks/angular-mocks.js',
-			'node_modules/zone.js/dist/zone.js',
 			'src/**/*.spec.ts'
 		],
 		reporters: ['spec'],

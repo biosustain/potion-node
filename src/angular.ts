@@ -1,3 +1,4 @@
+import * as angular from 'angular';
 import {PotionOptions, RequestOptions, PotionBase} from './core';
 
 

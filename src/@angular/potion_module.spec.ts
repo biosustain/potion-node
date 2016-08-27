@@ -1,4 +1,6 @@
-// `async` needs this
+// Dependency of Angular 2
+import 'zone.js';
+// Angular 2 testing `async` needs this
 import 'zone.js/dist/async-test.js';
 
 import {TestBed, async, inject} from '@angular/core/testing';

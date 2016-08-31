@@ -6,7 +6,8 @@ import {
 	Request,
 	Response,
 	URLSearchParams,
-	QueryEncoder
+	QueryEncoder,
+	Headers
 } from '@angular/http';
 
 import {Observable} from 'rxjs/Observable';
@@ -112,8 +113,12 @@ export class Potion extends PotionBase {
 
 		// We need to convert the {body} to proper JSON when making POST requests.
 		if (data) {
+			const headers = new Headers();
+			// Potion also expects all requests to have content type set to 'application/json'.
+			headers.set('Content-Type', 'application/json; charset=utf-8');
 			requestOptions = requestOptions.merge({
-				body: JSON.stringify(data)
+				body: JSON.stringify(data),
+				headers
 			});
 		}
 

@@ -2,7 +2,6 @@ import {Injectable, Inject, OpaqueToken} from '@angular/core';
 import {
 	RequestOptions,
 	RequestOptionsArgs,
-	RequestMethod,
 	Request,
 	Response,
 	URLSearchParams,
@@ -98,16 +97,8 @@ export class Potion extends PotionBase {
 	}
 
 	protected request(uri: string, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
-		// Angular Http Request accepts a RequestMethod type for a method,
-		// but the value for that is an integer.
-		// Therefore we need to match the string literals like 'GET' (coming from Potion) to the enum values for RequestMethod.
 		let requestOptions = new RequestOptions({
-			method: parseInt(
-				(Object as any)
-					.entries(RequestMethod)
-					.find((entry) => entry[1].toLowerCase() === (method as string).toLowerCase())[0],
-				10
-			),
+			method: method as string,
 			url: uri
 		});
 

@@ -25,6 +25,7 @@ module.exports = function (config) {
 			// Fetch should be available in the browser.
 			// This is here just to shim it in PhantomJS or browsers that do not have it.
 			'node_modules/whatwg-fetch/fetch.js',
+			// Specs
 			'src/**/*.spec.ts'
 		],
 		reporters: ['spec'],

@@ -380,10 +380,6 @@ Make sure that the builds and tests will run successfully, before you make a pul
 ```js
 {
     "files": [
-        // These files MUST always be here as they provide the type definitions
-        "node_modules/typescript/lib/lib.dom.d.ts",
-        "node_modules/typescript/lib/lib.es2017.d.ts",
-        // You can change the below as you wish
         "src/@angular.ts",
         "src/angular.ts",
         "src/core.ts",

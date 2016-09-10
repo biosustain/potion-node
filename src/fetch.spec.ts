@@ -1,7 +1,6 @@
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
 const fetchMock = require('fetch-mock');
-
 import {Potion,	Item} from './fetch';
 
 
@@ -37,9 +36,9 @@ describe('potion/fetch', () => {
 			});
 
 			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
-				let body = null;
-				let headers: Headers = null;
-				(fetchMock as any).post('http://localhost/ping', (url, opts: any) => {
+				let body = '';
+				let headers: Headers = new Headers();
+				(fetchMock as any).post('http://localhost/ping', (_, opts: any) => {
 					headers = opts.headers;
 					body = opts.body;
 					return 200;
@@ -49,11 +48,11 @@ describe('potion/fetch', () => {
 
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
 
-				expect(headers).not.toBeNull();
+				expect(headers).not.toBeUndefined();
 				expect(headers.get('accept')).toEqual('application/json');
 				expect(headers.get('content-type')).toEqual('application/json');
 
-				expect(body).not.toBeNull();
+				expect(body.length).not.toBe(0);
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});
 

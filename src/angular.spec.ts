@@ -15,7 +15,7 @@ describe('potion/angular', () => {
 			provider = potionProvider;
 		}]));
 
-		beforeEach(angular.mock.inject(function ($injector: any): any {
+		beforeEach(angular.mock.inject(($injector: any): any => {
 			$cacheFactory = $injector.get('$cacheFactory');
 			$q = $injector.get('$q');
 			$http = $injector.get('$http');
@@ -45,7 +45,7 @@ describe('potion/angular', () => {
 
 			beforeEach(angular.mock.module('test'));
 
-			beforeEach(angular.mock.inject(function ($injector: any): any {
+			beforeEach(angular.mock.inject(($injector: any): any => {
 				$q = $injector.get('$q');
 				$httpBackend = $injector.get('$httpBackend');
 				potion = $injector.get('potion');
@@ -78,10 +78,10 @@ describe('potion/angular', () => {
 			});
 
 			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
-				let body = null;
+				let body = '';
 				let response = jasmine.createSpy('response');
-				$httpBackend.expect('POST', '/ping').respond((method, url, data: any) => {
-					body = data;
+				$httpBackend.expect('POST', '/ping').respond((...args) => {
+					body = args[2];
 					response();
 					return [200, {}];
 				});
@@ -91,15 +91,15 @@ describe('potion/angular', () => {
 				$httpBackend.flush();
 
 				expect(response).toHaveBeenCalled();
-				expect(body).not.toBeNull();
+				expect(body.length).not.toBe(0);
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});
 
 			it('should pass on the query params from the {search} option', () => {
 				let search = null;
 				let response = jasmine.createSpy('response');
-				$httpBackend.expect('GET', '/ping?pong=true').respond((method, url, data, headers, params) => {
-					search = params;
+				$httpBackend.expect('GET', '/ping?pong=true').respond((...args) => {
+					search = args[4];
 					response();
 					return [200, {}];
 				});
@@ -144,7 +144,7 @@ describe('potion/angular', () => {
 
 			beforeEach(angular.mock.module('test'));
 
-			beforeEach(angular.mock.inject(function ($injector: any): any {
+			beforeEach(angular.mock.inject(($injector: any): any => {
 				$cacheFactory = $injector.get('$cacheFactory');
 				$httpBackend = $injector.get('$httpBackend');
 
@@ -201,7 +201,7 @@ describe('potion/angular', () => {
 
 		beforeEach(angular.mock.module('test'));
 
-		beforeEach(angular.mock.inject(function ($injector: any): any {
+		beforeEach(angular.mock.inject(($injector: any): any => {
 			$httpBackend = $injector.get('$httpBackend');
 
 			User = $injector.get('User');

@@ -1,12 +1,13 @@
 {
-	"files": [
-		"node_modules/typescript/lib/lib.dom.d.ts",
-		"node_modules/typescript/lib/lib.es2017.d.ts",
+	"include": [
 		"src/@angular.ts",
 		"src/angular.ts",
 		"src/fetch.ts",
 		"src/core.ts",
 		"src/utils.ts"
+	],
+	"exclude": [
+		"node_modules"
 	],
 	"compilerOptions": {
 		"emitDecoratorMetadata": true,
@@ -15,9 +16,17 @@
 		"declaration": true,
 		"moduleResolution": "node",
 		"noImplicitAny": false,
+		"noUnusedParameters": true,
+		"noUnusedLocals": true,
+		"skipLibCheck": true,
+		"strictNullChecks": true,
 		"noEmitOnError": true,
 		"sourceMap": true,
 		"target": "es6",
+		"lib": [
+			"dom",
+			"es2017"
+		],
 		"outDir": "./lib",
 		"types" : [
 			"angular",

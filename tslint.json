@@ -2,14 +2,15 @@
 	"rules" : {
 		// TS Specific
 		"member-access": false,
-		"member-ordering": [true, { "order": "instance-sandwich" }], // http://palantir.github.io/tslint/rules/member-ordering/
+		"member-ordering": [true, { "order": "statics-first" }], // http://palantir.github.io/tslint/rules/member-ordering/
 		"no-any": false,
 		"no-inferrable-types": [true, "ignore-params"],
 		"no-internal-module": true,
 		"no-namespace": [true, "allow-declarations"],
 		"no-reference": true,
 		"no-var-requires": false,
-		"typedef": [true, "call-signature", "parameter", "member-variable-declaration"], // http://palantir.github.io/tslint/rules/typedef/
+		"only-arrow-functions": [true, "allow-declarations"],
+		"typedef": [true, "call-signature", "parameter", "property-declaration", "member-variable-declaration"], // http://palantir.github.io/tslint/rules/typedef/
 		"typedef-whitespace": [true, {
 			"call-signature": "nospace",
 			"index-signature": "nospace",
@@ -20,14 +21,21 @@
 
 		// Style
 		"align": [true, "parameters", "arguments", "statements"],
+		"arrow-parens": true,
 		"class-name": true,
 		"comment-format": [true, "check-space"],
 		"jsdoc-format": true,
 		"new-parens": true,
 		"no-consecutive-blank-lines": false,
 		"no-constructor-vars": false,
+		"object-literal-key-quotes": [true, "as-needed"],
+		"object-literal-shorthand": true,
 		"one-line": [true, "check-open-brace", "check-catch", "check-else", "check-whitespace"],
 		"one-variable-per-declaration": [true, "ignore-for-loop"],
+		"ordered-imports": [false, {
+			"import-sources-order": "lowercase-last",
+			"named-imports-order": "lowercase-last"
+		}],
 		"quotemark": [true, "single"],
 		"semicolon": true,
 		"variable-name": [true, "check-format", "allow-leading-underscore", "allow-pascal-case", "ban-keywords"],
@@ -45,7 +53,8 @@
 		"eofline": true,
 		"indent": [true, "tabs"],
 		"linebreak-style": [true, "LF"],
-		"max-line-length": [true, 210],
+		"max-file-line-count": [true, 300],
+		"max-line-length": [true, 240],
 		"no-default-export": true,
 		"no-mergeable-namespace": true,
 		"no-require-imports": false,
@@ -62,7 +71,7 @@
 		"no-arg": true,
 		"no-bitwise": true,
 		"no-conditional-assignment": true,
-		"no-console": [true, "debug", "trace"],
+		"no-console": [true, "debug", "log", "trace"],
 		"no-construct": true,
 		"no-debugger": true,
 		"no-duplicate-key": true,
@@ -73,6 +82,7 @@
 		"no-switch-case-fall-through": true,
 		"no-unreachable": true,
 		"no-unused-expression": true,
+		"no-unused-new": true,
 		"no-unused-variable": true,
 		"no-use-before-declare": true,
 		"no-var-keyword": true,

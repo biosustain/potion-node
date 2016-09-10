@@ -1,3 +1,4 @@
+/* tslint:disable:max-file-line-count */
 // Dependency of Angular 2
 import 'zone.js';
 // Angular 2 testing `async` needs this
@@ -157,7 +158,7 @@ describe('potion/@angular', () => {
 			}));
 
 			it('should make a XHR request', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 					new Response(
 						new ResponseOptions({status: 200})
 					)
@@ -168,7 +169,7 @@ describe('potion/@angular', () => {
 			})));
 
 			it('should return a Promise with data', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 					new Response(
 						new ResponseOptions({
 							status: 200,
@@ -186,8 +187,8 @@ describe('potion/@angular', () => {
 			})));
 
 			it('should use the appropriate request method set by the {method} option', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let method = null;
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
+				let method: RequestMethod | null = null;
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					method = connection.request.method;
 					connection.mockRespond(new Response(
 						new ResponseOptions({status: 200})
@@ -201,8 +202,8 @@ describe('potion/@angular', () => {
 			})));
 
 			it('should pass anything set on {data} option as the {body} property of the request in JSON format', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let body = null;
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
+				let body = '';
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					body = connection.request.text();
 					connection.mockRespond(new Response(
 						new ResponseOptions({status: 200})
@@ -210,15 +211,15 @@ describe('potion/@angular', () => {
 				});
 
 				potion.fetch('/ping', {method: 'GET', data: {pong: true}}).then(() => {
-					expect(body).not.toBeNull();
+					expect(body.length).not.toBe(0);
 					expect(JSON.parse(body)).toEqual({pong: true});
 					subscription.unsubscribe();
 				});
 			})));
 
 			it('should pass on the query params from the {search} option', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let url = null;
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
+				let url: string | null = null;
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
 					url = connection.request.url;
 					connection.mockRespond(new Response(
 						new ResponseOptions({status: 200})
@@ -250,7 +251,7 @@ describe('potion/@angular', () => {
 				@potion.registerAs('/user')
 				class User extends Item {}
 
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 					new Response(
 						new ResponseOptions({
 							status: 200,
@@ -302,7 +303,7 @@ describe('potion/@angular', () => {
 					'John Doe',
 					'Jane Doe'
 				];
-				let subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
 					new Response(
 						new ResponseOptions({
 							status: 200,

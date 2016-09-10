@@ -45,6 +45,7 @@ export class PotionModule {
 	) {
 		potion.registerFromProvider(resources);
 	}
+	// tslint:disable-next-line:member-ordering
 	static forRoot(resources: PotionResources): ModuleWithProviders {
 		return {
 			ngModule: PotionModule,

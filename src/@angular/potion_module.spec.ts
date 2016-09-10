@@ -1,9 +1,4 @@
 /* tslint:disable:max-file-line-count */
-// Dependency of Angular 2
-import 'zone.js';
-// Angular 2 testing `async` needs this
-import 'zone.js/dist/async-test.js';
-
 import {TestBed, async, inject} from '@angular/core/testing';
 import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
 

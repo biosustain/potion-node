@@ -7,6 +7,8 @@ describe('potion/utils', () => {
 			expect(toSnakeCase(simple)).toEqual('camel_case');
 			const withNumbers = 'camelCase2';
 			expect(toSnakeCase(withNumbers)).toEqual('camel_case_2');
+			const numbers = 'camel2';
+			expect(toSnakeCase(numbers)).toEqual('camel_2');
 			const caps = 'camelCASE';
 			expect(toSnakeCase(caps)).toEqual('camel_case');
 		});

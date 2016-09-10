@@ -105,7 +105,7 @@ export abstract class Item {
 
 		Object
 			.keys(this)
-			.filter((key) => !key.startsWith('_') && !isReadonly(this.constructor, key))
+			.filter((key) => !key.startsWith('$') && !isReadonly(this.constructor, key))
 			.forEach((key) => {
 				properties[toSnakeCase(key)] = this[key];
 			});

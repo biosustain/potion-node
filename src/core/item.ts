@@ -2,7 +2,6 @@ import {isReadonly} from './metadata';
 import {QueryOptions, Store} from './store';
 import {FetchOptions} from './potion';
 import {Pagination} from './pagination';
-import {toSnakeCase} from '../utils';
 
 
 export interface ItemConstructor {
@@ -103,11 +102,10 @@ export abstract class Item {
 	toJSON(): any {
 		let properties = {};
 
-		Object
-			.keys(this)
+		Object.keys(this)
 			.filter((key) => !key.startsWith('$') && !isReadonly(this.constructor, key))
 			.forEach((key) => {
-				properties[toSnakeCase(key)] = this[key];
+				properties[key] = this[key];
 			});
 
 		return properties;

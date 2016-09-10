@@ -4,9 +4,9 @@ import {ItemCache} from './core';
 /**
  * Camel case to snake case
  */
-// TODO: we need to add an underscore between number and string as well
 export function toSnakeCase(str: string, separator: string = '_'): string {
-	return str.replace(/([a-z][A-Z])/g, (g) => `${g[0]}${separator}${g[1].toLowerCase()}`);
+	return str.replace(/\.?([A-Z0-9]+)/g, (_, $2) => `${separator}${$2.toLowerCase()}`)
+		.replace(/^_/, '');
 }
 
 

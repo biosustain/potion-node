@@ -21,7 +21,8 @@
 		"skipLibCheck": true,
 		"strictNullChecks": true,
 		"noEmitOnError": true,
-		"sourceMap": true,
+		"inlineSourceMap": true,
+		"inlineSources": true,
 		"target": "es6",
 		"lib": [
 			"dom",

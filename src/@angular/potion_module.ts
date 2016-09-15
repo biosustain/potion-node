@@ -1,4 +1,10 @@
-import {NgModule, ModuleWithProviders, Inject} from '@angular/core';
+import {
+	NgModule,
+	ModuleWithProviders,
+	Inject,
+	SkipSelf,
+	Optional
+} from '@angular/core';
 import {Http, HttpModule} from '@angular/http';
 
 import {
@@ -40,9 +46,16 @@ import {
 })
 export class PotionModule {
 	constructor(
+		@Optional() @SkipSelf() parentModule: PotionModule,
 		@Inject(POTION_RESOURCES) resources: PotionResources[],
 		potion: Potion
 	) {
+		// Prevent reimport of the PotionModule.
+		// https://angular.io/docs/ts/latest/guide/ngmodule.html#!#prevent-reimport
+		if (parentModule) {
+			throw new Error('potion-client#PotionModule has already been loaded by a different module. It can only be imported once per application.');
+		}
+
 		potion.registerFromProvider(resources);
 	}
 	// tslint:disable-next-line:member-ordering

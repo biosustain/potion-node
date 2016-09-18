@@ -145,6 +145,7 @@ export class Potion extends PotionBase {
 			}
 
 			// `response` might be something other than a Response object
+			// TODO: response might also be empty, so do a check (response.text().length) before conversion
 			const data = response instanceof Response
 				? response.json()
 				: response;

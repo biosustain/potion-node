@@ -9,7 +9,8 @@ import {
 	toCamelCase,
 	pairsToObject,
 	toSnakeCase,
-	omap
+	omap,
+	deepOmap
 } from '../utils';
 
 
@@ -341,7 +342,8 @@ export abstract class PotionBase {
 			} else if (typeof json.$schema === 'string') {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
-				return promise.resolve(json);
+				// Though, we want to convert snake case to camel case.
+				return promise.resolve(deepOmap(json, null, (key) => toCamelCase(key)));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.

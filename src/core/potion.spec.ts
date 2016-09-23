@@ -6,6 +6,7 @@ import {
 } from './potion';
 import {Item} from './item';
 import {Route} from './route';
+import {deepOmap, toCamelCase} from '../utils';
 
 
 describe('potion/core', () => {
@@ -99,7 +100,7 @@ describe('potion/core', () => {
 			const schema = {
 				$schema: 'http://json-schema.org/draft-04/hyper-schema#',
 				properties: {
-					time: {
+					created_at: {
 						additionalProperties: false,
 						default: 'Fri, 23 Sep 2016 14:47:34 GMT',
 						properties: {
@@ -247,7 +248,7 @@ describe('potion/core', () => {
 
 			it('should return the original request response for {$schema} references', (done) => {
 				User.schema().then((json) => {
-					expect(json).toEqual(schema);
+					expect(json).toEqual(deepOmap(schema, null, (key) => toCamelCase(key)));
 					done();
 				});
 			});

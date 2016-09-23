@@ -33,13 +33,47 @@ export function pairsToObject(pairs: any[]): any {
 /**
  * Object.map()
  */
-export function omap(object: Object, callback: (key: string, value: any) => any, context?: any): any {
+export function omap(object: Object, callback: (key: string, value: any) => [string, any], context?: any): any {
 	let map = {};
 	for (let [key, value] of (Object as any).entries(object)) {
 		let [k, v] = callback.call(context, key, value);
 		map[k] = v;
 	}
 	return map;
+}
+
+
+/**
+ * Deep Object.map()
+ */
+export type KeyMapper = (key: string) => string;
+export type ValueMapper = (value: any) => any;
+
+export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper: KeyMapper | null, context?: any): any {
+	if (Array.isArray(obj)) {
+		return (obj as any[]).map(
+			(value) => typeof value === 'object'
+				? deepOmap(value, valueMapper, keyMapper, context)
+				: value
+		);
+	} else if (typeof obj === 'object') {
+		const result = {};
+
+		for (let [key, value] of Object.entries(obj)) {
+			key = typeof keyMapper === 'function'
+				? keyMapper.call(context, key)
+				: key;
+			result[key] = typeof value === 'object' || Array.isArray(value)
+				? deepOmap(value, valueMapper, keyMapper, context)
+				: typeof valueMapper === 'function'
+					? valueMapper.call(context, value)
+					: value;
+		}
+
+		return result;
+	}
+
+	return obj;
 }
 
 

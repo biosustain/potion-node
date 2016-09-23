@@ -338,6 +338,10 @@ export abstract class PotionBase {
 
 						return item;
 					});
+			} else if (typeof json.$schema === 'string') {
+				// If we have a schema object,
+				// we want to resolve it as it is and not try to resolve references or do any conversions.
+				return promise.resolve(json);
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.

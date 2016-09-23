@@ -1,5 +1,11 @@
-import {PotionBase, RequestOptions, ItemCache} from './potion';
+import {
+	PotionBase,
+	RequestOptions,
+	ItemCache,
+	FetchOptions
+} from './potion';
 import {Item} from './item';
+import {Route} from './route';
 
 
 describe('potion/core', () => {
@@ -90,7 +96,25 @@ describe('potion/core', () => {
 			let cache;
 			let memcache = {};
 
+			const schema = {
+				$schema: 'http://json-schema.org/draft-04/hyper-schema#',
+				properties: {
+					time: {
+						additionalProperties: false,
+						default: 'Fri, 23 Sep 2016 14:47:34 GMT',
+						properties: {
+							$date: {
+								type: 'integer'
+							}
+						},
+						type: 'object'
+					}
+				},
+				type: 'object'
+			};
+
 			class User extends Item {
+				static schema: (params?: any, options?: FetchOptions) => Promise<any> = Route.GET<any>('/schema');
 				createdAt: Date;
 			}
 
@@ -112,6 +136,8 @@ describe('potion/core', () => {
 						let {promise} = this.constructor as typeof PotionBase;
 
 						switch (uri) {
+							case '/user/schema':
+								return promise.resolve({data: schema});
 							case '/user/1':
 								return promise.resolve({
 									data: {
@@ -215,6 +241,13 @@ describe('potion/core', () => {
 			it('should work with cross-references', (done) => {
 				Person.fetch(1).then((person: Person) => {
 					expect(person.sibling instanceof (Person as any)).toBe(true);
+					done();
+				});
+			});
+
+			it('should return the original request response for {$schema} references', (done) => {
+				User.schema().then((json) => {
+					expect(json).toEqual(schema);
 					done();
 				});
 			});

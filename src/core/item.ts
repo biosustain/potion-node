@@ -34,14 +34,14 @@ export interface ItemOptions {
  * });
  */
 export abstract class Item {
-	static store: Store<any>;
+	static store: Store<Item>;
 
 	/**
 	 * Get a resource by id.
 	 * @param {Number|String} id
 	 * @param {FetchOptions} fetchOptions - Setting {cache: true} will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
 	 */
-	static fetch(id: number, fetchOptions?: FetchOptions): Promise<Item> {
+	static fetch<T extends Item>(id: number, fetchOptions?: FetchOptions): Promise<T> {
 		return this.store.fetch(id, fetchOptions);
 	}
 
@@ -52,14 +52,14 @@ export abstract class Item {
 	 * @param {FetchOptions} fetchOptions - Setting {paginate: true} will result in the return value to be a Pagination object.
 	 * Caching it this case will only apply for the HTTP request.
 	 */
-	static query(queryOptions?: QueryOptions | null, fetchOptions?: FetchOptions): Promise<Item[] | Pagination<Item>> {
+	static query<T extends Item>(queryOptions?: QueryOptions | null, fetchOptions?: FetchOptions): Promise<T[] | Pagination<T>> {
 		return this.store.query(queryOptions, fetchOptions);
 	}
 
 	/**
 	 * Get the first item.
 	 */
-	static first(queryOptions?: QueryOptions): Promise<Item> {
+	static first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
 		return this.store
 			.query(queryOptions)
 			.then((items) => items[0]);
@@ -83,7 +83,7 @@ export abstract class Item {
 		return this.$id;
 	}
 
-	save(): Promise<Item> {
+	save(): Promise<this> {
 		return (this.constructor as typeof Item).store.save(this.toJSON());
 	}
 
@@ -91,11 +91,11 @@ export abstract class Item {
 	 * Update the resource.
 	 * @param {Object} properties - An object with any properties to update.
 	 */
-	update(properties: any = {}): Promise<Item> {
+	update(properties: any = {}): Promise<this> {
 		return (this.constructor as typeof Item).store.update(this, properties);
 	}
 
-	destroy(): Promise<Item> {
+	destroy(): Promise<this> {
 		return (this.constructor as typeof Item).store.destroy(this);
 	}
 

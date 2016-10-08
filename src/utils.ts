@@ -56,7 +56,7 @@ export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper
 				? deepOmap(value, valueMapper, keyMapper, context)
 				: value
 		);
-	} else if (typeof obj === 'object') {
+	} else if (typeof obj === 'object' && obj !== null) {
 		const result = {};
 
 		for (let [key, value] of Object.entries(obj)) {

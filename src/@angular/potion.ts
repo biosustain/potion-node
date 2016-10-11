@@ -129,31 +129,36 @@ export class Potion extends PotionBase {
 			});
 		}
 
-		return this.http.request(uri, requestOptions).toPromise().then((response: any) => {
-			let headers = {};
+		return this.http.request(uri, requestOptions)
+			.toPromise()
+			.then((response: any) => {
+				let headers = {};
+				let data;
 
-			// If `response` has is a Response object,
-			// we might also have a Headers instance which we need to convert into an object.
-			if (response.headers instanceof Headers) {
-				for (let key of response.headers.keys()) {
-					// Angular 2 does not yet lowercase headers.
-					// Make sure we get the first string value of the header instead of the array of values.
-					headers[key.toLowerCase()] = response.headers.get(key);
+				// If `response` is a Response object,
+				// we might also have a Headers instance which we need to convert into an object.
+				// NOTE: response can also be null.
+				if (response instanceof Response) {
+					if (response.headers instanceof Headers) {
+						for (let key of response.headers.keys()) {
+							// Angular 2 does not yet lowercase headers.
+							// Make sure we get the first string value of the header instead of the array of values.
+							headers[key.toLowerCase()] = response.headers.get(key);
+						}
+					} else {
+						// NOTE: headers must be an object,
+						// thus the fallback.
+						headers = response.headers || {};
+					}
+					data = response.json();
+				} else {
+					data = response;
 				}
-			} else {
-				headers = response.headers;
-			}
 
-			// `response` might be something other than a Response object
-			// TODO: response might also be empty, so do a check (response.text().length) before conversion
-			const data = response instanceof Response
-				? response.json()
-				: response;
-
-			return {
-				data,
-				headers
-			};
-		});
+				return {
+					headers,
+					data
+				};
+			});
 	}
 }

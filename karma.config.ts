@@ -35,7 +35,9 @@ module.exports = function (config) {
 			transform: [
 				['babelify', {presets: ['es2015', 'stage-0'],  extensions: ['.ts', '.js']}]
 			],
-			plugin: ['tsify']
+			plugin: [
+				['tsify', {target: 'es6'}]
+			]
 		},
 		plugins: [
 			'karma-browserify',

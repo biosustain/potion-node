@@ -1,14 +1,15 @@
 {
 	"include": [
-		"src/@angular.ts",
-		"src/angular.ts",
-		"src/fetch.ts",
-		"src/core.ts",
-		"src/utils.ts"
+		"src/**/*.ts"
 	],
 	"exclude": [
+		"src/**/*.spec.ts",
 		"node_modules"
 	],
+	"angularCompilerOptions": {
+		"skipTemplateCodegen": true,
+		"strictMetadataEmit": true
+	},
 	"compilerOptions": {
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
@@ -20,7 +21,7 @@
 		"noUnusedLocals": true,
 		"skipLibCheck": true,
 		"strictNullChecks": true,
-		"noEmitOnError": true,
+		"noEmitOnError": false,
 		"inlineSourceMap": true,
 		"inlineSources": true,
 		"target": "es6",

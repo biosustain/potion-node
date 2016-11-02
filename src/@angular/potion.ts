@@ -71,8 +71,9 @@ export class PotionQueryEncoder extends QueryEncoder {
 @Injectable()
 export class Potion extends PotionBase {
 	constructor(
-		@Inject(POTION_CONFIG) config: PotionConfig,
-		@Inject(POTION_HTTP) private http: PotionHttp
+		// TODO: fix when https://github.com/angular/angular/issues/12631 is fixed
+		@Inject(POTION_CONFIG) config: any,
+		@Inject(POTION_HTTP) private http: any
 	) {
 		super(config);
 	}

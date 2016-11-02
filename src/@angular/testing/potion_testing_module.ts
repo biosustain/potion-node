@@ -16,6 +16,11 @@ import {
 } from '../potion';
 
 
+export function provideHttpFactory(connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions): Http {
+	return new Http(connectionBackend, defaultOptions);
+}
+
+
 /**
  * PotionTestingModule can be used for testing the PotionModule.
  */
@@ -47,9 +52,7 @@ import {
 		// Angular 2 Http
 		{
 			provide: Http,
-			useFactory: (connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions) => {
-				return new Http(connectionBackend, defaultOptions);
-			},
+			useFactory: provideHttpFactory,
 			deps: [
 				MockBackend,
 				BaseRequestOptions

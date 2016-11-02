@@ -1,6 +1,6 @@
 {
 	"name": "potion-client",
-	"version": "0.20.25",
+	"version": "0.21.0",
 	"description": "A ES6 client for APIs written in Flask-Potion",
 	"keywords": [
 		"potion",
@@ -24,18 +24,19 @@
 		"clean": "rm -rf lib",
 		"lint": "tslint src/**/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish",
 		"test": "karma start karma.config.ts --browsers PhantomJS --single-run --log-level error",
-		"build": "tsc -target es5"
+		"build": "ngc -target es5"
 	},
 	"dependencies": {
 		"reflect-metadata": "^0.1.3"
 	},
 	"devDependencies": {
-		"@angular/common": "^2.1.0",
-		"@angular/compiler": "^2.1.0",
-		"@angular/core": "^2.1.0",
-		"@angular/platform-browser": "^2.1.0",
-		"@angular/platform-browser-dynamic": "^2.1.0",
-		"@angular/http": "^2.1.0",
+		"@angular/common": "^2.1.2",
+		"@angular/compiler": "^2.1.2",
+		"@angular/compiler-cli": "^2.1.2",
+		"@angular/core": "^2.1.2",
+		"@angular/platform-browser": "^2.1.2",
+		"@angular/platform-browser-dynamic": "^2.1.2",
+		"@angular/http": "^2.1.2",
 		"@types/angular": "^1.5.16",
 		"@types/angular-mocks": "^1.5.5",
 		"@types/fetch-mock": "^5.0.5",

@@ -24,7 +24,7 @@
 		"clean": "rm -rf lib",
 		"lint": "tslint src/**/*.ts -c ./tslint.json -s node_modules/tslint-stylish -t stylish",
 		"test": "karma start karma.config.ts --browsers PhantomJS --single-run --log-level error",
-		"build": "ngc -target es5"
+		"build": "ngc"
 	},
 	"dependencies": {
 		"reflect-metadata": "^0.1.3"

@@ -227,6 +227,19 @@ describe('potion/@angular', () => {
 					subscription.unsubscribe();
 				});
 			})));
+
+			it('should not fail when requests respond empty body', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
+				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
+					connection.mockRespond(new Response(
+						new ResponseOptions({status: 204, body: ''})
+					));
+				});
+
+				potion.fetch('/ping', {method: 'DELETE'}).then((response) => {
+					expect(response).toBeNull();
+					subscription.unsubscribe();
+				});
+			})));
 		});
 	});
 

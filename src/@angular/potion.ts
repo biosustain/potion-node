@@ -151,7 +151,13 @@ export class Potion extends PotionBase {
 						// thus the fallback.
 						headers = response.headers || {};
 					}
-					data = response.json();
+					// We cannot parse as JSON when there is a response with empty text (e.g. 204 NO CONTENT),
+					// therefore, we set the data to null to avoid exceptions being thrown.
+					if (response.text().length) {
+						data = response.json();
+					} else {
+						data = null;
+					}
 				} else {
 					data = response;
 				}

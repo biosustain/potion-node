@@ -1,4 +1,4 @@
-/* tslint:disable:max-file-line-count */
+/* tslint:disable:max-file-line-count max-classes-per-file */
 
 import {readonly} from './metadata';
 import {PotionBase, RequestOptions, ItemCache} from './potion';
@@ -575,7 +575,7 @@ describe('potion/core', () => {
 });
 
 
-function toPages(items: any[], perPage: number): Array<any[]> {
+function toPages(items: any[], perPage: number): any[][] {
 	let i;
 	let j;
 	let pages: any[][] = [];

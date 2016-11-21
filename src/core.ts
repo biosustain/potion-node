@@ -1,6 +1,13 @@
-export * from './core/item';
+export {ItemOptions, Item} from './core/item';
 export {readonly} from './core/metadata';
-export * from './core/pagination';
-export * from './core/potion';
-export * from './core/route';
-export * from './core/store';
+export {PaginationOptions, Pagination} from './core/pagination';
+export {
+	ItemCache,
+	URLSearchParams,
+	RequestOptions,
+	FetchOptions,
+	PotionOptions,
+	PotionBase
+} from './core/potion';
+export {Route} from './core/route';
+export {QueryOptions, Store} from './core/store';

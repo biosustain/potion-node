@@ -4,7 +4,10 @@ export {Item, Route, readonly} from './core';
 export {PotionModule} from './@angular/potion_module';
 export {
 	POTION_RESOURCES,
+	PotionResources,
 	POTION_CONFIG,
+	PotionConfig,
 	POTION_HTTP,
+	PotionHttp,
 	Potion
 } from './@angular/potion';

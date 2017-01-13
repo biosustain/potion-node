@@ -40,7 +40,8 @@ export class Pagination<T extends Item> {
 
 		this.items.push(...items);
 
-		let {page = 1, perPage = 25} = this.options.search || {};
+		// tslint:disable-next-line:no-magic-numbers
+		const {page = 1, perPage = 25} = this.options.search || {};
 		this._page = page;
 		this._perPage = perPage;
 		this._total = parseInt(count, 10);

@@ -88,7 +88,8 @@ export abstract class PotionBase {
 
 	fetch(uri: string, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		fetchOptions = fetchOptions || {};
-		let {method, cache, search, paginate, data} = fetchOptions;
+		const {method, cache, paginate, data} = fetchOptions;
+		let {search} = fetchOptions;
 		const {promise} = (this.constructor as typeof PotionBase);
 		const key = uri;
 
@@ -105,15 +106,15 @@ export abstract class PotionBase {
 		}
 
 		const fetch = () => {
-			return this
 			// Convert the {data, search} object props to snake case.
 			// Serialize all values to Potion JSON.
-				.request(`${this.host}${uri}`, Object.assign({}, fetchOptions, {
+			return this.request(`${this.host}${uri}`, Object.assign({}, fetchOptions, {
 					search: search ? this.toPotionJSON(search) : null,
 					data: data ? this.toPotionJSON(data) : null
 				}))
 				// Convert the data to Potion JSON
-				.then(({data, headers}) => this.fromPotionJSON(data).then((json) => ({headers, data: json})))
+				.then(({data, headers}) => this.fromPotionJSON(data)
+					.then((json) => ({headers, data: json})))
 				.then(({headers, data}) => {
 					// Return or update Pagination
 					if (paginate) {
@@ -148,27 +149,24 @@ export abstract class PotionBase {
 				return this.pendingGETRequests.get(uri);
 			}
 
-			let request = fetch().then(
-				(data) => {
-					// Remove pending request
-					this.pendingGETRequests.delete(uri);
-					return data;
-				},
-				(error) => {
-					// If request fails,
-					// make sure to remove the pending request so further requests can be made.
-					// Return is necessary.
-					this.pendingGETRequests.delete(uri);
-					const message = error instanceof Error
-						? error.message
-						: typeof error === 'string'
-							? error
-							: `An error occurred while Potion tried to retrieve resource from '${uri}'.`;
-					return promise.reject(
-						new Error(message)
-					);
-				}
-			);
+			const request = fetch().then((data) => {
+				// Remove pending request
+				this.pendingGETRequests.delete(uri);
+				return data;
+			}, (error) => {
+				// If request fails,
+				// make sure to remove the pending request so further requests can be made.
+				// Return is necessary.
+				this.pendingGETRequests.delete(uri);
+				const message = error instanceof Error
+					? error.message
+					: typeof error === 'string'
+						? error
+						: `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
+				return promise.reject(
+					new Error(message)
+				);
+			});
 
 			this.pendingGETRequests.set(uri, request);
 
@@ -229,9 +227,14 @@ export abstract class PotionBase {
 			uri = uri.substring(this.prefix.length);
 		}
 
-		for (let [resourceURI, resource] of Object.entries(this.resources)) {
+		for (const [resourceURI, resource] of Object.entries(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return {uri, resource, params: uri.substring(resourceURI.length + 1).split('/')};
+				return {
+					uri,
+					resource,
+					params: uri.substring(resourceURI.length + 1)
+						.split('/')
+				};
 			}
 		}
 
@@ -288,14 +291,12 @@ export abstract class PotionBase {
 
 
 				// Resolve possible references
-				for (let key of Object.keys(json)) {
+				for (const key of Object.keys(json)) {
 					if (key === '$uri') {
 						promises.push(promise.resolve([key, uri]));
 					} else {
-						promises.push(
-							this.fromPotionJSON(json[key])
-								.then((value) => [toCamelCase(key), value])
-						);
+						promises.push(this.fromPotionJSON(json[key])
+								.then((value) => [toCamelCase(key), value]));
 					}
 				}
 
@@ -373,7 +374,7 @@ export abstract class PotionBase {
 
 			const promises: Promise<any>[] = [];
 
-			for (let key of Object.keys(json)) {
+			for (const key of Object.keys(json)) {
 				promises.push(this.fromPotionJSON(json[key])
 					.then((value) => [toCamelCase(key), value]));
 			}

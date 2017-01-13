@@ -13,7 +13,7 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string): Promise<any> {
-					let {promise} = this.constructor as typeof PotionBase;
+					const {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user/1':
@@ -31,7 +31,7 @@ describe('potion/core', () => {
 				}
 			}
 
-			let potion = new Potion();
+			const potion = new Potion();
 			potion.register('/user', User);
 
 		});

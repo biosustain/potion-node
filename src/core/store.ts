@@ -59,7 +59,7 @@ export class Store<T extends Item> {
 	}
 
 	destroy(item: Item): Promise<T> {
-		let {uri} = item;
+		const {uri} = item;
 
 		return potionInstance(this.itemConstructor)
 			.fetch(uri, {method: 'DELETE'})

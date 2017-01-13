@@ -4,11 +4,13 @@
 		"member-access": false,
 		"member-ordering": [true, { "order": "statics-first" }], // http://palantir.github.io/tslint/rules/member-ordering/
 		"no-any": false,
+		"no-empty-interface": true,
 		"no-inferrable-types": [true, "ignore-params"],
 		"no-internal-module": true,
+		"no-magic-numbers": [true, 0, 1, -1, 10],
 		"no-namespace": [true, "allow-declarations"],
 		"no-reference": true,
-		"no-var-requires": false,
+		"no-var-requires": true,
 		"only-arrow-functions": [true, "allow-declarations"],
 		"prefer-for-of": true,
 		"typedef": [true, "call-signature", "parameter", "property-declaration", "member-variable-declaration"], // http://palantir.github.io/tslint/rules/typedef/
@@ -21,11 +23,14 @@
 		}],
 
 		// Style
-		"align": [true, "parameters", "arguments", "statements"],
-		"arrow-parens": true,
+		"align": [true, "parameters", "statements"],
 		"array-type": [true, "array"],
+		"arrow-parens": true,
+		"callable-types": true,
 		"class-name": true,
 		"comment-format": [true, "check-space"],
+		"import-spacing": true,
+		"interface-over-type-literal": true,
 		"jsdoc-format": true,
 		"new-parens": true,
 		"no-consecutive-blank-lines": false,
@@ -39,6 +44,13 @@
 		}],
 		"quotemark": [true, "single"],
 		"semicolon": true,
+		"space-before-function-paren": [true, {
+			"anonymous": "always",
+			"named": "never",
+			"asyncArrow": "always",
+			"method": "never",
+			"constructor": "never"
+		}],
 		"variable-name": [true, "check-format", "allow-leading-underscore", "allow-pascal-case", "ban-keywords"],
 		"whitespace": [true,
 			"check-branch",
@@ -59,9 +71,10 @@
 		"max-line-length": [true, 240],
 		"no-default-export": true,
 		"no-mergeable-namespace": true,
-		"no-require-imports": false,
+		"no-require-imports": true,
 		"no-trailing-whitespace": true,
 		"object-literal-sort-keys": false,
+		"prefer-const": true,
 		"trailing-comma": [true, {
 			"multiline": "never",
 			"singleline": "never"
@@ -70,6 +83,7 @@
 		// Functionality
 		"curly": true,
 		"forin": true,
+		"import-blacklist": [true, "@angular", "@infarm", "rxjs"],
 		"no-arg": true,
 		"no-bitwise": true,
 		"no-conditional-assignment": true,
@@ -78,8 +92,9 @@
 		"no-debugger": true,
 		"no-duplicate-variable": true,
 		"no-eval": true,
-		"no-invalid-this": false,
+		"no-invalid-this": true,
 		"no-string-literal": true,
+		"no-string-throw": true,
 		"no-switch-case-fall-through": true,
 		"no-unused-expression": true,
 		"no-unused-new": true,
@@ -88,6 +103,7 @@
 		"radix": true,
 		"switch-default": true,
 		"triple-equals": [true, "allow-null-check", "allow-undefined-check"],
+		"typeof-compare": true,
 		"use-isnan": true
 	}
 }

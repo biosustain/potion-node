@@ -36,7 +36,7 @@ export interface PotionResources {
  * Provide a way to configure Potion in Angular 2.
  */
 export const POTION_CONFIG = new OpaqueToken('POTION_CONFIG');
-export interface PotionConfig extends PotionOptions {}
+export interface PotionConfig extends PotionOptions {} // tslint:disable-line:no-empty-interface
 
 
 /**
@@ -85,7 +85,7 @@ export class Potion extends PotionBase {
 		);
 
 		if (!isEmpty(resources)) {
-			for (let [uri, type] of (Object as any).entries(resources)) {
+			for (const [uri, type] of (Object as any).entries(resources)) {
 				// `type` can be a tuple with resource type and a configuration for the resource type
 				if (Array.isArray(type)) {
 					const [resource, config] = type;
@@ -118,7 +118,7 @@ export class Potion extends PotionBase {
 		if (search) {
 			const params = new URLSearchParams('', new PotionQueryEncoder());
 
-			for (let [key, value] of (Object as any).entries(search)) {
+			for (const [key, value] of (Object as any).entries(search)) {
 				// We need to `encodeURIComponent()` when we have complex search queries.
 				// E.g. `search: {where: {foo: 1, bar: 2}}`, when URLSearchParams will be sent with the request,
 				// it will end up as `[object Object]`, thus, we need to encode the value.
@@ -141,7 +141,7 @@ export class Potion extends PotionBase {
 				// NOTE: response can also be null.
 				if (response instanceof Response) {
 					if (response.headers instanceof Headers) {
-						for (let key of response.headers.keys()) {
+						for (const key of response.headers.keys()) {
 							// Angular 2 does not yet lowercase headers.
 							// Make sure we get the first string value of the header instead of the array of values.
 							headers[key.toLowerCase()] = response.headers.get(key);

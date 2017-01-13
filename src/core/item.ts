@@ -100,7 +100,7 @@ export abstract class Item {
 	}
 
 	toJSON(): any {
-		let properties = {};
+		const properties = {};
 
 		Object.keys(this)
 			.filter((key) => !key.startsWith('$') && !isReadonly(this.constructor, key))

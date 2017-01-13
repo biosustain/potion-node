@@ -5,13 +5,14 @@ import {RequestOptions, FetchOptions} from './potion';
 export type RouteType<T> = (params?: any, options?: FetchOptions) => Promise<T>;
 
 
+// tslint:disable:no-invalid-this
 export function route<T>(path: string, {method}: RequestOptions = {}): RouteType<T> {
 	// tslint:disable-next-line:only-arrow-functions
 	return function (params?: any, {paginate = false, cache = true}: FetchOptions = {}): Promise<T> {
-		let isCtor = typeof this === 'function';
-		let uri = `${isCtor ? potionURI(this) : this.uri}${path}`;
+		const isCtor = typeof this === 'function';
+		const uri = `${isCtor ? potionURI(this) : this.uri}${path}`;
 
-		let options: FetchOptions = {method, paginate, cache};
+		const options: FetchOptions = {method, paginate, cache};
 		if (method === 'GET') {
 			options.search = params;
 		} else if ((['POST', 'PUT', 'PATCH'] as any).includes(method)) {
@@ -22,6 +23,7 @@ export function route<T>(path: string, {method}: RequestOptions = {}): RouteType
 			.fetch(uri, options);
 	};
 }
+// tslint:enable:no-invalid-this
 
 /**
  * Use the Route object methods to register other REST methods on a resource.

@@ -10,7 +10,7 @@ const Reflect = (window as any).Reflect; // tslint:disable-line:variable-name
 // tslint:disable-next-line:only-arrow-functions
 (function checkReflect(): void {
 	if (!(Reflect && Reflect.getMetadata)) {
-		throw 'reflect-metadata shim is required when using potion-node library';
+		throw new Error('Dependency error. reflect-metadata shim is required when using potion-node library');
 	}
 })();
 
@@ -60,7 +60,7 @@ export function isReadonly(ctor: any, key: string): boolean {
  * }
  */
 export function readonly(target: any, property: string): void {
-	let constructor = typeof target === 'function'
+	const constructor = typeof target === 'function'
 		? target
 		: typeof target.constructor === 'function'
 			? target.constructor

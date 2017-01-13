@@ -77,8 +77,8 @@ describe('potion/core', () => {
 					}
 				}
 
-				let potion = new Potion();
-				let today = new Date();
+				const potion = new Potion();
+				const today = new Date();
 
 				potion
 					.fetch('/user', {method: 'POST', data: {firstName: 'John', lastName: 'Doe', birthDate: today, features: [{eyeColor: 'blue'}]}, search: {isAdmin: false}})
@@ -136,7 +136,7 @@ describe('potion/core', () => {
 			beforeEach(() => {
 				class Potion extends PotionBase {
 					protected request(uri: string): Promise<any> {
-						let {promise} = this.constructor as typeof PotionBase;
+						const {promise} = this.constructor as typeof PotionBase;
 
 						switch (uri) {
 							case '/user/schema':
@@ -203,7 +203,7 @@ describe('potion/core', () => {
 				}
 
 				cache = new MockCache();
-				let potion = new Potion({cache});
+				const potion = new Potion({cache});
 
 				potion.register('/user', User);
 				potion.register('/car', Car);

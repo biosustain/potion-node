@@ -1,4 +1,4 @@
-/* tslint:disable:max-file-line-count max-classes-per-file */
+/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
 
 import {readonly} from './metadata';
 import {PotionBase, RequestOptions, ItemCache} from './potion';
@@ -10,13 +10,13 @@ describe('potion/core', () => {
 	describe('Item()', () => {
 		it('should be an instance of Item', () => {
 			class User extends Item {}
-			let user = new User();
+			const user = new User();
 			expect(user instanceof (Item as any)).toBe(true);
 		});
 
 		it('should be an instance of the child class that extended it', () => {
 			class User extends Item {}
-			let user = new User();
+			const user = new User();
 			expect(user instanceof (User as any)).toBe(true);
 		});
 
@@ -26,7 +26,7 @@ describe('potion/core', () => {
 				weight: number;
 				age: number;
 			}
-			let user = new User({name: 'John Doe', age: 24, weight: 72});
+			const user = new User({name: 'John Doe', age: 24, weight: 72});
 			expect(user.name).toEqual('John Doe');
 			expect(user.age).toEqual(24);
 			expect(user.weight).toEqual(72);
@@ -45,7 +45,7 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(uri: string, options?: RequestOptions): Promise<any> {
-						let {promise} = this.constructor as typeof PotionBase;
+						const {promise} = this.constructor as typeof PotionBase;
 						options = options || ({} as RequestOptions);
 
 						switch (uri) {
@@ -63,14 +63,14 @@ describe('potion/core', () => {
 					}
 				}
 
-				let potion = new Potion();
+				const potion = new Potion();
 				potion.register('/user', User);
 			});
 
 			it('should update the Item', (done) => {
 				User.fetch(1).then((user: User) => {
 					expect(user.name).toEqual('John Doe');
-					let name = 'John Foo Doe';
+					const name = 'John Foo Doe';
 					user.update({name}).then(() => {
 						User.fetch(1).then((user: User) => {
 							expect(user.name).toEqual(name);
@@ -94,7 +94,7 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
-						let {promise} = this.constructor as typeof PotionBase;
+						const {promise} = this.constructor as typeof PotionBase;
 						options = options || ({} as RequestOptions);
 
 						switch (options.method) {
@@ -114,13 +114,13 @@ describe('potion/core', () => {
 					}
 				}
 
-				let potion = new Potion();
+				const potion = new Potion();
 				potion.register('/user', User);
 			});
 
 			it('should destroy the Item', (done) => {
-				let success = jasmine.createSpy('success');
-				let error = jasmine.createSpy('error');
+				const success = jasmine.createSpy('success');
+				const error = jasmine.createSpy('error');
 
 				User.fetch(3).then((user: User) => {
 					user.destroy().then(() => {
@@ -148,7 +148,7 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
-						let {promise} = this.constructor as typeof PotionBase;
+						const {promise} = this.constructor as typeof PotionBase;
 						options = options || ({} as RequestOptions);
 
 						switch (options.method) {
@@ -164,13 +164,13 @@ describe('potion/core', () => {
 					}
 				}
 
-				let potion = new Potion();
+				const potion = new Potion();
 				potion.register('/user', User);
 			});
 
 			it('should save the Item', (done) => {
-				let name = 'Foo Bar';
-				let user = new User({name});
+				const name = 'Foo Bar';
+				const user = new User({name});
 
 				user.save().then(() => {
 					User.fetch(4).then((user: User) => {
@@ -196,12 +196,12 @@ describe('potion/core', () => {
 			beforeEach(() => {
 				class Potion extends PotionBase {
 					protected request(): Promise<any> {
-						let {promise} = this.constructor as typeof PotionBase;
+						const {promise} = this.constructor as typeof PotionBase;
 						return promise.resolve({});
 					}
 				}
 
-				let potion = new Potion();
+				const potion = new Potion();
 				potion.register('/user', User, {
 					readonly: ['weight']
 				});
@@ -210,13 +210,13 @@ describe('potion/core', () => {
 			});
 
 			it('should return a JSON repr. of the Item without the "id"', () => {
-				let {name, id} = user.toJSON();
+				const {name, id} = user.toJSON();
 				expect(name).toEqual('John Doe');
 				expect(id).toBeUndefined();
 			});
 
 			it('should omit @readonly properties', () => {
-				let {age, weight} = user.toJSON();
+				const {age, weight} = user.toJSON();
 				expect(age).toBeUndefined();
 				expect(weight).toBeUndefined();
 			});
@@ -233,7 +233,7 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string): Promise<any> {
-					let {promise} = this.constructor as typeof PotionBase;
+					const {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user/1':
@@ -321,7 +321,7 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string, options?: RequestOptions): Promise<any> {
-					let {promise} = this.constructor as typeof PotionBase;
+					const {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user':
@@ -411,7 +411,7 @@ describe('potion/core', () => {
 				}
 			}
 
-			let memcache = new Map();
+			const memcache = new Map();
 			class MockCache implements ItemCache<Item> {
 				get(key: string): Item {
 					return memcache.get(key);
@@ -433,10 +433,10 @@ describe('potion/core', () => {
 
 			function buildQueryResponse(data: any, options: any, promise: any): Promise<any> {
 				/* tslint:disable: variable-name */
-				let {page, per_page} = options.search;
+				const {page, per_page} = options.search;
 				/* tslint:enable: variable-name */
 
-				let response = {data};
+				const response = {data};
 
 				if (page && per_page) {
 					Object.assign(response, {
@@ -465,7 +465,7 @@ describe('potion/core', () => {
 
 		it('should contain instances of an Item', (done) => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
-				for (let user of users) {
+				for (const user of users) {
 					expect(user instanceof (User as any)).toBe(true);
 				}
 				done();
@@ -497,12 +497,12 @@ describe('potion/core', () => {
 		it('should work with cross-references', (done) => {
 			Person.query(undefined, {paginate: true}).then((people: Person[]) => {
 				expect(people.length).toEqual(2);
-				for (let person of people) {
+				for (const person of people) {
 					expect(person.groups.length).toEqual(2);
-					for (let group of person.groups) {
+					for (const group of person.groups) {
 						expect(group instanceof (Group as any)).toBe(true);
 						expect(group.members.length).toEqual(2);
-						for (let member of group.members) {
+						for (const member of group.members) {
 							expect(member instanceof (Person as any)).toBe(true);
 						}
 					}
@@ -520,16 +520,16 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string, options?: RequestOptions): Promise<any> {
-					let {promise} = this.constructor as typeof PotionBase;
+					const{promise} = this.constructor as typeof PotionBase;
 					options = options || ({} as RequestOptions);
 
 					switch (uri) {
 						case '/user':
 							/* tslint:disable: variable-name */
-							let {page, per_page} = options.search || {page: 1, per_page: 25};
+							const {page, per_page} = options.search || {page: 1, per_page: 25};
 							/* tslint:enable: variable-name */
 
-							let response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
+							const response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
 
 							if (page && per_page) {
 								Object.assign(response, {
@@ -578,7 +578,7 @@ describe('potion/core', () => {
 function toPages(items: any[], perPage: number): any[][] {
 	let i;
 	let j;
-	let pages: any[][] = [];
+	const pages: any[][] = [];
 
 	for (i = 0, j = items.length; i < j; i += perPage) {
 		pages.push(items.slice(i, i + perPage));

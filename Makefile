@@ -13,9 +13,12 @@ usage:
 clean:
 	npm run clean
 
-# Run tests
-test:
+# Lint
+lint:
 	npm run lint
+
+# Run tests
+test: lint
 	npm test
 
 # Build everything

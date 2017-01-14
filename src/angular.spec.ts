@@ -116,15 +116,15 @@ describe('potion/angular', () => {
 			it('should return a Promise', () => {
 				$httpBackend.expect('GET', '/ping').respond(200);
 				expect(potion.fetch('/ping') instanceof $q).toBe(true);
+				$httpBackend.flush();
 			});
 
-			it('should return a Promise with data', (done) => {
+			it('should return a Promise with data', () => {
 				$httpBackend.expect('GET', '/ping').respond(200, {pong: true});
 
 				potion.fetch('/ping').then((data) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
-					done();
 				});
 
 				$httpBackend.flush();
@@ -155,7 +155,7 @@ describe('potion/angular', () => {
 				$httpBackend.verifyNoOutstandingRequest();
 			});
 
-			it('should use $cacheFactory by default to to store and retrieve items', (done) => {
+			it('should use $cacheFactory by default to to store and retrieve items', () => {
 				let cache = $cacheFactory.get('potion');
 
 				expect(cache).not.toBeUndefined();
@@ -168,21 +168,19 @@ describe('potion/angular', () => {
 					User.fetch(1).then((user: User) => {
 						expect(response).toHaveBeenCalledTimes(1);
 						expect(user).not.toBeUndefined();
-						done();
 					});
 				});
 
 				$httpBackend.flush();
 			});
 
-			it('should work with cross references', (done) => {
+			it('should work with cross references', () => {
 				$httpBackend.expect('GET', '/user/1').respond(200, {$uri: '/user/1', sibling: {$ref: '/user/2'}});
 				$httpBackend.expect('GET', '/user/2').respond(200, {$uri: '/user/2', sibling: {$ref: '/user/1'}});
 
 				User.fetch(1).then((user: User) => {
 					expect(user instanceof User).toBe(true);
 					expect(user.sibling instanceof User).toBe(true);
-					done();
 				});
 
 				$httpBackend.flush();
@@ -212,7 +210,7 @@ describe('potion/angular', () => {
 			$httpBackend.verifyNoOutstandingRequest();
 		});
 
-		it('should work with cross references', (done) => {
+		it('should work with cross references', () => {
 			$httpBackend.when('GET', '/user').respond(200, [{$ref: '/user/1'}, {$ref: '/user/2'}]);
 			$httpBackend.when('GET', '/group').respond(200, [{$ref: '/group/1'}, {$ref: '/group/2'}]);
 
@@ -264,7 +262,6 @@ describe('potion/angular', () => {
 						}
 					}
 				}
-				done();
 			});
 
 			$httpBackend.flush();

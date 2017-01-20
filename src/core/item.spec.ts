@@ -310,12 +310,28 @@ describe('potion/core', () => {
 
 		class User extends Item {}
 
+		// Cross reference mock classes
 		class Person extends Item {
 			groups: Group[];
 		}
-
 		class Group extends Item {
 			members: Person[];
+		}
+
+		// Back references mock classes
+		class M1 extends Item {
+			m2: M2;
+		}
+		class M2 extends Item {
+			m3: M3;
+			m1s: M1[];
+		}
+		class M3 extends Item {
+			m4: M4;
+			m2s: M2[];
+		}
+		class M4 extends Item {
+			m3s: M3[];
 		}
 
 		beforeEach(() => {
@@ -403,6 +419,49 @@ describe('potion/core', () => {
 									]
 								}
 							});
+
+						// Circular dependency mock data
+						case '/m1':
+							return buildQueryResponse([{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}], options, promise);
+						case '/m1/1':
+							return promise.resolve({data: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}});
+						case '/m1/2':
+							// Simulate latency
+							return new promise((resolve) => {
+								setTimeout(() => {
+									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}})
+								}, 500);
+							});
+						case '/m1/3':
+							return promise.resolve({data: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}});
+						case '/m2/1':
+							return promise.resolve({data: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}});
+						case '/m2/2':
+							// Simulate latency
+							return new promise((resolve) => {
+								setTimeout(() => {
+									resolve({data: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}});
+								}, 250)
+							});
+						case '/m2/3':
+							return promise.resolve({data: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
+						case '/m3/1':
+							// Simulate latency
+							return new promise((resolve) => {
+								setTimeout(() => {
+									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}})
+								}, 500);
+							});
+						case '/m3/2':
+							return promise.resolve({data: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
+						case '/m4/1':
+							// Simulate latency
+							return new promise((resolve) => {
+								setTimeout(() => {
+									resolve({data: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}})
+								}, 250);
+							});
+
 						default:
 							break;
 					}
@@ -430,6 +489,11 @@ describe('potion/core', () => {
 			potion.register('/user', User);
 			potion.register('/person', Person);
 			potion.register('/group', Group);
+
+			potion.register('/m1', M1);
+			potion.register('/m2', M2);
+			potion.register('/m3', M3);
+			potion.register('/m4', M4);
 
 			function buildQueryResponse(data: any, options: any, promise: any): Promise<any> {
 				/* tslint:disable: variable-name */
@@ -509,6 +573,22 @@ describe('potion/core', () => {
 				}
 				done();
 			});
+		});
+
+		it('should work with back references', (done) => {
+			M1.query({})
+				.then((m1s: M1[]) => {
+					expect(m1s.length).toEqual(3);
+					m1s.forEach((m1) => expect(m1 instanceof M1).toBeTruthy());
+
+					const m4s = m1s.map(({m2}) => m2)
+						.map(({m3}) => m3)
+						.map(({m4}) => m4);
+
+					m4s.forEach((m4) => expect(m4 instanceof M4).toBeTruthy());
+
+					done();
+				});
 		});
 	});
 

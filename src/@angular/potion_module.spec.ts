@@ -279,6 +279,96 @@ describe('potion/@angular', () => {
 				});
 			})));
 		});
+
+		describe('.query()', () => {
+			it('should work with back references', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
+				// Back references mock classes
+				@potion.registerAs('/m1')
+				class M1 extends Item {
+					m2: M2;
+				}
+				@potion.registerAs('/m2')
+				class M2 extends Item {
+					m3: M3;
+					m1s: M1[];
+				}
+				@potion.registerAs('/m3')
+				class M3 extends Item {
+					m4: M4;
+					m2s: M2[];
+				}
+				@potion.registerAs('/m4')
+				class M4 extends Item {
+					m3s: M3[];
+				}
+
+				const subscription: Subscription = backend.connections.subscribe((connection: MockConnection) => {
+					const {request} = connection;
+					const {url} = request;
+					let response;
+
+					switch (url) {
+						// Circular dependency mock data
+						case '/m1':
+							response = new Response(new ResponseOptions({status: 200, body: [{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}]}));
+							break;
+						case '/m1/1':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}}));
+							break;
+						case '/m1/2':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}}));
+							break;
+						case '/m1/3':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}}));
+							break;
+						case '/m2/1':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}}));
+							break;
+						case '/m2/2':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}}));
+							break;
+						case '/m2/3':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}}));
+							break;
+						case '/m3/1':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}}));
+							break;
+						case '/m3/2':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}}));
+							break;
+						case '/m4/1':
+							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}}));
+							break;
+
+						default:
+							break;
+					}
+
+					if (['/m1/2', '/m2/2', '/m3/1', '/m4/1'].indexOf(url) !== -1) {
+						// Simulate latency
+						setTimeout(() => {
+							connection.mockRespond(response);
+						}, 1500);
+					} else {
+						connection.mockRespond(response);
+					}
+				});
+
+				M1.query()
+					.then((m1s: M1[]) => {
+						expect(m1s.length).toEqual(3);
+						m1s.forEach((m1) => expect(m1 instanceof M1).toBeTruthy());
+
+						const m4s = m1s.map(({m2}) => m2)
+							.map(({m3}) => m3)
+							.map(({m4}) => m4);
+
+						m4s.forEach((m4) => expect(m4 instanceof M4).toBeTruthy());
+
+						subscription.unsubscribe();
+					});
+			})));
+		});
 	});
 
 	describe('Route', () => {

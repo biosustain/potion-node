@@ -1,4 +1,4 @@
-/* tslint:disable:max-file-line-count max-classes-per-file */
+/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
 import {TestBed, async, inject} from '@angular/core/testing';
 import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
 

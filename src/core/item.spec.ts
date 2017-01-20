@@ -429,7 +429,7 @@ describe('potion/core', () => {
 							// Simulate latency
 							return new promise((resolve) => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}})
+									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}});
 								}, 500);
 							});
 						case '/m1/3':
@@ -441,7 +441,7 @@ describe('potion/core', () => {
 							return new promise((resolve) => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}});
-								}, 250)
+								}, 250);
 							});
 						case '/m2/3':
 							return promise.resolve({data: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
@@ -449,7 +449,7 @@ describe('potion/core', () => {
 							// Simulate latency
 							return new promise((resolve) => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}})
+									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}});
 								}, 500);
 							});
 						case '/m3/2':
@@ -458,7 +458,7 @@ describe('potion/core', () => {
 							// Simulate latency
 							return new promise((resolve) => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}})
+									resolve({data: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}});
 								}, 250);
 							});
 

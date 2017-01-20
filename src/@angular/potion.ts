@@ -10,6 +10,7 @@ import {
 } from '@angular/http';
 
 import {Observable} from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 
 import {
@@ -131,8 +132,7 @@ export class Potion extends PotionBase {
 		}
 
 		return this.http.request(uri, requestOptions)
-			.toPromise()
-			.then((response: any) => {
+			.map((response: any) => {
 				let headers = {};
 				let data;
 
@@ -166,6 +166,7 @@ export class Potion extends PotionBase {
 					headers,
 					data
 				};
-			});
+			})
+			.toPromise();
 	}
 }

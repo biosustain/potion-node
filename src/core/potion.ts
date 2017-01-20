@@ -247,7 +247,7 @@ export abstract class PotionBase {
 				return {$ref: `${this.prefix}${json.uri}`};
 			} else if (json instanceof Date) {
 				return {$date: json.getTime()};
-			} else if (json instanceof Array) {
+			} else if (Array.isArray(json)) {
 				return json.map((item) => this.toPotionJSON(item));
 			} else {
 				return omap(json, (key, value) => [toSnakeCase(key), this.toPotionJSON(value)]);
@@ -260,7 +260,7 @@ export abstract class PotionBase {
 	private fromPotionJSON(json: any): Promise<any> {
 		const {promise} = (this.constructor as typeof PotionBase);
 		if (typeof json === 'object' && json !== null) {
-			if (json instanceof Array) {
+			if (Array.isArray(json)) {
 				return promise.all(json.map((item) => this.fromPotionJSON(item)));
 				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
 				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.

@@ -7,9 +7,14 @@
 
 ### Installation
 ----------------
-You can install this package via npm, but it is advised to use it with [JSPM](http://jspm.io/): 
+You can install this package via [NPM](https://www.npmjs.com) or [Yarn](https://yarnpkg.com/en):
 ```shell
-$(node bin)/jspm install potion=npm:potion-client
+$(node bin)/npm install potion-client
+```
+
+It can also be used with [JSPM](http://jspm.io):
+```shell
+$(npm bin)/jspm install potion=npm:potion-client
 ```
 
 

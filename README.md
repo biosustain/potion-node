@@ -258,6 +258,7 @@ platformBrowserDynamic().bootstrapModule(AppModule);
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {HttpModule} from '@angular/http';
+import {POTION_RESOURCES, PotionModule} from 'potion-client/@angular';
 // Load the App component
 import {AppComponent} from './app.component';
 // Load resources
@@ -267,25 +268,31 @@ import {resources} from './app.resources';
 	imports: [
 		BrowserModule,
 		HttpModule,
-		// Potion resources registration
-		resources
+		PotionModule
 	],
 	declarations: [AppComponent],
-	bootstrap: [AppComponent]
+	bootstrap: [AppComponent],
+	providers: [
+		// Potion resources registration
+	    {
+	        provide: POTION_RESOURCES,
+	        useValue: resources,
+	        multi: true
+        }
+     ]
 })
 export class AppModule {}
 
 
 // ./app.resources.ts
-import {PotionResources, PotionModule} from 'potion-client/@angular';
+import {PotionResources} from 'potion-client/@angular';
 import {Engine, Car} from './vehicle';
-const appResources: PotionResources = {
+export const resources: PotionResources = {
     '/engine': Engine,
     '/car': [Car, {
         readonly: ['production']
     }]
 };
-export const resources = PotionModule.forRoot(appResources);
 
 
 // ./app.component.ts
@@ -328,8 +335,7 @@ class MyHttp implements PotionHttp {}
 	imports: [
 		BrowserModule,
 		HttpModule,
-		// Potion resources registration
-		resources,
+		PotionModule,
 		...
 	],
 	providers: [
@@ -342,7 +348,8 @@ class MyHttp implements PotionHttp {}
         {
             provide: POTION_HTTP,
             useClass: MyHttp
-        }
+        },
+        ...
     ],
 	...
 })

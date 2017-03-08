@@ -1,5 +1,13 @@
-import {Injectable, Inject, OpaqueToken} from '@angular/core';
 import {
+	Injectable,
+	Inject,
+	OpaqueToken,
+	Optional,
+	SkipSelf,
+	Provider
+} from '@angular/core';
+import {
+	Http,
 	RequestOptions,
 	RequestOptionsArgs,
 	Request,
@@ -71,28 +79,35 @@ export class PotionQueryEncoder extends QueryEncoder {
  */
 @Injectable()
 export class Potion extends PotionBase {
+	private http: PotionHttp;
+
 	constructor(
+		http: Http,
 		// TODO: fix when https://github.com/angular/angular/issues/12631 is fixed
-		@Inject(POTION_CONFIG) config: any,
-		@Inject(POTION_HTTP) private http: any
+		@Optional() @Inject(POTION_CONFIG) config: any,
+		@Optional() @Inject(POTION_HTTP) customHttp: any
 	) {
-		super(config);
+		super(config || {});
+		// Use custom Http class if provided,
+		// fallback to Angular Http otherwise.
+		this.http = customHttp || http;
 	}
 
 	registerFromProvider(resources: PotionResources[]): void {
-		resources = merge(
-			// Remove any values that contain no resources
-			resources.filter((item) => !isEmpty(item))
-		);
+		// Remove any values that contain no resources.
+		resources = merge(resources.filter((item) => !isEmpty(item)));
 
 		if (!isEmpty(resources)) {
-			for (const [uri, type] of (Object as any).entries(resources)) {
-				// `type` can be a tuple with resource type and a configuration for the resource type
-				if (Array.isArray(type)) {
-					const [resource, config] = type;
-					this.register(uri, resource, config);
-				} else {
-					this.register(uri, type);
+			for (const [uri, type] of Object.entries(resources)) {
+				// NOTE: Skip registration of existing resources.
+				if (!this.resources.hasOwnProperty(uri)) {
+					// `type` can be a tuple with resource type and a configuration for the resource type
+					if (Array.isArray(type)) {
+						const [resource, config] = type;
+						this.register(uri, resource, config);
+					} else {
+						this.register(uri, type);
+					}
 				}
 			}
 		}
@@ -170,3 +185,21 @@ export class Potion extends PotionBase {
 			.toPromise();
 	}
 }
+
+
+export function POTION_PROVIDER_FACTORY(parentFactory: Potion, http: Http, config: PotionConfig, customHttp: PotionHttp): Potion {
+	return parentFactory || new Potion(http, config, customHttp);
+}
+
+export const POTION_PROVIDER: Provider = {
+	// If there is already a Potion available, use that.
+	// Otherwise, provide a new one.
+	provide: Potion,
+	useFactory: POTION_PROVIDER_FACTORY,
+	deps: [
+		[new Optional(), new SkipSelf(), Potion],
+		Http,
+		[new Optional(), new Inject(POTION_CONFIG)],
+		[new Optional(), new Inject(POTION_HTTP)]
+	]
+};

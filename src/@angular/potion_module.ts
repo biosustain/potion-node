@@ -1,16 +1,9 @@
-import {
-	NgModule,
-	ModuleWithProviders,
-	Inject,
-	SkipSelf,
-	Optional
-} from '@angular/core';
-import {Http, HttpModule} from '@angular/http';
+import {NgModule, Inject, Optional} from '@angular/core';
+import {HttpModule} from '@angular/http';
 
 import {
 	POTION_RESOURCES,
-	POTION_CONFIG,
-	POTION_HTTP,
+	POTION_PROVIDER,
 	PotionResources,
 	Potion
 } from './potion';
@@ -22,71 +15,37 @@ import {
  * @example
  * // app.resources.ts
  * import {PotionResources, PotionModule} from 'potion-client/@angular';
- * const appResources: PotionResources = {
+ * export const appResources: PotionResources = {
  *     '/engine': Engine,
  * 	   '/car': [Car, {
  * 	       readonly: ['production']
  * 	   }]
  * };
- * export const resources = PotionModule.forRoot(appResources);
  *
  * // app.module.ts
  * import {AppComponent} from './app.component'
  * import {resources} from './app.resources';
  * @NgModule({
- *     imports: [
- *       resources
- *     ],
- *     bootstrap: [AppComponent]
+ *     imports: [PotionModule],
+ *     bootstrap: [AppComponent],
+ *     providers: [
+ *         {
+ *             provide: POTION_RESOURCES,
+ *             useValue: resources,
+ *             multi: true
+ *         }
+ *     ]
  * }
  * export class AppModule {}
  */
 @NgModule({
-	imports: [HttpModule]
+	imports: [HttpModule],
+	providers: [
+		POTION_PROVIDER
+	]
 })
 export class PotionModule {
-	constructor(
-		@Optional() @SkipSelf() parentModule: PotionModule,
-		@Inject(POTION_RESOURCES) resources: PotionResources[],
-		potion: Potion
-	) {
-		// Prevent reimport of the PotionModule.
-		// https://angular.io/docs/ts/latest/guide/ngmodule.html#!#prevent-reimport
-		if (parentModule) {
-			throw new Error('potion-client#PotionModule has already been loaded by a different module. It can only be imported once per application.');
-		}
-
-		potion.registerFromProvider(resources);
-	}
-	// tslint:disable-next-line:member-ordering
-	static forRoot(resources: PotionResources): ModuleWithProviders {
-		return {
-			ngModule: PotionModule,
-			// These providers will be available as singletons (only initialized once per app) throughout the app.
-			providers: [
-				{
-					provide: POTION_RESOURCES,
-					useValue: resources,
-					multi: true
-				},
-				{
-					provide: Potion,
-					useClass: Potion,
-					deps: [
-						POTION_CONFIG,
-						POTION_HTTP
-					]
-				},
-				{
-					provide: POTION_CONFIG,
-					useValue: {}
-				},
-				// Use Angular 2 Http by default
-				{
-					provide: POTION_HTTP,
-					useExisting: Http
-				}
-			]
-		};
+	constructor(@Optional() @Inject(POTION_RESOURCES) resources: PotionResources[], potion: Potion) {
+		potion.registerFromProvider(resources || []);
 	}
 }

@@ -2,6 +2,11 @@ language: node_js
 node_js:
   - "6.4"
 
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
 addons:
   # Node 5 requires a C++11 standard compliant compiler, so we'll use gcc.
   # See more info at https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements.
@@ -20,9 +25,6 @@ before_install:
   - sh -e /etc/init.d/xvfb start
   # Give xvfb some time to start
   - sleep 5
-
-install:
-  - npm install --loglevel silent
 
 script:
   - npm run lint

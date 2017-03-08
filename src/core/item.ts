@@ -5,8 +5,8 @@ import {Pagination} from './pagination';
 
 
 export interface ItemConstructor {
-	new (object: any): Item;
 	store?: Store<Item>;
+	new (object: any): Item;
 }
 
 export interface ItemOptions {

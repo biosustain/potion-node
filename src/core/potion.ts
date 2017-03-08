@@ -105,31 +105,29 @@ export abstract class PotionBase {
 			search = fetchOptions.search = Object.assign({page: 1, perPage: 25}, search);
 		}
 
-		const fetch = () => {
-			// Convert the {data, search} object props to snake case.
-			// Serialize all values to Potion JSON.
-			return this.request(`${this.host}${uri}`, Object.assign({}, fetchOptions, {
-					search: search ? this.toPotionJSON(search) : null,
-					data: data ? this.toPotionJSON(data) : null
-				}))
-				// Convert the data to Potion JSON
-				.then(({data, headers}) => this.fromPotionJSON(data)
-					.then((json) => ({headers, data: json})))
-				.then(({headers, data}) => {
-					// Return or update Pagination
-					if (paginate) {
-						const count = headers['x-total-count'] || data.length;
+		// Convert the {data, search} object props to snake case.
+		// Serialize all values to Potion JSON.
+		const fetch = () => this.request(`${this.host}${uri}`, Object.assign({}, fetchOptions, {
+				search: search ? this.toPotionJSON(search) : null,
+				data: data ? this.toPotionJSON(data) : null
+			}))
+			// Convert the data to Potion JSON
+			.then(({data, headers}) => this.fromPotionJSON(data)
+				.then((json) => ({headers, data: json})))
+			.then(({headers, data}) => {
+				// Return or update Pagination
+				if (paginate) {
+					const count = headers['x-total-count'] || data.length;
 
-						if (!paginationObj) {
-							return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
-						} else {
-							paginationObj.update(data, count);
-						}
+					if (!paginationObj) {
+						return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
+					} else {
+						paginationObj.update(data, count);
 					}
+				}
 
-					return data;
-				});
-		};
+				return data;
+			});
 
 		if (method === 'GET' && !search) {
 			// If a GET request and {cache: true},
@@ -218,7 +216,7 @@ export abstract class PotionBase {
 	 * @param {RequestOptions} options
 	 * @returns {Object} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
 	 */
-	protected abstract request(uri: string, options?: RequestOptions): Promise<any>;
+	protected abstract request(uri: string, options?: RequestOptions): Promise<any>; // tslint:disable-line: prefer-function-over-method
 
 	private parseURI(uri: string): ParsedURI {
 		uri = decodeURIComponent(uri);

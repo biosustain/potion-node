@@ -13,7 +13,7 @@
 		"no-var-requires": true,
 		"only-arrow-functions": [true, "allow-declarations"],
 		"prefer-for-of": true,
-		"typedef": [true, "call-signature", "parameter", "property-declaration", "member-variable-declaration"], // http://palantir.github.io/tslint/rules/typedef/
+		"typedef": [true, "call-signature", "parameter", "property-declaration"], // http://palantir.github.io/tslint/rules/typedef/
 		"typedef-whitespace": [true, {
 			"call-signature": "nospace",
 			"index-signature": "nospace",
@@ -26,6 +26,7 @@
 		"align": [true, "parameters", "statements"],
 		"array-type": [true, "array"],
 		"arrow-parens": true,
+		"arrow-return-shorthand": [true, "multiline"],
 		"callable-types": true,
 		"class-name": true,
 		"comment-format": [true, "check-space"],
@@ -34,6 +35,7 @@
 		"jsdoc-format": true,
 		"new-parens": true,
 		"no-consecutive-blank-lines": false,
+		"no-unnecessary-initializer": true,
 		"object-literal-key-quotes": [true, "consistent"],
 		"object-literal-shorthand": true,
 		"one-line": [true, "check-open-brace", "check-catch", "check-else", "check-whitespace"],
@@ -42,6 +44,8 @@
 			"import-sources-order": "lowercase-last",
 			"named-imports-order": "lowercase-last"
 		}],
+		"prefer-function-over-method": [true, "allow-public"],
+		"prefer-method-signature": true,
 		"quotemark": [true, "single"],
 		"semicolon": true,
 		"space-before-function-paren": [true, {
@@ -59,7 +63,8 @@
 			"check-module",
 			"check-separator",
 			"check-type",
-			"check-typecast"
+			"check-typecast",
+			"check-preblock"
 		],
 
 		// Maintainability
@@ -83,7 +88,7 @@
 		// Functionality
 		"curly": true,
 		"forin": true,
-		"import-blacklist": [true, "@angular", "@infarm", "rxjs"],
+		"import-blacklist": [true, "@angular", "rxjs"],
 		"no-arg": true,
 		"no-bitwise": true,
 		"no-conditional-assignment": true,
@@ -93,6 +98,7 @@
 		"no-duplicate-variable": true,
 		"no-eval": true,
 		"no-invalid-this": true,
+		"no-misused-new": true,
 		"no-string-literal": true,
 		"no-string-throw": true,
 		"no-switch-case-fall-through": true,

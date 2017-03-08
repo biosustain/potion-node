@@ -25,6 +25,9 @@
 		"outDir": "./lib",
 		"types" : [
 			"angular",
+			"angular-mocks",
+			"fetch-mock",
+			"jasmine",
 			"jquery",
 			"node",
 			"reflect-metadata",
@@ -35,7 +38,6 @@
 		"src/**/*.ts"
 	],
 	"exclude": [
-		"src/**/*.spec.ts",
 		"node_modules",
 		"lib"
 	]

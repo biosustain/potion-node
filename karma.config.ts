@@ -36,7 +36,8 @@ module.exports = function (config) {
 				['babelify', {presets: ['es2015', 'stage-0'],  extensions: ['.ts', '.js']}]
 			],
 			plugin: [
-				['tsify', {target: 'es6'}]
+				['tsify', {target: 'es6', project: './tsconfig.spec.json'}],
+				'watchify'
 			]
 		},
 		plugins: [

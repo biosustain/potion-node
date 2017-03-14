@@ -9,5 +9,5 @@ export {
 	PotionOptions,
 	PotionBase
 } from './core/potion';
-export {Route} from './core/route';
 export {QueryOptions, Store} from './core/store';
+export {Route, route} from './core/route';

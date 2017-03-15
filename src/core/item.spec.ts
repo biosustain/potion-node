@@ -528,7 +528,7 @@ describe('potion/core', () => {
 		});
 
 		it('should contain instances of an Item', (done) => {
-			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
+			User.query({}, {paginate: true}).then((users: User[]) => {
 				for (const user of users) {
 					expect(user instanceof (User as any)).toBe(true);
 				}

@@ -66,7 +66,7 @@ export abstract class Item {
 	}
 
 	private $uri: string;
-	private $id: number | null = null;
+	private $id: number | string | null = null;
 
 	/**
 	 * Create an instance of the class that extended the Item.
@@ -79,7 +79,7 @@ export abstract class Item {
 	get uri(): string {
 		return this.$uri;
 	}
-	get id(): number | null {
+	get id(): number | string | null {
 		return this.$id;
 	}
 

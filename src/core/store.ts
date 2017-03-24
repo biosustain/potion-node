@@ -22,7 +22,7 @@ export class Store<T extends Item> {
 
 	}
 
-	fetch(id: number, {cache = true}: FetchOptions = {}): Promise<T> {
+	fetch(id: number|string, {cache = true}: FetchOptions = {}): Promise<T> {
 		return potionInstance(this.itemConstructor).fetch(`${potionURI(this.itemConstructor)}/${id}`, {
 			method: 'GET',
 			cache

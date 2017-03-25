@@ -41,7 +41,7 @@ export abstract class Item {
 	 * @param {Number|String} id
 	 * @param {FetchOptions} fetchOptions - Setting {cache: true} will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
 	 */
-	static fetch<T extends Item>(id: number, fetchOptions?: FetchOptions): Promise<T> {
+	static fetch<T extends Item>(id: number | string, fetchOptions?: FetchOptions): Promise<T> {
 		return this.store.fetch(id, fetchOptions);
 	}
 
@@ -66,7 +66,7 @@ export abstract class Item {
 	}
 
 	private $uri: string;
-	private $id: number | null = null;
+	private $id: number | string | null = null;
 
 	/**
 	 * Create an instance of the class that extended the Item.
@@ -79,7 +79,7 @@ export abstract class Item {
 	get uri(): string {
 		return this.$uri;
 	}
-	get id(): number | null {
+	get id(): number | string | null {
 		return this.$id;
 	}
 

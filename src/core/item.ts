@@ -1,23 +1,22 @@
-import {isReadonly} from './metadata';
-import {QueryOptions, Store} from './store';
-import {FetchOptions} from './potion';
+import {isReadonly, potionInstance, potionURI} from './metadata';
+import {FetchOptions, QueryOptions} from './potion';
 import {Pagination} from './pagination';
 
-
-export interface ItemConstructor {
-	store?: Store<Item>;
-	new (object: any): Item;
-}
 
 export interface ItemOptions {
 	'readonly'?: string[];
 }
 
 
+export function first<T>(items: T[]): T {
+	return items[0];
+}
+
+
 /**
  * Base resource class for API resources.
- * Extending this class will make all resource operations available on the child class.
- * Note that this is an abstract class and cannot be directly initiated.
+ * Extending this class will make all resource operations available on the child classes.
+ * NOTE: This is an abstract class and cannot be directly initiated.
  *
  * @example
  * class User extends Item {}
@@ -34,35 +33,42 @@ export interface ItemOptions {
  * });
  */
 export abstract class Item {
-	static store: Store<Item>;
-
 	/**
 	 * Get a resource by id.
 	 * @param {Number|String} id
-	 * @param {FetchOptions} fetchOptions - Setting {cache: true} will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
+	 * @param {boolean} {cache} - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
 	 */
-	static fetch<T extends Item>(id: number | string, fetchOptions?: FetchOptions): Promise<T> {
-		return this.store.fetch(id, fetchOptions);
+	static async fetch<T extends Item>(id: number | string, {cache = true}: FetchOptions = {}): Promise<T> {
+		const uri: string = potionURI(this);
+		return potionInstance(this).fetch(`${uri}/${id}`, {
+			method: 'GET',
+			cache
+		});
 	}
 
 	/**
 	 * Query resources.
-	 * @param {QueryOptions} queryOptions - Can be used to manipulate the pagination with {page: number, perPage: number},
+	 * @param {QueryOptions|null} queryOptions - Can be used to manipulate the pagination with {page: number, perPage: number},
 	 * but it can also be used to further filter the results with {sort: any, where: any}.
-	 * @param {FetchOptions} fetchOptions - Setting {paginate: true} will result in the return value to be a Pagination object.
-	 * Caching it this case will only apply for the HTTP request.
+	 * @param {boolean} {paginate} - Setting {paginate: true} will result in the return value to be a Pagination object.
+	 * @param {boolean} {cache} - Cache the HTTP request.
 	 */
-	static query<T extends Item>(queryOptions?: QueryOptions | null, fetchOptions?: FetchOptions): Promise<T[] | Pagination<T>> {
-		return this.store.query(queryOptions, fetchOptions);
+	static query<T extends Item>(queryOptions?: QueryOptions | null, {paginate = false, cache = true}: FetchOptions = {}, paginationObj?: Pagination<T>): Promise<T[] | Pagination<T>> {
+		const uri: string = potionURI(this);
+		return potionInstance(this).fetch(uri, {
+			method: 'GET',
+			search: queryOptions,
+			paginate,
+			cache
+		}, paginationObj);
 	}
 
 	/**
 	 * Get the first item.
 	 */
-	static first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
-		return this.store
-			.query(queryOptions)
-			.then((items) => items[0]);
+	static async first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
+		const items = await this.query(queryOptions) as T[];
+		return first<T>(items);
 	}
 
 	private $uri: string;
@@ -84,19 +90,35 @@ export abstract class Item {
 	}
 
 	save(): Promise<this> {
-		return (this.constructor as typeof Item).store.save(this.toJSON());
+		const {constructor} = this;
+		return  potionInstance(constructor as typeof Item).fetch(potionURI(constructor as typeof Item), {
+			method: 'POST',
+			data: this.toJSON(),
+			cache: true
+		});
 	}
 
 	/**
 	 * Update the resource.
-	 * @param {Object} properties - An object with any properties to update.
+	 * @param {Object} data - An object with any properties to update.
 	 */
-	update(properties: any = {}): Promise<this> {
-		return (this.constructor as typeof Item).store.update(this, properties);
+	update(data: any = {}): Promise<this> {
+		return potionInstance(this.constructor as typeof Item).fetch(this.uri, {
+			cache: true,
+			method: 'PATCH',
+			data
+		});
 	}
 
-	destroy(): Promise<this> {
-		return (this.constructor as typeof Item).store.destroy(this);
+	async destroy(): Promise<void> {
+		const {uri} = this;
+		const potion = potionInstance(this.constructor as typeof Item);
+		const cache = potion.cache;
+		await potion.fetch(uri, {method: 'DELETE'});
+		// Clear the item from cache if exists
+		if (cache.get(uri)) {
+			cache.remove(uri);
+		}
 	}
 
 	toJSON(): any {

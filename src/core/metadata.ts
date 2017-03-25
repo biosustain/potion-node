@@ -1,5 +1,5 @@
 import {PotionBase} from './potion';
-import {ItemConstructor} from './item';
+import {Item} from './item';
 
 
 const Reflect = (window as any).Reflect; // tslint:disable-line:variable-name
@@ -16,30 +16,22 @@ const Reflect = (window as any).Reflect; // tslint:disable-line:variable-name
 
 
 const POTION_METADATA_KEY = Symbol('potion');
-export function potionInstance(ctor: ItemConstructor): PotionBase {
+export function potionInstance(ctor: typeof Item): PotionBase {
 	return Reflect.getOwnMetadata(POTION_METADATA_KEY, ctor);
 }
 
-export function decorateCtorWithPotionInstance(ctor: ItemConstructor, instance: any): void {
-	Reflect.defineMetadata(
-		POTION_METADATA_KEY,
-		instance,
-		ctor
-	);
+export function decorateCtorWithPotionInstance(ctor: typeof Item, instance: any): void {
+	Reflect.defineMetadata(POTION_METADATA_KEY, instance, ctor);
 }
 
 
 const POTION_URI_METADATA_KEY = Symbol('potion:uri');
-export function potionURI(ctor: ItemConstructor): string {
+export function potionURI(ctor: typeof Item): string {
 	return Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, ctor);
 }
 
-export function decorateCtorWithPotionURI(ctor: ItemConstructor, uri: string): void {
-	Reflect.defineMetadata(
-		POTION_URI_METADATA_KEY,
-		uri,
-		ctor
-	);
+export function decorateCtorWithPotionURI(ctor: typeof Item, uri: string): void {
+	Reflect.defineMetadata(POTION_URI_METADATA_KEY, uri, ctor);
 }
 
 

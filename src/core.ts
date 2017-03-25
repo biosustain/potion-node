@@ -6,8 +6,8 @@ export {
 	URLSearchParams,
 	RequestOptions,
 	FetchOptions,
+	QueryOptions,
 	PotionOptions,
 	PotionBase
 } from './core/potion';
-export {QueryOptions, Store} from './core/store';
 export {Route, route} from './core/route';

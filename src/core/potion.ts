@@ -2,8 +2,7 @@
 
 import {decorateCtorWithPotionInstance, decorateCtorWithPotionURI, readonly} from './metadata';
 import {ItemOptions, Item} from './item';
-import {Store} from './store';
-import {Pagination} from './pagination';
+import {Pagination, PaginationOptions} from './pagination';
 import {
 	MemCache,
 	toCamelCase,
@@ -50,6 +49,11 @@ export interface FetchOptions extends RequestOptions {
 	paginate?: boolean;
 }
 
+export interface QueryOptions extends PaginationOptions {
+	where?: any;
+	sort?: any;
+}
+
 
 export interface PotionOptions {
 	host?: string;
@@ -72,7 +76,7 @@ export interface PotionOptions {
  * }
  */
 export abstract class PotionBase {
-	static readonly promise: any = (window as any).Promise;
+	static readonly promise: any = Promise;
 	readonly resources: {[key: string]: Item} = {};
 	readonly cache: ItemCache<Item>;
 	host: string;
@@ -187,9 +191,7 @@ export abstract class PotionBase {
 		if (options && Array.isArray(options.readonly)) {
 			options.readonly.forEach((property) => readonly(resource, property));
 		}
-
 		this.resources[uri] = resource;
-		resource.store = new Store(resource);
 
 		return resource;
 	}

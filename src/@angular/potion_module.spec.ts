@@ -271,7 +271,7 @@ describe('potion/@angular', () => {
 				));
 
 				User.fetch(1).then(() => {
-					expect(User.store.cache.get('/user/1')).not.toBeUndefined();
+					expect(potion.cache.get('/user/1')).not.toBeUndefined();
 					User.fetch(1).then((user: User) => {
 						expect(user).not.toBeUndefined();
 						subscription.unsubscribe();

@@ -1,7 +1,7 @@
 import {
 	Injectable,
 	Inject,
-	OpaqueToken,
+	InjectionToken,
 	Optional,
 	SkipSelf,
 	Provider
@@ -35,7 +35,7 @@ import {merge, isEmpty} from '../utils';
 /**
  * Angular 2 Potion resources interface.
  */
-export const POTION_RESOURCES = new OpaqueToken('POTION_RESOURCES');
+export const POTION_RESOURCES = new InjectionToken<PotionResources>('POTION_RESOURCES');
 export interface PotionResources {
 	[key: string]: typeof Item | [typeof Item, ItemOptions];
 }
@@ -44,7 +44,7 @@ export interface PotionResources {
 /**
  * Provide a way to configure Potion in Angular 2.
  */
-export const POTION_CONFIG = new OpaqueToken('POTION_CONFIG');
+export const POTION_CONFIG = new InjectionToken<PotionConfig>('POTION_CONFIG');
 export interface PotionConfig extends PotionOptions {} // tslint:disable-line:no-empty-interface
 
 
@@ -52,7 +52,7 @@ export interface PotionConfig extends PotionOptions {} // tslint:disable-line:no
  * Potion can also be configured to use various Angular 2 Http implementations.
  * This is useful when there is a wrapper around the core Angular 2 Http module (mostly needed when creating interceptors).
  */
-export const POTION_HTTP = new OpaqueToken('POTION_HTTP');
+export const POTION_HTTP = new InjectionToken<PotionHttp>('POTION_HTTP');
 export interface PotionHttp {
 	request(url: string | Request, options?: RequestOptionsArgs): Observable<Response>;
 }
@@ -95,7 +95,7 @@ export class Potion extends PotionBase {
 
 	registerFromProvider(resources: PotionResources[]): void {
 		// Remove any values that contain no resources.
-		resources = merge(resources.filter((item) => !isEmpty(item)));
+		resources = merge(...resources.filter((item) => !isEmpty(item)));
 
 		if (!isEmpty(resources)) {
 			for (const [uri, type] of Object.entries(resources)) {

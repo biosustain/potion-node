@@ -27,8 +27,7 @@
 			"angular",
 			"jquery",
 			"node",
-			"reflect-metadata",
-			"whatwg-fetch"
+			"reflect-metadata"
 		]
 	},
 	"include": [

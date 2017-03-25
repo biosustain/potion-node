@@ -89,7 +89,7 @@ describe('potion/fetch', () => {
 				(fetchMock as any).get('http://localhost/user/1', {$uri: '/user/1'});
 
 				User.fetch(1).then(() => {
-					expect(User.store.cache.get('/user/1')).not.toBeUndefined();
+					expect(potion.cache.get('/user/1')).not.toBeUndefined();
 					User.fetch(1).then((user: User) => {
 						expect(fetchMock.calls('http://localhost/user/1').length).toEqual(1);
 						expect(user).not.toBeUndefined();

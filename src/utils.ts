@@ -80,7 +80,7 @@ export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper
 /**
  * Merge array of objects into one object.
  */
-export function merge(objects: any[]): any {
+export function merge(...objects: {[key: string]: any}[]): any {
 	const result = {};
 	for (let obj of objects) {
 		Object.assign(result, obj);

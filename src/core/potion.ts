@@ -304,7 +304,8 @@ export abstract class PotionBase {
 				}
 
 				// Set the id
-				map.set('$id', parseInt(params[0], 10));
+				const [id] = params;
+				map.set('$id', Number.isInteger(id) || /^\d+$/.test(id) ? parseInt(id, 10) : id);
 				// Convert map to object
 				const properties: {[key: string]: any} = mapToObject(map);
 

@@ -148,6 +148,15 @@ describe('potion/core', () => {
 										}
 									}
 								});
+							case '/user/00cc8d4b-9682-4655-ad78-1fa4b03e757d':
+								return Promise.resolve({
+									data: {
+										$uri: '/user/00cc8d4b-9682-4655-ad78-1fa4b03e757d',
+										created_at: {
+											$date: 1451060269000
+										}
+									}
+								});
 							case '/car/1':
 								return Promise.resolve({
 									data: {
@@ -217,9 +226,11 @@ describe('potion/core', () => {
 			});
 
 			it('should correctly deserialize Potion server response', (done) => {
-				User.fetch(1).then((user: User) => {
-					expect(user.id).toEqual(1);
-					expect(user.createdAt instanceof Date).toBe(true);
+				Promise.all([User.fetch(1), User.fetch('00cc8d4b-9682-4655-ad78-1fa4b03e757d')]).then(([user1, user2]: User[]) => {
+					expect(user1.id).toEqual(1);
+					expect(user1.createdAt instanceof Date).toBe(true);
+					expect(user2.id).toEqual('00cc8d4b-9682-4655-ad78-1fa4b03e757d');
+					expect(user2.createdAt instanceof Date).toBe(true);
 					done();
 				});
 			});

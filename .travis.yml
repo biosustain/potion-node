@@ -27,7 +27,6 @@ before_install:
   - sleep 5
 
 script:
-  # TODO: For some reason npm run lint does not work properly, so we do this instead
-  - tslint src/**/*.ts -c tslint.json --project tsconfig.spec.json -t stylish --type-check
+  - npm run lint
   - npm run test
   - npm run build

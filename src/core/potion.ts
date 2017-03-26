@@ -6,10 +6,11 @@ import {Pagination, PaginationOptions} from './pagination';
 import {
 	MemCache,
 	toCamelCase,
-	pairsToObject,
+	mapToObject,
 	toSnakeCase,
 	omap,
-	deepOmap
+	deepOmap,
+	entries
 } from '../utils';
 
 
@@ -54,6 +55,11 @@ export interface QueryOptions extends PaginationOptions {
 	sort?: any;
 }
 
+export interface PotionResponse {
+	data: any;
+	headers: any;
+}
+
 
 export interface PotionOptions {
 	host?: string;
@@ -76,7 +82,6 @@ export interface PotionOptions {
  * }
  */
 export abstract class PotionBase {
-	static readonly promise: any = Promise;
 	readonly resources: {[key: string]: Item} = {};
 	readonly cache: ItemCache<Item>;
 	host: string;
@@ -90,11 +95,10 @@ export abstract class PotionBase {
 		this.prefix = prefix;
 	}
 
-	fetch(uri: string, fetchOptions?: FetchOptions, paginationObj?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
-		fetchOptions = fetchOptions || {};
-		const {method, cache, paginate, data} = fetchOptions;
-		let {search} = fetchOptions;
-		const {promise} = (this.constructor as typeof PotionBase);
+	async fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
+		const options: FetchOptions = {...fetchOptions};
+		const {method, cache, paginate, data} = options;
+		let {search} = options;
 		const key = uri;
 
 		// Add the API prefix if not present
@@ -106,30 +110,27 @@ export abstract class PotionBase {
 		if (paginate) {
 			// If no page was provided set to first
 			// Default to 25 items per page
-			search = fetchOptions.search = Object.assign({page: 1, perPage: 25}, search);
+			search = options.search = Object.assign({page: 1, perPage: 25}, search);
 		}
 
 		// Convert the {data, search} object props to snake case.
 		// Serialize all values to Potion JSON.
-		const fetch = () => this.request(`${this.host}${uri}`, Object.assign({}, fetchOptions, {
-				search: search ? this.toPotionJSON(search) : null,
-				data: data ? this.toPotionJSON(data) : null
-			}))
+		const fetch = () => this.request(`${this.host}${uri}`, {...options, ...{
+				search: this.toPotionJSON(search),
+				data: this.toPotionJSON(data)
+			}})
 			// Convert the data to Potion JSON
-			.then(({data, headers}) => this.fromPotionJSON(data)
-				.then((json) => ({headers, data: json})))
+			.then((response) => this.deserialize(response))
 			.then(({headers, data}) => {
 				// Return or update Pagination
 				if (paginate) {
 					const count = headers['x-total-count'] || data.length;
-
-					if (!paginationObj) {
-						return new Pagination<Item>({uri, potion: this}, data, count, fetchOptions);
+					if (!pagination) {
+						return new Pagination<Item>({uri, potion: this}, data, count, options);
 					} else {
-						paginationObj.update(data, count);
+						return pagination.update(data, count);
 					}
 				}
-
 				return data;
 			});
 
@@ -141,40 +142,38 @@ export abstract class PotionBase {
 			if  (cache) {
 				const item = this.cache.get(key);
 				if (item) {
-					return promise.resolve(item);
+					return item;
 				}
 			}
 
 			// If we already asked for the resource,
 			// return the exiting pending request promise.
 			if (this.pendingGETRequests.has(uri)) {
-				return this.pendingGETRequests.get(uri);
+				return await this.pendingGETRequests.get(uri);
 			}
 
-			const request = fetch().then((data) => {
+			try {
+				const request = fetch();
+				// Save pending request
+				this.pendingGETRequests.set(uri, request);
+				const data = await request;
 				// Remove pending request
 				this.pendingGETRequests.delete(uri);
 				return data;
-			}, (error) => {
+			} catch (err) {
 				// If request fails,
 				// make sure to remove the pending request so further requests can be made.
 				// Return is necessary.
 				this.pendingGETRequests.delete(uri);
-				const message = error instanceof Error
-					? error.message
-					: typeof error === 'string'
-						? error
+				const message = err instanceof Error
+					? err.message
+					: typeof err === 'string'
+						? err
 						: `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
-				return promise.reject(
-					new Error(message)
-				);
-			});
-
-			this.pendingGETRequests.set(uri, request);
-
-			return request;
+				throw new Error(message);
+			}
 		} else {
-			return fetch();
+			return await fetch();
 		}
 	}
 
@@ -216,9 +215,9 @@ export abstract class PotionBase {
 	 * Make a HTTP request.
 	 * @param {string} uri
 	 * @param {RequestOptions} options
-	 * @returns {Object} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
+	 * @returns {PotionResponse} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
 	 */
-	protected abstract request(uri: string, options?: RequestOptions): Promise<any>; // tslint:disable-line: prefer-function-over-method
+	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>; // tslint:disable-line: prefer-function-over-method
 
 	private parseURI(uri: string): ParsedURI {
 		uri = decodeURIComponent(uri);
@@ -227,7 +226,7 @@ export abstract class PotionBase {
 			uri = uri.substring(this.prefix.length);
 		}
 
-		for (const [resourceURI, resource] of Object.entries(this.resources)) {
+		for (const [resourceURI, resource] of entries<string, any>(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
 				return {
 					uri,
@@ -257,100 +256,82 @@ export abstract class PotionBase {
 		}
 	}
 
-	private fromPotionJSON(json: any): Promise<any> {
-		const {promise} = (this.constructor as typeof PotionBase);
+	private async deserialize({data, headers}: PotionResponse): Promise<PotionResponse> {
+		const json = await this.fromPotionJSON(data);
+		return {
+			headers,
+			data: json
+		};
+	}
+
+	private async fromPotionJSON(json: any): Promise<any> {
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
-				return promise.all(json.map((item) => this.fromPotionJSON(item)));
+				return await Promise.all(json.map((item) => this.fromPotionJSON(item)));
+			} else if (typeof json.$uri === 'string') {
 				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
 				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.
-			} else if (typeof json.$uri === 'string') {
+
 				// Try to parse the URI,
 				// otherwise reject with the exception thrown from parseURI.
 				let resource;
+				let params;
 				let uri;
 				try {
 					const parsedURI = this.parseURI(json.$uri);
 					resource = parsedURI.resource;
+					params = parsedURI.params;
 					uri = parsedURI.uri;
 				} catch (parseURIError) {
-					return promise.reject(parseURIError);
+					throw parseURIError;
 				}
 
-				const promises: Promise<any>[] = [];
+				const map: Map<any, any> = new Map();
 
 				// Cache the resource if it does not exist,
 				// but do it before resolving any possible references (to other resources) on it.
 				if (!this.cache.get(uri)) {
-					this.cache.put(
-						uri,
-						// Create an empty instance
-						Reflect.construct(resource as any, []) as any
-					);
+					this.cache.put(uri, Reflect.construct(resource as any, []) as any);
 				}
 
-
 				// Resolve possible references
-				for (const key of Object.keys(json)) {
+				for (const [key, value] of entries<string, any>(json)) {
 					if (key === '$uri') {
-						promises.push(promise.resolve([key, uri]));
+						map.set(key, uri);
 					} else {
-						promises.push(this.fromPotionJSON(json[key])
-								.then((value) => [toCamelCase(key), value]));
+						map.set(toCamelCase(key), await this.fromPotionJSON(value));
 					}
 				}
 
+				const properties: any = mapToObject(map);
+				Object.assign(properties, {
+					$id: parseInt(params[0], 10)
+				});
 
-				return promise.all(promises)
-					.then((propertyValuePairs) => {
-						const properties: any = pairsToObject(propertyValuePairs);
-						const obj = {};
+				// Try to get existing entry from cache
+				let item = this.cache.get(uri);
+				if (item) {
+					// Update existing entry with new properties
+					Object.assign(item, properties);
+				} else {
+					// Create a new entry
+					item = Reflect.construct(resource as any, [properties]);
+				}
+				// TODO: We only need to place in cache if item did not exist before, otherwise, when we use Object.assign() we mutate the existing entry
+				this.cache.put(uri, item as any);
 
-						Object.keys(properties)
-							.filter((key) => key !== '$uri')
-							.forEach((key) => obj[key] = properties[key]);
-
-						// Try to parse the URI,
-						// otherwise reject with the exception thrown from parseURI.
-						let params;
-						let uri;
-						try {
-							const parsedURI = this.parseURI(properties.$uri);
-							params = parsedURI.params;
-							uri = parsedURI.uri;
-						} catch (parseURIError) {
-							return promise.reject(parseURIError);
-						}
-
-						Object.assign(obj, {
-							$id: parseInt(params[0], 10),
-							$uri: uri
-						});
-
-						// Try to get existing entry from cache
-						let item = this.cache.get(uri);
-
-						if (item) {
-							Object.assign(item, obj);
-						} else {
-							item = Reflect.construct(resource as any, [obj]);
-						}
-
-						this.cache.put(uri, item as any);
-
-						return item;
-					});
+				return item;
 			} else if (typeof json.$schema === 'string') {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
 				// Though, we want to convert snake case to camel case.
-				return promise.resolve(deepOmap(json, null, (key) => toCamelCase(key)));
+				return deepOmap(json, null, (key) => toCamelCase(key));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.
-					// TODO: we need to fix this in some way
+					// TODO: Implement resolving self-references
 					if (json.$ref === '#') {
-						return promise.resolve(json.$ref);
+						return json.$ref;
 					}
 
 					// Try to parse the URI,
@@ -360,29 +341,27 @@ export abstract class PotionBase {
 						const parsedURI = this.parseURI(json.$ref);
 						uri = parsedURI.uri;
 					} catch (parseURIError) {
-						return promise.reject(parseURIError);
+						throw parseURIError;
 					}
 
-					return this.fetch(uri, {
+					return await this.fetch(uri, {
 						cache: true,
 						method: 'GET'
 					});
 				} else if (typeof json.$date !== 'undefined') {
-					return promise.resolve(new Date(json.$date));
+					// Parse Potion date
+					return new Date(json.$date);
 				}
 			}
 
-			const promises: Promise<any>[] = [];
-
-			for (const key of Object.keys(json)) {
-				promises.push(this.fromPotionJSON(json[key])
-					.then((value) => [toCamelCase(key), value]));
+			const map: Map<any, any> = new Map();
+			for (const [key, value] of entries<string, any>(json)) {
+				map.set(toCamelCase(key), await this.fromPotionJSON(value));
 			}
 
-			return promise.all(promises)
-				.then((propertyValuePairs) => pairsToObject(propertyValuePairs));
+			return mapToObject(map);
 		} else {
-			return promise.resolve(json);
+			return json;
 		}
 	}
 }

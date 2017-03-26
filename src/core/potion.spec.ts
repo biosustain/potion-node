@@ -18,7 +18,7 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(): Promise<any> {
-					return (this.constructor as typeof PotionBase).promise.resolve({});
+					return Promise.resolve({});
 				}
 			}
 
@@ -73,7 +73,7 @@ describe('potion/core', () => {
 						data = options.data;
 						search = options.search;
 
-						return (this.constructor as typeof PotionBase).promise.resolve({});
+						return Promise.resolve({});
 					}
 				}
 
@@ -136,13 +136,11 @@ describe('potion/core', () => {
 			beforeEach(() => {
 				class Potion extends PotionBase {
 					protected request(uri: string): Promise<any> {
-						const {promise} = this.constructor as typeof PotionBase;
-
 						switch (uri) {
 							case '/user/schema':
-								return promise.resolve({data: schema});
+								return Promise.resolve({data: schema});
 							case '/user/1':
-								return promise.resolve({
+								return Promise.resolve({
 									data: {
 										$uri: '/user/1',
 										created_at: {
@@ -151,7 +149,7 @@ describe('potion/core', () => {
 									}
 								});
 							case '/car/1':
-								return promise.resolve({
+								return Promise.resolve({
 									data: {
 										$uri: '/car/1',
 										user: {$ref: '/user/1'}
@@ -159,21 +157,21 @@ describe('potion/core', () => {
 									headers: {}
 								});
 							case '/engine/1':
-								return promise.resolve({
+								return Promise.resolve({
 									data: {
 										car: {$ref: '#'},
 										type: 'Diesel'
 									}
 								});
 							case '/person/1':
-								return promise.resolve({
+								return Promise.resolve({
 									data: {
 										$uri: '/person/1',
 										sibling: {$ref: '/person/2'}
 									}
 								});
 							case '/person/2':
-								return promise.resolve({
+								return Promise.resolve({
 									data: {
 										$uri: '/person/2',
 										sibling: {$ref: '/person/1'}
@@ -183,7 +181,7 @@ describe('potion/core', () => {
 								break;
 						}
 
-						return promise.resolve({});
+						return Promise.resolve({});
 					}
 				}
 

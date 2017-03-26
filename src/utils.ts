@@ -19,11 +19,11 @@ export function toCamelCase(str: string): string {
 
 
 /**
- * Transform pairs of [[key, value]] to {[key]: value}
+ * Transform a Map to Object
  */
-export function pairsToObject(pairs: any[]): any {
+export function mapToObject(map: Map<any, any>): any {
 	let obj = {};
-	for (let [key, value] of pairs) {
+	for (let [key, value] of entries<string, any>(map)) {
 		obj[key] = value;
 	}
 	return obj;
@@ -96,6 +96,19 @@ export function isEmpty(obj: Object): boolean {
 	return Object.keys(obj).length === 0;
 }
 
+
+/**
+ * Transform an Object or Map to pairs of [key, value].
+ */
+export function entries<K, V>(object: any): [K, V][] {
+	let entries: any;
+	if (object instanceof Map) {
+		entries = object.entries();
+	} else if (typeof object === 'object' && object !== null) {
+		entries = Object.entries(object);
+	}
+	return Array.from(entries) as [K, V][];
+}
 
 
 /**

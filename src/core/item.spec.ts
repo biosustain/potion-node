@@ -45,7 +45,6 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(uri: string, options?: RequestOptions): Promise<any> {
-						const {promise} = this.constructor as typeof PotionBase;
 						options = options || ({} as RequestOptions);
 
 						switch (uri) {
@@ -54,12 +53,12 @@ describe('potion/core', () => {
 									Object.assign(JOHN, {}, options.data);
 								}
 
-								return promise.resolve({data: JOHN});
+								return Promise.resolve({data: JOHN});
 							default:
 								break;
 						}
 
-						return promise.resolve({});
+						return Promise.resolve({});
 					}
 				}
 
@@ -94,23 +93,22 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
-						const {promise} = this.constructor as typeof PotionBase;
 						options = options || ({} as RequestOptions);
 
 						switch (options.method) {
 							case 'GET':
 								if (john) {
-									return promise.resolve({data: john});
+									return Promise.resolve({data: john});
 								}
-								return promise.reject();
+								return Promise.reject({});
 							case 'DELETE':
 								john = null;
-								return promise.resolve({});
+								return Promise.resolve({});
 							default:
 								break;
 						}
 
-						return promise.resolve({});
+						return Promise.resolve({});
 					}
 				}
 
@@ -148,19 +146,18 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
-						const {promise} = this.constructor as typeof PotionBase;
 						options = options || ({} as RequestOptions);
 
 						switch (options.method) {
 							case 'POST':
-								return promise.resolve(john = Object.assign({}, options.data, {$uri: '/user/4'}));
+								return Promise.resolve(john = Object.assign({}, options.data, {$uri: '/user/4'}));
 							case 'GET':
-								return promise.resolve({data: john});
+								return Promise.resolve({data: john});
 							default:
 								break;
 						}
 
-						return promise.resolve({});
+						return Promise.resolve({});
 					}
 				}
 
@@ -196,8 +193,7 @@ describe('potion/core', () => {
 			beforeEach(() => {
 				class Potion extends PotionBase {
 					protected request(): Promise<any> {
-						const {promise} = this.constructor as typeof PotionBase;
-						return promise.resolve({});
+						return Promise.resolve({});
 					}
 				}
 
@@ -233,11 +229,9 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string): Promise<any> {
-					const {promise} = this.constructor as typeof PotionBase;
-
 					switch (uri) {
 						case '/user/1':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/user/1',
 									created_at: {
@@ -249,7 +243,7 @@ describe('potion/core', () => {
 							break;
 					}
 
-					return promise.resolve({});
+					return Promise.resolve({});
 				}
 			}
 
@@ -337,50 +331,37 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string, options?: RequestOptions): Promise<any> {
-					const {promise} = this.constructor as typeof PotionBase;
 
 					switch (uri) {
 						case '/user':
-							return buildQueryResponse(
-								[
-									{$ref: '/user/1'},
-									{$ref: '/user/2'}
-								],
-								options,
-								promise
-							);
+							return buildQueryResponse([
+								{$ref: '/user/1'},
+								{$ref: '/user/2'}
+							], options);
 						case '/person':
-							return buildQueryResponse(
-								[
-									{$ref: '/person/1'},
-									{$ref: '/person/2'}
-								],
-								options,
-								promise
-							);
+							return buildQueryResponse([
+								{$ref: '/person/1'},
+								{$ref: '/person/2'}
+							], options);
 						case '/group':
-							return buildQueryResponse(
-								[
-									{$ref: '/group/1'},
-									{$ref: '/group/2'}
-								],
-								options,
-								promise
-							);
+							return buildQueryResponse([
+								{$ref: '/group/1'},
+								{$ref: '/group/2'}
+							], options);
 						case '/user/1':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/user/1'
 								}
 							});
 						case '/user/2':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/user/2'
 								}
 							});
 						case '/person/1':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/person/1',
 									groups: [
@@ -390,7 +371,7 @@ describe('potion/core', () => {
 								}
 							});
 						case '/person/2':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/person/2',
 									groups: [
@@ -400,7 +381,7 @@ describe('potion/core', () => {
 								}
 							});
 						case '/group/1':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/group/1',
 									members: [
@@ -410,7 +391,7 @@ describe('potion/core', () => {
 								}
 							});
 						case '/group/2':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/group/2',
 									members: [
@@ -422,41 +403,41 @@ describe('potion/core', () => {
 
 						// Circular dependency mock data
 						case '/m1':
-							return buildQueryResponse([{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}], options, promise);
+							return buildQueryResponse([{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}], options);
 						case '/m1/1':
-							return promise.resolve({data: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}});
+							return Promise.resolve({data: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}});
 						case '/m1/2':
 							// Simulate latency
-							return new promise((resolve) => {
+							return new Promise((resolve) => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}});
 								}, 500);
 							});
 						case '/m1/3':
-							return promise.resolve({data: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}});
+							return Promise.resolve({data: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}});
 						case '/m2/1':
-							return promise.resolve({data: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}});
+							return Promise.resolve({data: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}});
 						case '/m2/2':
 							// Simulate latency
-							return new promise((resolve) => {
+							return new Promise((resolve) => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}});
 								}, 250);
 							});
 						case '/m2/3':
-							return promise.resolve({data: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
+							return Promise.resolve({data: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
 						case '/m3/1':
 							// Simulate latency
-							return new promise((resolve) => {
+							return new Promise((resolve) => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}});
 								}, 500);
 							});
 						case '/m3/2':
-							return promise.resolve({data: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
+							return Promise.resolve({data: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
 						case '/m4/1':
 							// Simulate latency
-							return new promise((resolve) => {
+							return new Promise((resolve) => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}});
 								}, 250);
@@ -466,7 +447,7 @@ describe('potion/core', () => {
 							break;
 					}
 
-					return promise.resolve({});
+					return Promise.resolve({});
 				}
 			}
 
@@ -495,7 +476,7 @@ describe('potion/core', () => {
 			potion.register('/m3', M3);
 			potion.register('/m4', M4);
 
-			function buildQueryResponse(data: any, options: any, promise: any): Promise<any> {
+			function buildQueryResponse(data: any, options: any): Promise<any> {
 				/* tslint:disable: variable-name */
 				const {page, per_page} = options.search;
 				/* tslint:enable: variable-name */
@@ -511,7 +492,7 @@ describe('potion/core', () => {
 					});
 				}
 
-				return promise.resolve(response);
+				return Promise.resolve(response);
 			}
 		});
 
@@ -600,7 +581,6 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string, options?: RequestOptions): Promise<any> {
-					const{promise} = this.constructor as typeof PotionBase;
 					options = options || ({} as RequestOptions);
 
 					switch (uri) {
@@ -620,15 +600,15 @@ describe('potion/core', () => {
 								});
 							}
 
-							return promise.resolve(response);
+							return Promise.resolve(response);
 						case '/user/1':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/user/1'
 								}
 							});
 						case '/user/2':
-							return promise.resolve({
+							return Promise.resolve({
 								data: {
 									$uri: '/user/2'
 								}
@@ -637,7 +617,7 @@ describe('potion/core', () => {
 							break;
 					}
 
-					return promise.resolve({});
+					return Promise.resolve({});
 				}
 			}
 

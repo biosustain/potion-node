@@ -1,5 +1,5 @@
 import {isReadonly, potionInstance, potionURI} from './metadata';
-import {FetchOptions, QueryOptions} from './potion';
+import {FetchOptions, PotionBase, QueryOptions} from './potion';
 import {Pagination} from './pagination';
 
 
@@ -73,12 +73,14 @@ export abstract class Item {
 
 	private $uri: string;
 	private $id: number | string | null = null;
+	private potion: PotionBase;
 
 	/**
 	 * Create an instance of the class that extended the Item.
 	 * @param {Object} properties - An object with any properties that will be added and accessible on the resource.
 	 */
 	constructor(properties: any = {}) {
+		this.potion = potionInstance(this.constructor as typeof Item);
 		Object.assign(this, properties);
 	}
 
@@ -90,8 +92,7 @@ export abstract class Item {
 	}
 
 	save(): Promise<this> {
-		const {constructor} = this;
-		return  potionInstance(constructor as typeof Item).fetch(potionURI(constructor as typeof Item), {
+		return  this.potion.fetch(potionURI(this.constructor as typeof Item), {
 			method: 'POST',
 			data: this.toJSON(),
 			cache: true
@@ -103,7 +104,7 @@ export abstract class Item {
 	 * @param {Object} data - An object with any properties to update.
 	 */
 	update(data: any = {}): Promise<this> {
-		return potionInstance(this.constructor as typeof Item).fetch(this.uri, {
+		return this.potion.fetch(this.uri, {
 			cache: true,
 			method: 'PATCH',
 			data
@@ -112,9 +113,8 @@ export abstract class Item {
 
 	async destroy(): Promise<void> {
 		const {uri} = this;
-		const potion = potionInstance(this.constructor as typeof Item);
-		const cache = potion.cache;
-		await potion.fetch(uri, {method: 'DELETE'});
+		const cache = this.potion.cache;
+		await this.potion.fetch(uri, {method: 'DELETE'});
 		// Clear the item from cache if exists
 		if (cache.get(uri)) {
 			cache.remove(uri);

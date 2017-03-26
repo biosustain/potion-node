@@ -6,7 +6,6 @@ import {Item} from './angular';
 describe('potion/angular', () => {
 	describe('potionProvider', () => {
 		let $cacheFactory;
-		let $q;
 		let $http;
 
 		let provider;
@@ -17,14 +16,13 @@ describe('potion/angular', () => {
 
 		beforeEach(angular.mock.inject(($injector: any): any => {
 			$cacheFactory = $injector.get('$cacheFactory');
-			$q = $injector.get('$q');
 			$http = $injector.get('$http');
 		}));
 
 		it('should provide a Potion instance', () => {
 			// Note that the `.$get` when using strict DI,
 			// is an array with the last element being the fn.
-			expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http)).not.toBeUndefined();
+			expect(provider.$get[provider.$get.length - 1]($cacheFactory, $http)).not.toBeUndefined();
 		});
 
 		describe('.config()', () => {
@@ -32,21 +30,19 @@ describe('potion/angular', () => {
 				let config = {prefix: '/api'};
 				provider.config(config);
 				expect(provider.config()).toEqual(config);
-				expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http).prefix).toEqual('/api');
+				expect(provider.$get[provider.$get.length - 1]($cacheFactory, $http).prefix).toEqual('/api');
 			});
 		});
 	});
 
 	describe('Potion()', () => {
 		describe('.fetch()', () => {
-			let $q;
 			let $httpBackend;
 			let potion;
 
 			beforeEach(angular.mock.module('test'));
 
 			beforeEach(angular.mock.inject(($injector: any): any => {
-				$q = $injector.get('$q');
 				$httpBackend = $injector.get('$httpBackend');
 				potion = $injector.get('potion');
 			}));
@@ -115,7 +111,7 @@ describe('potion/angular', () => {
 
 			it('should return a Promise', () => {
 				$httpBackend.expect('GET', '/ping').respond(200);
-				expect(potion.fetch('/ping') instanceof $q).toBe(true);
+				expect(potion.fetch('/ping') instanceof Promise).toBe(true);
 				$httpBackend.flush();
 			});
 

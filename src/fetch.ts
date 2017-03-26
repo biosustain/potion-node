@@ -1,4 +1,9 @@
-import {RequestOptions, PotionOptions, PotionBase} from './core';
+import {
+	RequestOptions,
+	PotionOptions,
+	PotionResponse,
+	PotionBase
+} from './core';
 
 
 export {readonly, Item, Route} from './core';
@@ -13,9 +18,9 @@ export class Potion extends PotionBase {
 	// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 	// Polyfill at https://github.com/github/fetch.
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
-	protected request(uri: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
-		let headers: Headers = new Headers();
-		let init: any = {
+	protected request(uri: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
+		const headers: Headers = new Headers();
+		const init: any = {
 			method,
 			cache: cache ? 'default' : 'no-cache',
 			// Make sure cookies are sent
@@ -38,18 +43,14 @@ export class Potion extends PotionBase {
 			let count = 1;
 			let entries = (Object as any).entries(search);
 			let size = entries.length;
-
 			for (let [key, value] of entries) {
 				if (count === 1) {
 					uri += '?';
 				}
-
 				uri += `${key}=${value}`;
-
 				if (count < size) {
 					uri += '&';
 				}
-
 				count++;
 			}
 		}
@@ -64,10 +65,11 @@ export class Potion extends PotionBase {
 					});
 				}
 
-				return response.json().then((json) => ({headers, data: json}), (error) => (error));
+				return response.json()
+					.then((json) => ({headers, data: json}), (error) => error) as Promise<PotionResponse>;
 			} else {
 				let error: any = new Error(response.statusText);
-				error.response = response;
+				Object.assign(error, {response});
 				throw error;
 			}
 		});

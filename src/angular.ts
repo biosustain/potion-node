@@ -1,5 +1,10 @@
 import * as angular from 'angular';
-import {PotionOptions, RequestOptions, PotionBase} from './core';
+import {
+	PotionOptions,
+	RequestOptions,
+	PotionResponse,
+	PotionBase
+} from './core';
 
 
 export {readonly, Item,	Route} from './core';
@@ -20,14 +25,11 @@ function potionProvider(): any {
 		}
 	};
 
-	this.$get = ['$cacheFactory', '$q', '$http', ($cacheFactory: angular.ICacheFactoryService, $q: angular.IQService, $http: angular.IHttpService): any => {
+	this.$get = ['$cacheFactory', '$http', ($cacheFactory: angular.ICacheFactoryService, $http: angular.IHttpService): any => {
 		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
-			// noinspection TypeScriptUnresolvedVariable
-			static readonly promise: any = $q;
-
-			protected request(url: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<any> {
+			protected request(url: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
 				return $http(Object.assign({url, method, data, cache}, {params: search}))
 					.then(({headers, data}) => {
 						const res: any = {data};
@@ -43,7 +45,6 @@ function potionProvider(): any {
 
 		// Use the $cacheFactory.
 		// Allow user to override cache.
-
 		/* tslint:disable: align */
 		return new Potion(Object.assign({
 			cache

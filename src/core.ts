@@ -8,6 +8,7 @@ export {
 	FetchOptions,
 	QueryOptions,
 	PotionOptions,
+	PotionResponse,
 	PotionBase
 } from './core/potion';
 export {Route, route} from './core/route';

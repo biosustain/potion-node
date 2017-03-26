@@ -81,9 +81,10 @@ export class Pagination<T extends Item> {
 		return this.potion.fetch(this.uri, this.options, this);
 	}
 
-	update(items: T[], count: number): void {
+	update(items: T[], count: number): this {
 		this.items.splice(0, this.length, ...items);
 		this._total = count;
+		return this;
 	}
 
 	toArray(): T[] {

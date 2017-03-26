@@ -38,7 +38,7 @@ export abstract class Item {
 	 * @param {Number|String} id
 	 * @param {boolean} {cache} - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
 	 */
-	static async fetch<T extends Item>(id: number | string, {cache = true}: FetchOptions = {}): Promise<T> {
+	static fetch<T extends Item>(id: number | string, {cache = true}: FetchOptions = {}): Promise<T> {
 		const uri: string = potionURI(this);
 		return potionInstance(this).fetch(`${uri}/${id}`, {
 			method: 'GET',
@@ -92,7 +92,7 @@ export abstract class Item {
 	}
 
 	save(): Promise<this> {
-		return  this.potion.fetch(potionURI(this.constructor as typeof Item), {
+		return this.potion.fetch(potionURI(this.constructor as typeof Item), {
 			method: 'POST',
 			data: this.toJSON(),
 			cache: true

@@ -21,7 +21,7 @@ export function toCamelCase(str: string): string {
 /**
  * Transform a Map to Object
  */
-export function mapToObject(map: Map<any, any>): any {
+export function mapToObject(map: Map<any, any>): {[key: string]: any} {
 	let obj = {};
 	for (let [key, value] of entries<string, any>(map)) {
 		obj[key] = value;
@@ -33,7 +33,7 @@ export function mapToObject(map: Map<any, any>): any {
 /**
  * Object.map()
  */
-export function omap(object: Object, callback: (key: string, value: any) => [string, any], context?: any): any {
+export function omap(object: Object, callback: (key: string, value: any) => [string, any], context?: any): {[key: string]: any} {
 	let map = {};
 	for (let [key, value] of (Object as any).entries(object)) {
 		let [k, v] = callback.call(context, key, value);
@@ -49,7 +49,7 @@ export function omap(object: Object, callback: (key: string, value: any) => [str
 export type KeyMapper = (key: string) => string;
 export type ValueMapper = (value: any) => any;
 
-export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper: KeyMapper | null, context?: any): any {
+export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper: KeyMapper | null, context?: any): {[key: string]: any} {
 	if (Array.isArray(obj)) {
 		return (obj as any[]).map(
 			(value) => typeof value === 'object'

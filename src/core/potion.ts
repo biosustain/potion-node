@@ -240,9 +240,9 @@ export abstract class PotionBase {
 		throw new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`);
 	}
 
-	private toPotionJSON(json: any): any {
+	private toPotionJSON(json: any): {[key: string]: any} {
 		if (typeof json === 'object' && json !== null) {
-			if (json instanceof (Item as any) && typeof json.uri === 'string') {
+			if (json instanceof Item && typeof json.uri === 'string') {
 				return {$ref: `${this.prefix}${json.uri}`};
 			} else if (json instanceof Date) {
 				return {$date: json.getTime()};
@@ -264,7 +264,7 @@ export abstract class PotionBase {
 		};
 	}
 
-	private async fromPotionJSON(json: any): Promise<any> {
+	private async fromPotionJSON(json: any): Promise<{[key: string]: any}> {
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
 				return await Promise.all(json.map((item) => this.fromPotionJSON(item)));
@@ -286,12 +286,12 @@ export abstract class PotionBase {
 					throw parseURIError;
 				}
 
-				const map: Map<any, any> = new Map();
+				const map: Map<string, any> = new Map();
 
 				// Cache the resource if it does not exist,
 				// but do it before resolving any possible references (to other resources) on it.
 				if (!this.cache.get(uri)) {
-					this.cache.put(uri, Reflect.construct(resource as any, []) as any);
+					this.cache.put(uri, Reflect.construct(resource, []));
 				}
 
 				// Resolve possible references
@@ -303,10 +303,10 @@ export abstract class PotionBase {
 					}
 				}
 
-				const properties: any = mapToObject(map);
-				Object.assign(properties, {
-					$id: parseInt(params[0], 10)
-				});
+				// Set the id
+				map.set('$id', parseInt(params[0], 10));
+				// Convert map to object
+				const properties: {[key: string]: any} = mapToObject(map);
 
 				// Try to get existing entry from cache
 				let item = this.cache.get(uri);
@@ -315,10 +315,9 @@ export abstract class PotionBase {
 					Object.assign(item, properties);
 				} else {
 					// Create a new entry
-					item = Reflect.construct(resource as any, [properties]);
+					item = Reflect.construct(resource, [properties]);
+					this.cache.put(uri, item);
 				}
-				// TODO: We only need to place in cache if item did not exist before, otherwise, when we use Object.assign() we mutate the existing entry
-				this.cache.put(uri, item as any);
 
 				return item;
 			} else if (typeof json.$schema === 'string') {
@@ -354,7 +353,7 @@ export abstract class PotionBase {
 				}
 			}
 
-			const map: Map<any, any> = new Map();
+			const map: Map<string, any> = new Map();
 			for (const [key, value] of entries<string, any>(json)) {
 				map.set(toCamelCase(key), await this.fromPotionJSON(value));
 			}

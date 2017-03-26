@@ -320,8 +320,9 @@ export abstract class PotionBase {
 							return promise.reject(parseURIError);
 						}
 
+						// check if id is string or number
 						Object.assign(obj, {
-							$id: parseInt(params[0], 10),
+							$id: !isNaN(params[0]) ? parseInt(params[0], 10) : params[0],
 							$uri: uri
 						});
 

@@ -22,7 +22,7 @@
 	},
 	"scripts": {
 		"clean": "rm -rf lib",
-		"lint": "tslint ./src/**/*.ts -c ./tslint.json --project ./tsconfig.spec.json -t stylish --type-check",
+		"lint": "tslint src/**/*.ts -c tslint.json --project tsconfig.spec.json -t stylish --type-check",
 		"test": "karma start karma.config.ts --browsers PhantomJS --single-run --log-level error",
 		"test:continuous": "karma start karma.config.ts",
 		"build": "npm run clean && ngc"

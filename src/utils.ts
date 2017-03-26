@@ -22,8 +22,8 @@ export function toCamelCase(str: string): string {
  * Transform a Map to Object
  */
 export function mapToObject(map: Map<any, any>): {[key: string]: any} {
-	let obj = {};
-	for (let [key, value] of entries<string, any>(map)) {
+	const obj = {};
+	for (const [key, value] of entries<string, any>(map)) {
 		obj[key] = value;
 	}
 	return obj;
@@ -34,12 +34,12 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
  * Object.map()
  */
 export function omap(object: Object, callback: (key: string, value: any) => [string, any], context?: any): {[key: string]: any} {
-	let map = {};
-	for (let [key, value] of (Object as any).entries(object)) {
-		let [k, v] = callback.call(context, key, value);
-		map[k] = v;
+	const mapped = {};
+	for (const [key, value] of (Object as any).entries(object)) {
+		const [k, v] = callback.call(context, key, value);
+		mapped[k] = v;
 	}
-	return map;
+	return mapped;
 }
 
 
@@ -59,7 +59,7 @@ export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper
 	} else if (typeof obj === 'object' && obj !== null) {
 		const result = {};
 
-		for (let [key, value] of Object.entries(obj)) {
+		for (let [key, value] of Object.entries(obj)) { // tslint:disable-line: prefer-const
 			key = typeof keyMapper === 'function'
 				? keyMapper.call(context, key)
 				: key;
@@ -82,7 +82,7 @@ export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper
  */
 export function merge(...objects: {[key: string]: any}[]): any {
 	const result = {};
-	for (let obj of objects) {
+	for (const obj of objects) {
 		Object.assign(result, obj);
 	}
 	return result;

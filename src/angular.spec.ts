@@ -1,3 +1,5 @@
+/* tslint:disable: no-magic-numbers */
+
 import * as angular from 'angular';
 import 'angular-mocks';
 import {Item} from './angular';
@@ -17,7 +19,7 @@ describe('potion/angular', () => {
 
 		beforeEach(angular.mock.inject(($injector: any): any => {
 			$cacheFactory = $injector.get('$cacheFactory');
-			$q= $injector.get('$q');
+			$q = $injector.get('$q');
 			$http = $injector.get('$http');
 		}));
 
@@ -29,7 +31,7 @@ describe('potion/angular', () => {
 
 		describe('.config()', () => {
 			it('should configure Potion({prefix, cache}) properties', () => {
-				let config = {prefix: '/api'};
+				const config = {prefix: '/api'};
 				provider.config(config);
 				expect(provider.config()).toEqual(config);
 				expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http).prefix).toEqual('/api');
@@ -249,12 +251,12 @@ describe('potion/angular', () => {
 			const spy = jasmine.createSpy('User.query()');
 			User.query().then((users: User[]) => {
 				expect(users.length).toEqual(2);
-				for (let user of users) {
+				for (const user of users) {
 					expect(user.groups.length).toEqual(2);
-					for (let group of user.groups) {
+					for (const group of user.groups) {
 						expect(group instanceof Group).toBe(true);
 						expect(group.members.length).toEqual(2);
-						for (let member of group.members) {
+						for (const member of group.members) {
 							expect(member instanceof User).toBe(true);
 						}
 					}
@@ -287,9 +289,5 @@ angular
 	.config(['potionProvider', (potionProvider) => {
 		potionProvider.config({prefix: ''});
 	}])
-	.factory('User', ['potion', (potion) => {
-		return potion.register('/user', User);
-	}])
-	.factory('Group', ['potion', (potion) => {
-		return potion.register('/group', Group);
-	}]);
+	.factory('User', ['potion', (potion) => potion.register('/user', User)])
+	.factory('Group', ['potion', (potion) => potion.register('/group', Group)]);

@@ -1,6 +1,7 @@
+/* tslint:disable: no-magic-numbers */
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
-const fetchMock = require('fetch-mock');
+import * as fetchMock from 'fetch-mock';
 import {Potion,	Item} from './fetch';
 
 
@@ -81,7 +82,7 @@ describe('potion/fetch', () => {
 	describe('Item()', () => {
 		describe('.fetch()', () => {
 			it('should use a memory cache by default to store and retrieve items', (done) => {
-				let potion = new Potion({prefix: 'http://localhost'});
+				const potion = new Potion({prefix: 'http://localhost'});
 
 				@potion.registerAs('/user')
 				class User extends Item {}

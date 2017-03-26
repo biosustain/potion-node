@@ -18,6 +18,7 @@ const potion = angular.module('potion', [])
 function potionProvider(): any {
 	const options = {};
 
+	// tslint:disable-next-line: no-invalid-this
 	this.config = (config: PotionOptions) => {
 		if (config) {
 			return Object.assign(options, config);
@@ -26,10 +27,12 @@ function potionProvider(): any {
 		}
 	};
 
+	// tslint:disable-next-line: no-invalid-this
 	this.$get = ['$cacheFactory', '$q', '$http', ($cacheFactory: angular.ICacheFactoryService, $q: angular.IQService, $http: angular.IHttpService): any => {
-		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
+		const cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
+			// tslint:disable-next-line: prefer-function-over-method
 			protected request(url: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
 				return $http(Object.assign({url, method, data, cache}, {params: search}))
 					.then(({headers, data}) => {
@@ -53,6 +56,7 @@ function potionProvider(): any {
 		}, options));
 	}];
 
+	// tslint:disable-next-line: no-invalid-this
 	return this;
 }
 

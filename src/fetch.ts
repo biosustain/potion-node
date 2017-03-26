@@ -18,6 +18,7 @@ export class Potion extends PotionBase {
 	// see https://developer.mozilla.org/en-US/docs/Web/API/GlobalFetch/fetch for API.
 	// Polyfill at https://github.com/github/fetch.
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
+	// tslint:disable-next-line: prefer-function-over-method
 	protected request(uri: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
 		const headers: Headers = new Headers();
 		const init: any = {
@@ -41,9 +42,9 @@ export class Potion extends PotionBase {
 		// TODO: when URL will be supported we will switch to it
 		if (search) {
 			let count = 1;
-			let entries = (Object as any).entries(search);
-			let size = entries.length;
-			for (let [key, value] of entries) {
+			const entries = (Object as any).entries(search);
+			const size = entries.length;
+			for (const [key, value] of entries) {
 				if (count === 1) {
 					uri += '?';
 				}
@@ -57,8 +58,7 @@ export class Potion extends PotionBase {
 
 		return fetch(new Request(uri, init), init).then((response) => {
 			if (response.ok) {
-				let headers = {};
-
+				const headers = {};
 				if (response.headers) {
 					response.headers.forEach((value, key) => {
 						headers[key] = value;
@@ -68,7 +68,7 @@ export class Potion extends PotionBase {
 				return response.json()
 					.then((json) => ({headers, data: json}), (error) => error) as Promise<PotionResponse>;
 			} else {
-				let error: any = new Error(response.statusText);
+				const error: any = new Error(response.statusText);
 				Object.assign(error, {response});
 				throw error;
 			}

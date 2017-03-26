@@ -91,6 +91,18 @@ export abstract class Item {
 		return this.$id;
 	}
 
+	toJSON(): any {
+		const properties = {};
+
+		Object.keys(this)
+			.filter((key) => !key.startsWith('$') && key !== 'potion' && !isReadonly(this.constructor, key))
+			.forEach((key) => {
+				properties[key] = this[key];
+			});
+
+		return properties;
+	}
+
 	save(): Promise<this> {
 		return this.potion.fetch(potionURI(this.constructor as typeof Item), {
 			method: 'POST',
@@ -119,17 +131,5 @@ export abstract class Item {
 		if (cache.get(uri)) {
 			cache.remove(uri);
 		}
-	}
-
-	toJSON(): any {
-		const properties = {};
-
-		Object.keys(this)
-			.filter((key) => !key.startsWith('$') && !isReadonly(this.constructor, key))
-			.forEach((key) => {
-				properties[key] = this[key];
-			});
-
-		return properties;
 	}
 }

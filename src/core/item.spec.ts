@@ -205,10 +205,11 @@ describe('potion/core', () => {
 				user = new User({name: 'John Doe', age: 24, weight: 72});
 			});
 
-			it('should return a JSON repr. of the Item without the "id"', () => {
-				const {name, id} = user.toJSON();
+			it('should return a JSON repr. of the Item without prohibited properties', () => {
+				const {name, id, potion} = user.toJSON();
 				expect(name).toEqual('John Doe');
 				expect(id).toBeUndefined();
+				expect(potion).toBeUndefined();
 			});
 
 			it('should omit @readonly properties', () => {

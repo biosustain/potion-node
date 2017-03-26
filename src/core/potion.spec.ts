@@ -1,4 +1,4 @@
-/* tslint:disable:max-classes-per-file */
+/* tslint:disable: max-classes-per-file prefer-function-over-method */
 
 import {
 	PotionBase,

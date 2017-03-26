@@ -1,3 +1,5 @@
+/* tslint:disable: prefer-function-over-method */
+
 import {PotionBase} from './potion';
 import {Item} from './item';
 import {Route} from './route';

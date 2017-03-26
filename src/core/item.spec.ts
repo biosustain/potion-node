@@ -1,4 +1,4 @@
-/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
+/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers prefer-function-over-method  */
 
 import {readonly} from './metadata';
 import {PotionBase, RequestOptions, ItemCache} from './potion';

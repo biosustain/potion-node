@@ -1,6 +1,10 @@
 /* tslint:disable:max-file-line-count */
-
-import {decorateCtorWithPotionInstance, decorateCtorWithPotionURI, readonly} from './metadata';
+import {
+	decorateCtorWithPotionInstance,
+	decorateCtorWithPotionURI,
+	potionPromise,
+	readonly
+} from './metadata';
 import {ItemOptions, Item} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
@@ -67,6 +71,7 @@ export interface PotionOptions {
 	cache?: ItemCache<Item>;
 }
 
+
 /**
  * This class contains the main logic for interacting with the Flask Potion backend.
  * Note that this class does not contain the logic for making the HTTP requests,
@@ -75,7 +80,6 @@ export interface PotionOptions {
  *
  * @example
  * class Potion extends PotionBase {
- *     static promise = Promise;
  *     protected request(uri, options?: RequestOptions): Promise<any> {
  *         // Here we need to implement the actual HTTP request
  *     };
@@ -87,6 +91,7 @@ export abstract class PotionBase {
 	host: string;
 	readonly prefix: string;
 
+	private readonly Promise: typeof Promise = potionPromise(this); // NOTE: This is needed only to provide support for AngularJS.
 	private pendingGETRequests: Map<string, any> = new Map();
 
 	constructor({host = '', prefix = '', cache}: PotionOptions = {}) {
@@ -95,11 +100,12 @@ export abstract class PotionBase {
 		this.prefix = prefix;
 	}
 
-	async fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
+	fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		const options: FetchOptions = {...fetchOptions};
 		const {method, cache, paginate, data} = options;
 		let {search} = options;
 		const key = uri;
+		const {Promise} = this;
 
 		// Add the API prefix if not present
 		const {prefix} = this;
@@ -142,25 +148,24 @@ export abstract class PotionBase {
 			if  (cache) {
 				const item = this.cache.get(key);
 				if (item) {
-					return item;
+					return Promise.resolve(item);
 				}
 			}
 
 			// If we already asked for the resource,
 			// return the exiting pending request promise.
 			if (this.pendingGETRequests.has(uri)) {
-				return await this.pendingGETRequests.get(uri);
+				return this.pendingGETRequests.get(uri);
 			}
 
-			try {
-				const request = fetch();
-				// Save pending request
-				this.pendingGETRequests.set(uri, request);
-				const data = await request;
-				// Remove pending request
+			const request = fetch();
+			// Save pending request
+			this.pendingGETRequests.set(uri, request);
+
+			return request.then((data) => {
 				this.pendingGETRequests.delete(uri);
 				return data;
-			} catch (err) {
+			}, (err) => {
 				// If request fails,
 				// make sure to remove the pending request so further requests can be made.
 				// Return is necessary.
@@ -170,10 +175,10 @@ export abstract class PotionBase {
 					: typeof err === 'string'
 						? err
 						: `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
-				throw new Error(message);
-			}
+				return Promise.reject(message);
+				});
 		} else {
-			return await fetch();
+			return fetch();
 		}
 	}
 
@@ -256,18 +261,19 @@ export abstract class PotionBase {
 		}
 	}
 
-	private async deserialize({data, headers}: PotionResponse): Promise<PotionResponse> {
-		const json = await this.fromPotionJSON(data);
-		return {
-			headers,
-			data: json
-		};
+	private deserialize({data, headers}: PotionResponse): Promise<PotionResponse> {
+		return this.fromPotionJSON(data)
+			.then((json) => ({
+				headers,
+				data: json
+			}));
 	}
 
-	private async fromPotionJSON(json: any): Promise<{[key: string]: any}> {
+	private fromPotionJSON(json: any): Promise<{[key: string]: any}> {
+		const {Promise} = this;
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
-				return await Promise.all(json.map((item) => this.fromPotionJSON(item)));
+				return Promise.all(json.map((item) => this.fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string') {
 				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
 				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.
@@ -283,10 +289,11 @@ export abstract class PotionBase {
 					params = parsedURI.params;
 					uri = parsedURI.uri;
 				} catch (parseURIError) {
-					throw parseURIError;
+					return Promise.reject(parseURIError);
 				}
 
-				const map: Map<string, any> = new Map();
+				const properties: Map<string, any> = new Map();
+				const promises: Map<string, Promise<any>> = new Map();
 
 				// Cache the resource if it does not exist,
 				// but do it before resolving any possible references (to other resources) on it.
@@ -297,41 +304,46 @@ export abstract class PotionBase {
 				// Resolve possible references
 				for (const [key, value] of entries<string, any>(json)) {
 					if (key === '$uri') {
-						map.set(key, uri);
+						properties.set(key, uri);
 					} else {
-						map.set(toCamelCase(key), await this.fromPotionJSON(value));
+						const k = toCamelCase(key);
+						promises.set(k, this.fromPotionJSON(value).then((value) => {
+							properties.set(k, value);
+							return value;
+						}));
 					}
 				}
 
 				// Set the id
 				const [id] = params;
-				map.set('$id', Number.isInteger(id) || /^\d+$/.test(id) ? parseInt(id, 10) : id);
-				// Convert map to object
-				const properties: {[key: string]: any} = mapToObject(map);
+				properties.set('$id', Number.isInteger(id) || /^\d+$/.test(id) ? parseInt(id, 10) : id);
 
-				// Try to get existing entry from cache
-				let item = this.cache.get(uri);
-				if (item) {
-					// Update existing entry with new properties
-					Object.assign(item, properties);
-				} else {
-					// Create a new entry
-					item = Reflect.construct(resource, [properties]);
-					this.cache.put(uri, item);
-				}
+				return Promise.all(Array.from(promises.values()))
+					.then(() => {
+						// Try to get existing entry from cache
+						let item = this.cache.get(uri);
+						if (item) {
+							// Update existing entry with new properties
+							Object.assign(item, mapToObject(properties));
+						} else {
+							// Create a new entry
+							item = Reflect.construct(resource, [mapToObject(properties)]);
+							this.cache.put(uri, item);
+						}
 
-				return item;
+						return item;
+					});
 			} else if (typeof json.$schema === 'string') {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
 				// Though, we want to convert snake case to camel case.
-				return deepOmap(json, null, (key) => toCamelCase(key));
+				return Promise.resolve(deepOmap(json, null, (key) => toCamelCase(key)));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.
 					// TODO: Implement resolving self-references
 					if (json.$ref === '#') {
-						return json.$ref;
+						return Promise.resolve(json.$ref);
 					}
 
 					// Try to parse the URI,
@@ -341,27 +353,34 @@ export abstract class PotionBase {
 						const parsedURI = this.parseURI(json.$ref);
 						uri = parsedURI.uri;
 					} catch (parseURIError) {
-						throw parseURIError;
+						return Promise.reject(parseURIError);
 					}
 
-					return await this.fetch(uri, {
+					return this.fetch(uri, {
 						cache: true,
 						method: 'GET'
 					});
 				} else if (typeof json.$date !== 'undefined') {
 					// Parse Potion date
-					return new Date(json.$date);
+					return Promise.resolve(new Date(json.$date));
 				}
 			}
 
-			const map: Map<string, any> = new Map();
+			const properties: Map<string, any> = new Map();
+			const promises: Map<string, Promise<any>> = new Map();
+
 			for (const [key, value] of entries<string, any>(json)) {
-				map.set(toCamelCase(key), await this.fromPotionJSON(value));
+				const k = toCamelCase(key);
+				promises.set(k, this.fromPotionJSON(value).then((value) => {
+					properties.set(k, value);
+					return value;
+				}));
 			}
 
-			return mapToObject(map);
+			return Promise.all(Array.from(promises.values()))
+				.then(() => mapToObject(properties));
 		} else {
-			return json;
+			return Promise.resolve(json);
 		}
 	}
 }

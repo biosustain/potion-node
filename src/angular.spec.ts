@@ -6,6 +6,7 @@ import {Item} from './angular';
 describe('potion/angular', () => {
 	describe('potionProvider', () => {
 		let $cacheFactory;
+		let $q;
 		let $http;
 
 		let provider;
@@ -16,13 +17,14 @@ describe('potion/angular', () => {
 
 		beforeEach(angular.mock.inject(($injector: any): any => {
 			$cacheFactory = $injector.get('$cacheFactory');
+			$q= $injector.get('$q');
 			$http = $injector.get('$http');
 		}));
 
 		it('should provide a Potion instance', () => {
 			// Note that the `.$get` when using strict DI,
 			// is an array with the last element being the fn.
-			expect(provider.$get[provider.$get.length - 1]($cacheFactory, $http)).not.toBeUndefined();
+			expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http)).not.toBeUndefined();
 		});
 
 		describe('.config()', () => {
@@ -30,7 +32,7 @@ describe('potion/angular', () => {
 				let config = {prefix: '/api'};
 				provider.config(config);
 				expect(provider.config()).toEqual(config);
-				expect(provider.$get[provider.$get.length - 1]($cacheFactory, $http).prefix).toEqual('/api');
+				expect(provider.$get[provider.$get.length - 1]($cacheFactory, $q, $http).prefix).toEqual('/api');
 			});
 		});
 	});
@@ -38,12 +40,14 @@ describe('potion/angular', () => {
 	describe('Potion()', () => {
 		describe('.fetch()', () => {
 			let $httpBackend;
+			let $q;
 			let potion;
 
 			beforeEach(angular.mock.module('test'));
 
 			beforeEach(angular.mock.inject(($injector: any): any => {
 				$httpBackend = $injector.get('$httpBackend');
+				$q = $injector.get('$q');
 				potion = $injector.get('potion');
 			}));
 
@@ -52,7 +56,7 @@ describe('potion/angular', () => {
 			});
 
 			it('should make a XHR request', () => {
-				let response = jasmine.createSpy('response').and.returnValue([200, {}]);
+				const response = jasmine.createSpy('response').and.returnValue([200, {}]);
 				$httpBackend.expect('GET', '/ping').respond(response);
 
 				potion.fetch('/ping');
@@ -63,7 +67,7 @@ describe('potion/angular', () => {
 			});
 
 			it('should use the appropriate request method set by the {method} option', () => {
-				let response = jasmine.createSpy('response').and.returnValue([200, {}]);
+				const response = jasmine.createSpy('response').and.returnValue([200, {}]);
 				$httpBackend.expect('PATCH', '/ping').respond(response);
 
 				potion.fetch('/ping', {method: 'PATCH'});
@@ -75,7 +79,7 @@ describe('potion/angular', () => {
 
 			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
 				let body = '';
-				let response = jasmine.createSpy('response');
+				const response = jasmine.createSpy('response');
 				$httpBackend.expect('POST', '/ping').respond((...args) => {
 					body = args[2];
 					response();
@@ -93,7 +97,7 @@ describe('potion/angular', () => {
 
 			it('should pass on the query params from the {search} option', () => {
 				let search = null;
-				let response = jasmine.createSpy('response');
+				const response = jasmine.createSpy('response');
 				$httpBackend.expect('GET', '/ping?pong=true').respond((...args) => {
 					search = args[4];
 					response();
@@ -111,19 +115,22 @@ describe('potion/angular', () => {
 
 			it('should return a Promise', () => {
 				$httpBackend.expect('GET', '/ping').respond(200);
-				expect(potion.fetch('/ping') instanceof Promise).toBe(true);
+				expect(potion.fetch('/ping') instanceof $q).toBe(true);
 				$httpBackend.flush();
 			});
 
 			it('should return a Promise with data', () => {
 				$httpBackend.expect('GET', '/ping').respond(200, {pong: true});
 
+				const spy = jasmine.createSpy('potion.fetch()');
 				potion.fetch('/ping').then((data) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
+					spy();
 				});
 
 				$httpBackend.flush();
+				expect(spy).toHaveBeenCalled();
 			});
 		});
 	});
@@ -132,11 +139,7 @@ describe('potion/angular', () => {
 		describe('.fetch()', () => {
 			let $cacheFactory;
 			let $httpBackend;
-
-			// Make sure tslint does not complain about the var names
-			/* tslint:disable: variable-name */
-			let User;
-			/* tslint:enable: variable-name */
+			let User; /* tslint:disable-line: variable-name */
 
 			beforeEach(angular.mock.module('test'));
 
@@ -152,46 +155,47 @@ describe('potion/angular', () => {
 			});
 
 			it('should use $cacheFactory by default to to store and retrieve items', () => {
-				let cache = $cacheFactory.get('potion');
-
+				const cache = $cacheFactory.get('potion');
 				expect(cache).not.toBeUndefined();
 
-				let response = jasmine.createSpy('response').and.returnValue([200, {$uri: '/user/1'}]);
+				const response = jasmine.createSpy('response').and.returnValue([200, {$uri: '/user/1'}]);
 				$httpBackend.expect('GET', '/user/1').respond(response);
 
+				const spy = jasmine.createSpy('User.fetch()');
 				User.fetch(1).then(() => {
 					expect(cache.get('/user/1')).not.toBeUndefined();
 					User.fetch(1).then((user: User) => {
 						expect(response).toHaveBeenCalledTimes(1);
 						expect(user).not.toBeUndefined();
 					});
+					spy();
 				});
 
 				$httpBackend.flush();
+				expect(spy).toHaveBeenCalled();
 			});
 
 			it('should work with cross references', () => {
 				$httpBackend.expect('GET', '/user/1').respond(200, {$uri: '/user/1', sibling: {$ref: '/user/2'}});
 				$httpBackend.expect('GET', '/user/2').respond(200, {$uri: '/user/2', sibling: {$ref: '/user/1'}});
 
+				const spy = jasmine.createSpy('User.fetch()');
 				User.fetch(1).then((user: User) => {
 					expect(user instanceof User).toBe(true);
 					expect(user.sibling instanceof User).toBe(true);
+					spy();
 				});
 
 				$httpBackend.flush();
+				expect(spy).toHaveBeenCalled();
 			});
 		});
 	});
 
 	describe('Item.query()', () => {
 		let $httpBackend;
-
-		// Make sure tslint does not complain about the var names
-		/* tslint:disable: variable-name */
-		let User;
-		let Group;
-		/* tslint:enable: variable-name */
+		let User; /* tslint:disable-line: variable-name */
+		let Group; /* tslint:disable-line: variable-name */
 
 		beforeEach(angular.mock.module('test'));
 
@@ -210,7 +214,6 @@ describe('potion/angular', () => {
 			$httpBackend.when('GET', '/user').respond(200, [{$ref: '/user/1'}, {$ref: '/user/2'}]);
 			$httpBackend.when('GET', '/group').respond(200, [{$ref: '/group/1'}, {$ref: '/group/2'}]);
 
-
 			$httpBackend.when('GET', '/user/1').respond(200, {
 				$uri: '/user/1',
 				// sibling: {$ref: '/user/2'},
@@ -219,7 +222,6 @@ describe('potion/angular', () => {
 					{$ref: '/group/2'}
 				]
 			});
-
 			$httpBackend.when('GET', '/user/2').respond(200, {
 				$uri: '/user/2',
 				// sibling: {$ref: '/user/1'},
@@ -229,7 +231,6 @@ describe('potion/angular', () => {
 				]
 			});
 
-
 			$httpBackend.when('GET', '/group/1').respond(200, {
 				$uri: '/group/1',
 				members: [
@@ -237,7 +238,6 @@ describe('potion/angular', () => {
 					{$ref: '/user/2'}
 				]
 			});
-
 			$httpBackend.when('GET', '/group/2').respond(200, {
 				$uri: '/group/2',
 				members: [
@@ -246,6 +246,7 @@ describe('potion/angular', () => {
 				]
 			});
 
+			const spy = jasmine.createSpy('User.query()');
 			User.query().then((users: User[]) => {
 				expect(users.length).toEqual(2);
 				for (let user of users) {
@@ -258,9 +259,11 @@ describe('potion/angular', () => {
 						}
 					}
 				}
+				spy();
 			});
 
 			$httpBackend.flush();
+			expect(spy).toHaveBeenCalled();
 		});
 	});
 });

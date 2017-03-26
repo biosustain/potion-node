@@ -19,7 +19,6 @@ const POTION_METADATA_KEY = Symbol('potion');
 export function potionInstance(ctor: typeof Item): PotionBase {
 	return Reflect.getOwnMetadata(POTION_METADATA_KEY, ctor);
 }
-
 export function decorateCtorWithPotionInstance(ctor: typeof Item, instance: any): void {
 	Reflect.defineMetadata(POTION_METADATA_KEY, instance, ctor);
 }
@@ -29,14 +28,30 @@ const POTION_URI_METADATA_KEY = Symbol('potion:uri');
 export function potionURI(ctor: typeof Item): string {
 	return Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, ctor);
 }
-
 export function decorateCtorWithPotionURI(ctor: typeof Item, uri: string): void {
 	Reflect.defineMetadata(POTION_URI_METADATA_KEY, uri, ctor);
 }
 
 
-const READONLY_METADATA_KEY = Symbol('potion:readonly');
+/**
+ * Get/Set the Promise implementation that should be used by Potion.
+ * NOTE: If it is never set, it will fallback to using the native implementation of Promise.
+ * @example
+ * class Potion extends PotionBase {
+ *     ...
+ * }
+ * setPotionPromise(Potion, ... some impl. of a Promise);
+ */
+const POTION_PROMISE_METADATA_KEY = Symbol('potion:promise');
+export function potionPromise(potion: PotionBase): typeof Promise {
+	return Reflect.getOwnMetadata(POTION_PROMISE_METADATA_KEY, potion.constructor) || Promise;
+}
+export function setPotionPromise(ctor: typeof PotionBase, promise: any): void {
+	Reflect.defineMetadata(POTION_PROMISE_METADATA_KEY, promise, ctor);
+}
 
+
+const READONLY_METADATA_KEY = Symbol('potion:readonly');
 export function isReadonly(ctor: any, key: string): boolean {
 	const metadata = Reflect.getOwnMetadata(READONLY_METADATA_KEY, ctor);
 	return metadata && metadata[key];

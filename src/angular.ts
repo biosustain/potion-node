@@ -5,9 +5,10 @@ import {
 	PotionResponse,
 	PotionBase
 } from './core';
+import {setPotionPromise} from './core/metadata';
 
 
-export {readonly, Item,	Route} from './core';
+export {Item, Route, readonly} from './core';
 
 
 const potion = angular.module('potion', [])
@@ -15,7 +16,7 @@ const potion = angular.module('potion', [])
 
 
 function potionProvider(): any {
-	let options = {};
+	const options = {};
 
 	this.config = (config: PotionOptions) => {
 		if (config) {
@@ -25,26 +26,27 @@ function potionProvider(): any {
 		}
 	};
 
-	this.$get = ['$cacheFactory', '$http', ($cacheFactory: angular.ICacheFactoryService, $http: angular.IHttpService): any => {
+	this.$get = ['$cacheFactory', '$q', '$http', ($cacheFactory: angular.ICacheFactoryService, $q: angular.IQService, $http: angular.IHttpService): any => {
 		let cache = $cacheFactory.get('potion') || $cacheFactory('potion');
 
 		class Potion extends PotionBase {
 			protected request(url: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
 				return $http(Object.assign({url, method, data, cache}, {params: search}))
 					.then(({headers, data}) => {
-						const res: any = {data};
-
+						const response: any = {data};
 						if (headers) {
-							res.headers = headers();
+							response.headers = headers();
 						}
-
-						return res;
+						return response;
 					}) as any;
 			}
 		}
 
-		// Use the $cacheFactory.
-		// Allow user to override cache.
+		// Make sure Potion uses $q as the Promise implementation.
+		// NOTE: This is necessary due to the nature of AngularJS change detection system.
+		setPotionPromise(Potion, $q);
+
+		// Use the $cacheFactory and allow user to override cache.
 		/* tslint:disable: align */
 		return new Potion(Object.assign({
 			cache

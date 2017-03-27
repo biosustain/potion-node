@@ -102,6 +102,9 @@ export abstract class Item {
 	}
 
 	save(): Promise<this> {
+		if (this.uri || this.id) {
+			return this.update(this.toJSON());
+		}
 		return this.potion.fetch(potionURI(this.constructor as typeof Item), {
 			method: 'POST',
 			data: this.toJSON(),

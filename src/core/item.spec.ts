@@ -150,7 +150,11 @@ describe('potion/core', () => {
 
 						switch (options.method) {
 							case 'POST':
-								return Promise.resolve(john = Object.assign({}, options.data, {$uri: '/user/4'}));
+								john = Object.assign({}, options.data, {$uri: '/user/4'});
+								return Promise.resolve(john);
+							case 'PATCH':
+								Object.assign(john, options.data, {$uri: '/user/4'});
+								return Promise.resolve(john);
 							case 'GET':
 								return Promise.resolve({data: john});
 							default:
@@ -176,6 +180,25 @@ describe('potion/core', () => {
 						done();
 					});
 				});
+			});
+
+			it('should update the Item if it exists', (done) => {
+				const name = 'Foo Bar';
+				const user = new User({name});
+
+				user.save()
+					.then(() => User.fetch(4))
+					.then((user) => {
+						expect(user.name).toEqual(name);
+						user.name = 'John Doe';
+						user.save()
+							.then(() => User.fetch(4))
+							.then((user) => {
+								expect(user.id).toEqual(4);
+								expect(user.name).toEqual('John Doe');
+								done();
+							});
+					});
 			});
 		});
 

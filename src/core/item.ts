@@ -20,8 +20,14 @@ export interface ItemOptions {
  *     user.update({name: 'John Doe'});
  * });
  *
- * let fred = new User({name: 'Fred'});
+ * const fred = new User({name: 'Fred'});
  * fred.save();
+ *
+ * const jane = User.fetch(1);
+ * jane.then((jane) => {
+ *     jane.alias = 'Joe';
+ *     jane.save();
+ * });
  *
  * User.query().then((users) => {
  *     users[0].destroy();
@@ -89,6 +95,10 @@ export abstract class Item {
 		return this.$id;
 	}
 
+	/**
+	 * Compare current resource with another object.
+	 * @param {Object} resource
+	 */
 	equals(resource: any): boolean {
 		if (resource instanceof Item) {
 			return this.id === resource.id && this.constructor.name === resource.constructor.name;
@@ -96,6 +106,9 @@ export abstract class Item {
 		return false;
 	}
 
+	/**
+	 * Get the JSON repr. of this item.
+	 */
 	toJSON(): any {
 		const properties = {};
 
@@ -108,6 +121,9 @@ export abstract class Item {
 		return properties;
 	}
 
+	/**
+	 * Save the current item.
+	 */
 	save(): Promise<this> {
 		if (this.uri || this.id) {
 			return this.update(this.toJSON());
@@ -131,6 +147,9 @@ export abstract class Item {
 		});
 	}
 
+	/**
+	 * Destroy the current item.
+	 */
 	destroy(): Promise<void> {
 		const {uri} = this;
 		const cache = this.potion.cache;

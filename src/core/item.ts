@@ -89,6 +89,13 @@ export abstract class Item {
 		return this.$id;
 	}
 
+	equals(resource: any): boolean {
+		if (resource instanceof Item) {
+			return this.id === resource.id && this.constructor.name === resource.constructor.name;
+		}
+		return false;
+	}
+
 	toJSON(): any {
 		const properties = {};
 

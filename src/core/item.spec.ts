@@ -7,242 +7,6 @@ import {Pagination} from './pagination';
 
 
 describe('potion/core', () => {
-	describe('Item()', () => {
-		it('should be an instance of Item', () => {
-			class User extends Item {}
-			const user = new User();
-			expect(user instanceof (Item as any)).toBe(true);
-		});
-
-		it('should be an instance of the child class that extended it', () => {
-			class User extends Item {}
-			const user = new User();
-			expect(user instanceof (User as any)).toBe(true);
-		});
-
-		it('should have the same attributes it was initialized with', () => {
-			class User extends Item {
-				name: string;
-				weight: number;
-				age: number;
-			}
-			const user = new User({name: 'John Doe', age: 24, weight: 72});
-			expect(user.name).toEqual('John Doe');
-			expect(user.age).toEqual(24);
-			expect(user.weight).toEqual(72);
-		});
-
-		describe('.update()', () => {
-			class User extends Item {
-				name: string;
-			}
-
-			beforeEach(() => {
-				const JOHN = {
-					$uri: '/user/1',
-					name: 'John Doe'
-				};
-
-				class Potion extends PotionBase {
-					protected request(uri: string, options?: RequestOptions): Promise<any> {
-						options = options || ({} as RequestOptions);
-
-						switch (uri) {
-							case '/user/1':
-								if (options.method === 'PATCH') {
-									Object.assign(JOHN, {}, options.data);
-								}
-
-								return Promise.resolve({data: JOHN});
-							default:
-								break;
-						}
-
-						return Promise.resolve({});
-					}
-				}
-
-				const potion = new Potion();
-				potion.register('/user', User);
-			});
-
-			it('should update the Item', (done) => {
-				User.fetch(1).then((user: User) => {
-					expect(user.name).toEqual('John Doe');
-					const name = 'John Foo Doe';
-					user.update({name}).then(() => {
-						User.fetch(1).then((user: User) => {
-							expect(user.name).toEqual(name);
-							done();
-						});
-					});
-				});
-			});
-		});
-
-		describe('.destroy()', () => {
-			class User extends Item {
-				name: string;
-			}
-
-			beforeEach(() => {
-				let john: any = {
-					$uri: '/user/1',
-					name: 'John Doe'
-				};
-
-				class Potion extends PotionBase {
-					protected request(_: string, options?: RequestOptions): Promise<any> {
-						options = options || ({} as RequestOptions);
-
-						switch (options.method) {
-							case 'GET':
-								if (john) {
-									return Promise.resolve({data: john});
-								}
-								return Promise.reject({});
-							case 'DELETE':
-								john = null;
-								return Promise.resolve({});
-							default:
-								break;
-						}
-
-						return Promise.resolve({});
-					}
-				}
-
-				const potion = new Potion();
-				potion.register('/user', User);
-			});
-
-			it('should destroy the Item', (done) => {
-				const success = jasmine.createSpy('success');
-				const error = jasmine.createSpy('error');
-
-				User.fetch(3).then((user: User) => {
-					user.destroy().then(() => {
-						User.fetch(3).then(success, error);
-						setTimeout(
-							() => {
-								expect(success).not.toHaveBeenCalled();
-								expect(error).toHaveBeenCalled();
-								done();
-							},
-							50
-						);
-					});
-				});
-			});
-		});
-
-		describe('.save()', () => {
-			class User extends Item {
-				name: string;
-			}
-
-			beforeEach(() => {
-				let john = null;
-
-				class Potion extends PotionBase {
-					protected request(_: string, options?: RequestOptions): Promise<any> {
-						options = options || ({} as RequestOptions);
-
-						switch (options.method) {
-							case 'POST':
-								john = Object.assign({}, options.data, {$uri: '/user/4'});
-								return Promise.resolve(john);
-							case 'PATCH':
-								Object.assign(john, options.data, {$uri: '/user/4'});
-								return Promise.resolve(john);
-							case 'GET':
-								return Promise.resolve({data: john});
-							default:
-								break;
-						}
-
-						return Promise.resolve({});
-					}
-				}
-
-				const potion = new Potion();
-				potion.register('/user', User);
-			});
-
-			it('should save the Item', (done) => {
-				const name = 'Foo Bar';
-				const user = new User({name});
-
-				user.save().then(() => {
-					User.fetch(4).then((user: User) => {
-						expect(user.id).toEqual(4);
-						expect(user.name).toEqual(name);
-						done();
-					});
-				});
-			});
-
-			it('should update the Item if it exists', (done) => {
-				const name = 'Foo Bar';
-				const user = new User({name});
-
-				user.save()
-					.then(() => User.fetch(4))
-					.then((user) => {
-						expect(user.name).toEqual(name);
-						user.name = 'John Doe';
-						user.save()
-							.then(() => User.fetch(4))
-							.then((user) => {
-								expect(user.id).toEqual(4);
-								expect(user.name).toEqual('John Doe');
-								done();
-							});
-					});
-			});
-		});
-
-		describe('.toJSON()', () => {
-			class User extends Item {
-				name: string;
-				weight: number;
-
-				@readonly
-				age: number;
-			}
-
-			let user: User;
-
-			beforeEach(() => {
-				class Potion extends PotionBase {
-					protected request(): Promise<any> {
-						return Promise.resolve({});
-					}
-				}
-
-				const potion = new Potion();
-				potion.register('/user', User, {
-					readonly: ['weight']
-				});
-
-				user = new User({name: 'John Doe', age: 24, weight: 72});
-			});
-
-			it('should return a JSON repr. of the Item without prohibited properties', () => {
-				const {name, id, potion} = user.toJSON();
-				expect(name).toEqual('John Doe');
-				expect(id).toBeUndefined();
-				expect(potion).toBeUndefined();
-			});
-
-			it('should omit @readonly properties', () => {
-				const {age, weight} = user.toJSON();
-				expect(age).toBeUndefined();
-				expect(weight).toBeUndefined();
-			});
-		});
-	});
-
 	describe('Item.fetch()', () => {
 		let potion;
 		let cache;
@@ -653,6 +417,289 @@ describe('potion/core', () => {
 			User.first().then((user: User) => {
 				expect(user instanceof (User as any)).toBe(true);
 				done();
+			});
+		});
+	});
+
+	describe('Item()', () => {
+		it('should be an instance of Item', () => {
+			class User extends Item {}
+			const user = new User();
+			expect(user instanceof (Item as any)).toBe(true);
+		});
+
+		it('should be an instance of the child class that extended it', () => {
+			class User extends Item {}
+			const user = new User();
+			expect(user instanceof (User as any)).toBe(true);
+		});
+
+		it('should have the same attributes it was initialized with', () => {
+			class User extends Item {
+				name: string;
+				weight: number;
+				age: number;
+			}
+			const user = new User({name: 'John Doe', age: 24, weight: 72});
+			expect(user.name).toEqual('John Doe');
+			expect(user.age).toEqual(24);
+			expect(user.weight).toEqual(72);
+		});
+
+		describe('.update()', () => {
+			class User extends Item {
+				name: string;
+			}
+
+			beforeEach(() => {
+				const JOHN = {
+					$uri: '/user/1',
+					name: 'John Doe'
+				};
+
+				class Potion extends PotionBase {
+					protected request(uri: string, options?: RequestOptions): Promise<any> {
+						options = options || ({} as RequestOptions);
+
+						switch (uri) {
+							case '/user/1':
+								if (options.method === 'PATCH') {
+									Object.assign(JOHN, {}, options.data);
+								}
+
+								return Promise.resolve({data: JOHN});
+							default:
+								break;
+						}
+
+						return Promise.resolve({});
+					}
+				}
+
+				const potion = new Potion();
+				potion.register('/user', User);
+			});
+
+			it('should update the Item', (done) => {
+				User.fetch(1).then((user: User) => {
+					expect(user.name).toEqual('John Doe');
+					const name = 'John Foo Doe';
+					user.update({name}).then(() => {
+						User.fetch(1).then((user: User) => {
+							expect(user.name).toEqual(name);
+							done();
+						});
+					});
+				});
+			});
+		});
+
+		describe('.destroy()', () => {
+			class User extends Item {
+				name: string;
+			}
+
+			beforeEach(() => {
+				let john: any = {
+					$uri: '/user/1',
+					name: 'John Doe'
+				};
+
+				class Potion extends PotionBase {
+					protected request(_: string, options?: RequestOptions): Promise<any> {
+						options = options || ({} as RequestOptions);
+
+						switch (options.method) {
+							case 'GET':
+								if (john) {
+									return Promise.resolve({data: john});
+								}
+								return Promise.reject({});
+							case 'DELETE':
+								john = null;
+								return Promise.resolve({});
+							default:
+								break;
+						}
+
+						return Promise.resolve({});
+					}
+				}
+
+				const potion = new Potion();
+				potion.register('/user', User);
+			});
+
+			it('should destroy the Item', (done) => {
+				const success = jasmine.createSpy('success');
+				const error = jasmine.createSpy('error');
+
+				User.fetch(3).then((user: User) => {
+					user.destroy().then(() => {
+						User.fetch(3).then(success, error);
+						setTimeout(
+							() => {
+								expect(success).not.toHaveBeenCalled();
+								expect(error).toHaveBeenCalled();
+								done();
+							},
+							50
+						);
+					});
+				});
+			});
+		});
+
+		describe('.save()', () => {
+			class User extends Item {
+				name: string;
+			}
+
+			beforeEach(() => {
+				let john = null;
+
+				class Potion extends PotionBase {
+					protected request(_: string, options?: RequestOptions): Promise<any> {
+						options = options || ({} as RequestOptions);
+
+						switch (options.method) {
+							case 'POST':
+								john = Object.assign({}, options.data, {$uri: '/user/4'});
+								return Promise.resolve(john);
+							case 'PATCH':
+								Object.assign(john, options.data, {$uri: '/user/4'});
+								return Promise.resolve(john);
+							case 'GET':
+								return Promise.resolve({data: john});
+							default:
+								break;
+						}
+
+						return Promise.resolve({});
+					}
+				}
+
+				const potion = new Potion();
+				potion.register('/user', User);
+			});
+
+			it('should save the Item', (done) => {
+				const name = 'Foo Bar';
+				const user = new User({name});
+
+				user.save().then(() => {
+					User.fetch(4).then((user: User) => {
+						expect(user.id).toEqual(4);
+						expect(user.name).toEqual(name);
+						done();
+					});
+				});
+			});
+
+			it('should update the Item if it exists', (done) => {
+				const name = 'Foo Bar';
+				const user = new User({name});
+
+				user.save()
+					.then(() => User.fetch(4))
+					.then((user) => {
+						expect(user.name).toEqual(name);
+						user.name = 'John Doe';
+						user.save()
+							.then(() => User.fetch(4))
+							.then((user) => {
+								expect(user.id).toEqual(4);
+								expect(user.name).toEqual('John Doe');
+								done();
+							});
+					});
+			});
+		});
+
+		describe('.toJSON()', () => {
+			class User extends Item {
+				name: string;
+				weight: number;
+
+				@readonly
+				age: number;
+			}
+
+			let user: User;
+
+			beforeEach(() => {
+				class Potion extends PotionBase {
+					protected request(): Promise<any> {
+						return Promise.resolve({});
+					}
+				}
+
+				const potion = new Potion();
+				potion.register('/user', User, {
+					readonly: ['weight']
+				});
+
+				user = new User({name: 'John Doe', age: 24, weight: 72});
+			});
+
+			it('should return a JSON repr. of the Item without prohibited properties', () => {
+				const {name, id, potion} = user.toJSON();
+				expect(name).toEqual('John Doe');
+				expect(id).toBeUndefined();
+				expect(potion).toBeUndefined();
+			});
+
+			it('should omit @readonly properties', () => {
+				const {age, weight} = user.toJSON();
+				expect(age).toBeUndefined();
+				expect(weight).toBeUndefined();
+			});
+		});
+
+		describe('.equals()', () => {
+			class User extends Item {}
+			class Engine extends Item {}
+
+			beforeEach(() => {
+				class Potion extends PotionBase {
+					protected request(uri: string): Promise<any> {
+						switch (uri) {
+							case '/user/1':
+								return Promise.resolve({
+									data: {$uri: '/user/1'}
+								});
+							case '/user/2':
+								return Promise.resolve({
+									data: {$uri: '/user/2'}
+								});
+							case '/engine/1':
+								return Promise.resolve({
+									data: {$uri: '/engine/1'}
+								});
+							default:
+								break;
+						}
+
+						return Promise.resolve({});
+					}
+				}
+
+				const potion = new Potion();
+				potion.register('/user', User);
+				potion.register('/engine', Engine);
+			});
+
+			it('should check if the current resource is the same as the one compared with', (done) => {
+				Promise.all([User.fetch(1), User.fetch(2), Engine.fetch(1)])
+					.then(([john, jane, engine]: Item[]) => {
+						expect(john.equals(jane))
+							.toBeFalsy();
+						expect(john.equals(engine))
+							.toBeFalsy();
+						expect(john.equals(john))
+							.toBeTruthy();
+						done();
+					});
 			});
 		});
 	});

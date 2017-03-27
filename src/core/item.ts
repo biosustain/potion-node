@@ -8,11 +8,6 @@ export interface ItemOptions {
 }
 
 
-export function first<T>(items: T[]): T {
-	return items[0];
-}
-
-
 /**
  * Base resource class for API resources.
  * Extending this class will make all resource operations available on the child classes.
@@ -66,9 +61,12 @@ export abstract class Item {
 	/**
 	 * Get the first item.
 	 */
-	static async first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
-		const items = await this.query(queryOptions) as T[];
-		return first<T>(items);
+	static first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
+		return this.query(queryOptions)
+			.then(first);
+		function first(items: T[]): T {
+			return items[0];
+		}
 	}
 
 	private $uri: string;
@@ -123,13 +121,16 @@ export abstract class Item {
 		});
 	}
 
-	async destroy(): Promise<void> {
+	destroy(): Promise<void> {
 		const {uri} = this;
 		const cache = this.potion.cache;
-		await this.potion.fetch(uri, {method: 'DELETE'});
-		// Clear the item from cache if exists
-		if (cache.get(uri)) {
-			cache.remove(uri);
+		return this.potion.fetch(uri, {method: 'DELETE'})
+			.then(clearCache);
+		function clearCache(): void {
+			// Clear the item from cache if exists
+			if (cache.get(uri)) {
+				cache.remove(uri);
+			}
 		}
 	}
 }

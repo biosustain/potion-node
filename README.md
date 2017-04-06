@@ -1,7 +1,7 @@
 # Potion
 
-[![Build Status](https://travis-ci.org/biosustain/potion-node.svg?branch=master)](https://travis-ci.org/biosustain/potion-node)
-[![Dependency Status](https://gemnasium.com/badges/github.com/biosustain/potion-node.svg)](https://gemnasium.com/github.com/biosustain/potion-node)
+[![Build Status](https://img.shields.io/travis/biosustain/potion-node.svg?style=flat-square)](https://travis-ci.org/biosustain/potion-node)
+[![Dependency Status](https://david-dm.org/biosustain/potion-node.svg?style=flat-square)](https://github.com/biosustain/potion-node)
 
 > A TypeScript client for APIs written in Flask-Potion.
 

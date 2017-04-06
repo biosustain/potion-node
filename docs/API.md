@@ -4,9 +4,9 @@ Note that all examples are using this package as a standalone package, or [Fetch
 the rest of the implementations follow the same pattern.
 
 For information about usage with specific frameworks, see:
-* [Angular](docs/ANGULAR.md)
-* [AngularJS](docs/ANGULARJS.md)
-* [Fetch](docs/FETCH.md)
+* [Angular](ANGULAR.md)
+* [AngularJS](ANGULARJS.md)
+* [Fetch](FETCH.md)
 
 Furthermore, all routes created with `Route` and all methods on `Item` return a [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 

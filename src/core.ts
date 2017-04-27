@@ -12,3 +12,4 @@ export {
 	PotionBase
 } from './core/potion';
 export {Route, route} from './core/route';
+export {toSnakeCase, toCamelCase} from './utils';

@@ -33,6 +33,7 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
 /**
  * Object.map()
  */
+// TODO: Remove this and use deepOmap()
 export function omap(object: Object, callback: (key: string, value: any) => [string, any], context?: any): {[key: string]: any} {
 	const mapped = {};
 	for (const [key, value] of (Object as any).entries(object)) {
@@ -46,6 +47,8 @@ export function omap(object: Object, callback: (key: string, value: any) => [str
 /**
  * Deep Object.map()
  */
+// TODO: Rename to omap()
+// TODO: Add unit tests (test all possible scenarios)
 export type KeyMapper = (key: string) => string;
 export type ValueMapper = (value: any) => any;
 

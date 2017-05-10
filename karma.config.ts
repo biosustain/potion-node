@@ -34,7 +34,8 @@ module.exports = function (config) {
 		},
 		logLevel: config.LOG_INFO,
 		browsers: [
-			'Chrome'
+			'Chrome',
+			'PhantomJS'
 		]
 	});
 };

@@ -112,7 +112,7 @@ describe('potion/angular', () => {
 
 				expect(response).toHaveBeenCalled();
 				expect(search).not.toBeNull();
-				expect(search).toEqual({pong: 'true'});
+				expect<any>(search).toEqual({pong: 'true'});
 			});
 
 			it('should return a Promise', () => {

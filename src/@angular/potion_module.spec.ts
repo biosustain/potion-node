@@ -1,6 +1,5 @@
 /* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
 import {TestBed, async, inject} from '@angular/core/testing';
-import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
 
 import {MockBackend, MockConnection} from '@angular/http/testing';
 
@@ -19,13 +18,6 @@ import {
 	POTION_HTTP,
 	Potion
 } from './potion';
-
-
-// Prepare for tests
-TestBed.initTestEnvironment(
-	BrowserDynamicTestingModule,
-	platformBrowserDynamicTesting()
-);
 
 
 describe('potion/@angular', () => {

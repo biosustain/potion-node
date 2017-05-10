@@ -1,11 +1,11 @@
-import {NgModule, Inject, Optional} from '@angular/core';
+import {Inject, NgModule, Optional} from '@angular/core';
 import {HttpModule} from '@angular/http';
 
 import {
-	POTION_RESOURCES,
+	Potion,
 	POTION_PROVIDER,
-	PotionResources,
-	Potion
+	POTION_RESOURCES,
+	PotionResources
 } from './potion';
 
 

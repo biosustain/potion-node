@@ -5,16 +5,16 @@ import {
 	potionPromise,
 	readonly
 } from './metadata';
-import {ItemOptions, Item} from './item';
+import {Item, ItemOptions} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
-	MemCache,
-	toCamelCase,
-	mapToObject,
-	toSnakeCase,
-	omap,
 	deepOmap,
-	entries
+	entries,
+	mapToObject,
+	MemCache,
+	omap,
+	toCamelCase,
+	toSnakeCase
 } from '../utils';
 
 
@@ -45,7 +45,7 @@ export interface URLSearchParams {
 
 export interface RequestOptions {
 	method?: string;
-	search?: URLSearchParams | undefined | null;
+	search?: URLSearchParams | null;
 	data?: any;
 	cache?: boolean;
 }
@@ -126,7 +126,7 @@ export abstract class PotionBase {
 				data: this.toPotionJSON(data)
 			}})
 			// Convert the data to Potion JSON
-			.then((response) => this.deserialize(response))
+			.then(response => this.deserialize(response))
 			.then(({headers, data}) => {
 				// Return or update Pagination
 				if (paginate) {
@@ -162,10 +162,10 @@ export abstract class PotionBase {
 			// Save pending request
 			this.pendingGETRequests.set(uri, request);
 
-			return request.then((data) => {
+			return request.then(data => {
 				this.pendingGETRequests.delete(uri);
 				return data;
-			}, (err) => {
+			}, err => {
 				// If request fails,
 				// make sure to remove the pending request so further requests can be made.
 				// Return is necessary.
@@ -193,7 +193,7 @@ export abstract class PotionBase {
 		decorateCtorWithPotionURI(resource, uri);
 
 		if (options && Array.isArray(options.readonly)) {
-			options.readonly.forEach((property) => readonly(resource, property));
+			options.readonly.forEach(property => readonly(resource, property));
 		}
 		this.resources[uri] = resource;
 
@@ -252,7 +252,7 @@ export abstract class PotionBase {
 			} else if (json instanceof Date) {
 				return {$date: json.getTime()};
 			} else if (Array.isArray(json)) {
-				return json.map((item) => this.toPotionJSON(item));
+				return json.map(item => this.toPotionJSON(item));
 			} else {
 				return omap(json, (key, value) => [toSnakeCase(key), this.toPotionJSON(value)]);
 			}
@@ -263,7 +263,7 @@ export abstract class PotionBase {
 
 	private deserialize({data, headers}: PotionResponse): Promise<PotionResponse> {
 		return this.fromPotionJSON(data)
-			.then((json) => ({
+			.then(json => ({
 				headers,
 				data: json
 			}));
@@ -273,7 +273,7 @@ export abstract class PotionBase {
 		const {Promise} = this;
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
-				return Promise.all(json.map((item) => this.fromPotionJSON(item)));
+				return Promise.all(json.map(item => this.fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string') {
 				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
 				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.
@@ -307,7 +307,7 @@ export abstract class PotionBase {
 						properties.set(key, uri);
 					} else {
 						const k = toCamelCase(key);
-						promises.set(k, this.fromPotionJSON(value).then((value) => {
+						promises.set(k, this.fromPotionJSON(value).then(value => {
 							properties.set(k, value);
 							return value;
 						}));
@@ -337,7 +337,7 @@ export abstract class PotionBase {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
 				// Though, we want to convert snake case to camel case.
-				return Promise.resolve(deepOmap(json, null, (key) => toCamelCase(key)));
+				return Promise.resolve(deepOmap(json, null, key => toCamelCase(key)));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.
@@ -371,7 +371,7 @@ export abstract class PotionBase {
 
 			for (const [key, value] of entries<string, any>(json)) {
 				const k = toCamelCase(key);
-				promises.set(k, this.fromPotionJSON(value).then((value) => {
+				promises.set(k, this.fromPotionJSON(value).then(value => {
 					properties.set(k, value);
 					return value;
 				}));

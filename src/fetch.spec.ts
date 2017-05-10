@@ -2,7 +2,7 @@
 // Mock request responses using
 // https://www.npmjs.com/package/fetch-mock
 import * as fetchMock from 'fetch-mock';
-import {Potion,	Item} from './fetch';
+import {Item,	Potion} from './fetch';
 
 
 describe('potion/fetch', () => {
@@ -68,9 +68,9 @@ describe('potion/fetch', () => {
 				expect(potion.fetch('http://localhost/ping') instanceof Promise).toBe(true);
 			});
 
-			it('should return a Promise with data', (done) => {
+			it('should return a Promise with data', done => {
 				(fetchMock as any).get('http://localhost/ping', {body: {pong: true}});
-				potion.fetch('http://localhost/ping').then((data) => {
+				potion.fetch('http://localhost/ping').then(data => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
 					done();
@@ -81,7 +81,7 @@ describe('potion/fetch', () => {
 
 	describe('Item()', () => {
 		describe('.fetch()', () => {
-			it('should use a memory cache by default to store and retrieve items', (done) => {
+			it('should use a memory cache by default to store and retrieve items', done => {
 				const potion = new Potion({prefix: 'http://localhost'});
 
 				@potion.registerAs('/user')

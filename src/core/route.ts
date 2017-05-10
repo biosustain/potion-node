@@ -1,5 +1,5 @@
 import {potionInstance, potionURI} from './metadata';
-import {RequestOptions, FetchOptions} from './potion';
+import {FetchOptions, RequestOptions} from './potion';
 
 
 export type RouteType<T> = (params?: any, options?: FetchOptions) => Promise<T>;
@@ -8,7 +8,7 @@ export type RouteType<T> = (params?: any, options?: FetchOptions) => Promise<T>;
 // tslint:disable:no-invalid-this
 export function route<T>(path: string, {method}: RequestOptions = {}): RouteType<T> {
 	// tslint:disable-next-line:only-arrow-functions
-	return function (params?: any, {paginate = false, cache = true}: FetchOptions = {}): Promise<T> {
+	return function(params?: any, {paginate = false, cache = true}: FetchOptions = {}): Promise<T> {
 		const isCtor = typeof this === 'function';
 		const uri = `${isCtor ? potionURI(this) : this.uri}${path}`;
 

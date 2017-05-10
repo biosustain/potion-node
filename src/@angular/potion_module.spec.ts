@@ -1,5 +1,5 @@
 /* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
-import {TestBed, async, inject} from '@angular/core/testing';
+import {async, inject, TestBed} from '@angular/core/testing';
 
 import {MockBackend, MockConnection} from '@angular/http/testing';
 
@@ -8,15 +8,15 @@ import {Subscription} from 'rxjs/Subscription';
 // RxJs Statics
 import 'rxjs/add/observable/of';
 
-import {RequestMethod, ResponseOptions, Response} from '@angular/http';
+import {RequestMethod, Response, ResponseOptions} from '@angular/http';
 
 import {PotionTestingModule} from './testing/potion_testing_module';
 import {Item, Route} from '../core';
 import {
-	POTION_RESOURCES,
+	Potion,
 	POTION_CONFIG,
 	POTION_HTTP,
-	Potion
+	POTION_RESOURCES
 } from './potion';
 
 
@@ -61,7 +61,7 @@ describe('potion/@angular', () => {
 				)
 			));
 
-			User.fetch(1).then((user) => {
+			User.fetch(1).then(user => {
 				subscription.unsubscribe();
 				expect(user).not.toBeUndefined();
 				expect(user.id).toEqual(1);
@@ -122,7 +122,7 @@ describe('potion/@angular', () => {
 		});
 
 		it('should change the underlying Potion() Http engine', async(inject([Potion], (potion: Potion) => {
-			potion.fetch('/ping').then((res) => {
+			potion.fetch('/ping').then(res => {
 				expect(res).toEqual(body);
 			});
 		})));
@@ -166,7 +166,7 @@ describe('potion/@angular', () => {
 						})
 					)
 				));
-				potion.fetch('/ping').then((data) => {
+				potion.fetch('/ping').then(data => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
 					subscription.unsubscribe();
@@ -227,7 +227,7 @@ describe('potion/@angular', () => {
 					));
 				});
 
-				potion.fetch('/ping', {method: 'DELETE'}).then((response) => {
+				potion.fetch('/ping', {method: 'DELETE'}).then(response => {
 					expect(response).toBeNull();
 					subscription.unsubscribe();
 				});
@@ -349,13 +349,13 @@ describe('potion/@angular', () => {
 				M1.query()
 					.then((m1s: M1[]) => {
 						expect(m1s.length).toEqual(3);
-						m1s.forEach((m1) => expect(m1 instanceof M1).toBeTruthy());
+						m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
 
 						const m4s = m1s.map(({m2}) => m2)
 							.map(({m3}) => m3)
 							.map(({m4}) => m4);
 
-						m4s.forEach((m4) => expect(m4 instanceof M4).toBeTruthy());
+						m4s.forEach(m4 => expect(m4 instanceof M4).toBeTruthy());
 
 						subscription.unsubscribe();
 					});

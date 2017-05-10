@@ -1,7 +1,7 @@
 /* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers prefer-function-over-method  */
 
 import {readonly} from './metadata';
-import {PotionBase, RequestOptions, ItemCache} from './potion';
+import {ItemCache, PotionBase, RequestOptions} from './potion';
 import {Item} from './item';
 import {Pagination} from './pagination';
 
@@ -63,21 +63,21 @@ describe('potion/core', () => {
 			cache.clear();
 		});
 
-		it('should return an instance of Item', (done) => {
+		it('should return an instance of Item', done => {
 			User.fetch(1).then((user: User) => {
 				expect(user instanceof (User as any)).toBe(true);
 				done();
 			});
 		});
 
-		it('should not trigger more requests for consequent requests for the same resource and if the first request is still pending', (done) => {
+		it('should not trigger more requests for consequent requests for the same resource and if the first request is still pending', done => {
 			Promise.all([User.fetch(1, {cache: false}), User.fetch(1, {cache: false})]).then(() => {
 				expect(potion.request).toHaveBeenCalledTimes(1);
 				done();
 			});
 		});
 
-		it('should skip retrieval from Item cache if {cache} option is set to false', (done) => {
+		it('should skip retrieval from Item cache if {cache} option is set to false', done => {
 			User.fetch(1, {cache: false}).then(() => {
 				// `cache.get()` will be called twice during deserialization in Potion()._fromPotionJSON()
 				expect(cache.get).toHaveBeenCalledTimes(2);
@@ -125,8 +125,8 @@ describe('potion/core', () => {
 							return buildQueryResponse([
 								{$ref: '/user/1'},
 								{$ref: '/user/2'},
-								{$ref: '/user/3'},
-							], options);
+								{$ref: '/user/3'}
+						], options);
 						case '/person':
 							return buildQueryResponse([
 								{$ref: '/person/1'},
@@ -203,7 +203,7 @@ describe('potion/core', () => {
 							return Promise.resolve({data: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}});
 						case '/m1/2':
 							// Simulate latency
-							return new Promise((resolve) => {
+							return new Promise(resolve => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}});
 								}, 500);
@@ -214,7 +214,7 @@ describe('potion/core', () => {
 							return Promise.resolve({data: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}});
 						case '/m2/2':
 							// Simulate latency
-							return new Promise((resolve) => {
+							return new Promise(resolve => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}});
 								}, 250);
@@ -223,7 +223,7 @@ describe('potion/core', () => {
 							return Promise.resolve({data: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
 						case '/m3/1':
 							// Simulate latency
-							return new Promise((resolve) => {
+							return new Promise(resolve => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}});
 								}, 500);
@@ -232,7 +232,7 @@ describe('potion/core', () => {
 							return Promise.resolve({data: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
 						case '/m4/1':
 							// Simulate latency
-							return new Promise((resolve) => {
+							return new Promise(resolve => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}});
 								}, 250);
@@ -291,7 +291,7 @@ describe('potion/core', () => {
 			}
 		});
 
-		it('should return a Pagination object', (done) => {
+		it('should return a Pagination object', done => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users instanceof Pagination).toBe(true);
 				expect(users.length).toEqual(3);
@@ -303,7 +303,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should contain instances of an Item', (done) => {
+		it('should contain instances of an Item', done => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				for (const user of users) {
 					expect(user instanceof (User as any)).toBe(true);
@@ -312,7 +312,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
+		it('should return the right page when called with pagination params ({page, perPage})', done => {
 			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users.length).toEqual(1);
 				expect(users.page).toEqual(2);
@@ -324,7 +324,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should update query if {page} is set on the pagination object', (done) => {
+		it('should update query if {page} is set on the pagination object', done => {
 			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
 				users.changePageTo(1).then(() => {
 					expect(users.page).toEqual(1);
@@ -335,7 +335,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should work with cross-references', (done) => {
+		it('should work with cross-references', done => {
 			Person.query(undefined, {paginate: true}).then((people: Person[]) => {
 				expect(people.length).toEqual(2);
 				for (const person of people) {
@@ -352,17 +352,17 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should work with back references', (done) => {
+		it('should work with back references', done => {
 			M1.query({})
 				.then((m1s: M1[]) => {
 					expect(m1s.length).toEqual(3);
-					m1s.forEach((m1) => expect(m1 instanceof M1).toBeTruthy());
+					m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
 
 					const m4s = m1s.map(({m2}) => m2)
 						.map(({m3}) => m3)
 						.map(({m4}) => m4);
 
-					m4s.forEach((m4) => expect(m4 instanceof M4).toBeTruthy());
+					m4s.forEach(m4 => expect(m4 instanceof M4).toBeTruthy());
 
 					done();
 				});
@@ -377,7 +377,7 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string, options?: RequestOptions): Promise<any> {
-					options = options || ({} as RequestOptions);
+					options = options || {};
 
 					switch (uri) {
 						case '/user':
@@ -421,7 +421,7 @@ describe('potion/core', () => {
 			potion.register('/user', User);
 		});
 
-		it('should return the fist Item', (done) => {
+		it('should return the fist Item', done => {
 			User.first().then((user: User) => {
 				expect(user instanceof (User as any)).toBe(true);
 				done();
@@ -467,7 +467,7 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(uri: string, options?: RequestOptions): Promise<any> {
-						options = options || ({} as RequestOptions);
+						options = options || {};
 
 						switch (uri) {
 							case '/user/1':
@@ -488,7 +488,7 @@ describe('potion/core', () => {
 				potion.register('/user', User);
 			});
 
-			it('should update the Item', (done) => {
+			it('should update the Item', done => {
 				User.fetch(1).then((user: User) => {
 					expect(user.name).toEqual('John Doe');
 					const name = 'John Foo Doe';
@@ -515,7 +515,7 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
-						options = options || ({} as RequestOptions);
+						options = options || {};
 
 						switch (options.method) {
 							case 'GET':
@@ -538,7 +538,7 @@ describe('potion/core', () => {
 				potion.register('/user', User);
 			});
 
-			it('should destroy the Item', (done) => {
+			it('should destroy the Item', done => {
 				const success = jasmine.createSpy('success');
 				const error = jasmine.createSpy('error');
 
@@ -568,7 +568,7 @@ describe('potion/core', () => {
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
-						options = options || ({} as RequestOptions);
+						options = options || {};
 
 						switch (options.method) {
 							case 'POST':
@@ -591,7 +591,7 @@ describe('potion/core', () => {
 				potion.register('/user', User);
 			});
 
-			it('should save the Item', (done) => {
+			it('should save the Item', done => {
 				const name = 'Foo Bar';
 				const user = new User({name});
 
@@ -604,7 +604,7 @@ describe('potion/core', () => {
 				});
 			});
 
-			it('should update the Item if it exists', (done) => {
+			it('should update the Item if it exists', done => {
 				const name = 'Foo Bar';
 				const user = new User({name});
 
@@ -697,7 +697,7 @@ describe('potion/core', () => {
 				potion.register('/engine', Engine);
 			});
 
-			it('should check if the current resource is the same as the one compared with', (done) => {
+			it('should check if the current resource is the same as the one compared with', done => {
 				Promise.all([User.fetch(1), User.fetch(2), Engine.fetch(1)])
 					.then(([john, jane, engine]: Item[]) => {
 						expect(john.equals(jane))

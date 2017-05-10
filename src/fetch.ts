@@ -1,8 +1,8 @@
 import {
-	RequestOptions,
+	PotionBase,
 	PotionOptions,
 	PotionResponse,
-	PotionBase
+	RequestOptions
 } from './core';
 
 
@@ -56,7 +56,7 @@ export class Potion extends PotionBase {
 			}
 		}
 
-		return fetch(new Request(uri, init), init).then((response) => {
+		return fetch(new Request(uri, init), init).then(response => {
 			if (response.ok) {
 				const headers = {};
 				if (response.headers) {
@@ -66,7 +66,7 @@ export class Potion extends PotionBase {
 				}
 
 				return response.json()
-					.then((json) => ({headers, data: json}), (error) => error) as Promise<PotionResponse>;
+					.then(json => ({headers, data: json}), error => error) as Promise<PotionResponse>;
 			} else {
 				const error: any = new Error(response.statusText);
 				Object.assign(error, {response});

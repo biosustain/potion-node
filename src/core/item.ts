@@ -113,8 +113,8 @@ export abstract class Item {
 		const properties = {};
 
 		Object.keys(this)
-			.filter((key) => !key.startsWith('$') && key !== 'potion' && !isReadonly(this.constructor, key))
-			.forEach((key) => {
+			.filter(key => !key.startsWith('$') && key !== 'potion' && !isReadonly(this.constructor, key))
+			.forEach(key => {
 				properties[key] = this[key];
 			});
 

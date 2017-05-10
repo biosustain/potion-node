@@ -22,7 +22,8 @@
 	},
 	"scripts": {
 		"clean": "rm -rf lib",
-		"lint": "tslint -c tslint.json -p src/tsconfig.spec.json -t stylish --type-check",
+		"lint": "tslint -c tslint.json -p ./tsconfig.spec.json -t stylish --type-check",
+		"lint:fix": "npm run lint -- --fix",
 		"test": "karma start karma.config.ts --browsers PhantomJS --single-run --log-level error",
 		"test:continuous": "karma start karma.config.ts",
 		"build": "npm run clean && ngc"
@@ -66,7 +67,7 @@
 		"karma-typescript-es6-transform": "^1.0.0",
 		"phantomjs-prebuilt": "^2.1.14",
 		"rxjs": "^5.4.0",
-		"tslint": "^4.5.1",
+		"tslint": "^5.2.0",
 		"typescript": "^2.3.2",
 		"whatwg-fetch": "^2.0.3",
 		"zone.js": "^0.8.10"

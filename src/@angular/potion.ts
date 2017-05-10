@@ -1,20 +1,22 @@
+// tslint:disable: max-classes-per-file
+
 import {
-	Injectable,
 	Inject,
+	Injectable,
 	InjectionToken,
 	Optional,
-	SkipSelf,
-	Provider
+	Provider,
+	SkipSelf
 } from '@angular/core';
 import {
+	Headers,
 	Http,
+	QueryEncoder,
+	Request,
 	RequestOptions,
 	RequestOptionsArgs,
-	Request,
 	Response,
-	URLSearchParams,
-	QueryEncoder,
-	Headers
+	URLSearchParams
 } from '@angular/http';
 
 import {Observable} from 'rxjs/Observable';
@@ -22,14 +24,14 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 
 import {
-	RequestOptions as PotionRequestOptions,
-	PotionOptions,
-	PotionBase,
 	Item,
-	ItemOptions
+	ItemOptions,
+	PotionBase,
+	PotionOptions,
+	RequestOptions as PotionRequestOptions
 } from '../core';
 
-import {merge, isEmpty} from '../utils';
+import {isEmpty, merge} from '../utils';
 
 
 /**
@@ -95,7 +97,7 @@ export class Potion extends PotionBase {
 
 	registerFromProvider(resources: PotionResources[]): void {
 		// Remove any values that contain no resources.
-		resources = merge(...resources.filter((item) => !isEmpty(item)));
+		resources = merge(...resources.filter(item => !isEmpty(item)));
 
 		if (!isEmpty(resources)) {
 			for (const [uri, type] of Object.entries(resources)) {

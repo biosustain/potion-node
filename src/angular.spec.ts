@@ -1,4 +1,4 @@
-/* tslint:disable: no-magic-numbers */
+/* tslint:disable: no-magic-numbers max-classes-per-file */
 
 import * as angular from 'angular';
 import 'angular-mocks';
@@ -13,7 +13,7 @@ describe('potion/angular', () => {
 
 		let provider;
 
-		beforeEach(angular.mock.module('test', ['potionProvider', (potionProvider) => {
+		beforeEach(angular.mock.module('test', ['potionProvider', potionProvider => {
 			provider = potionProvider;
 		}]));
 
@@ -125,7 +125,7 @@ describe('potion/angular', () => {
 				$httpBackend.expect('GET', '/ping').respond(200, {pong: true});
 
 				const spy = jasmine.createSpy('potion.fetch()');
-				potion.fetch('/ping').then((data) => {
+				potion.fetch('/ping').then(data => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
 					spy();
@@ -286,8 +286,8 @@ class Group extends Item {
 // and register resources
 angular
 	.module('test', ['potion'])
-	.config(['potionProvider', (potionProvider) => {
+	.config(['potionProvider', potionProvider => {
 		potionProvider.config({prefix: ''});
 	}])
-	.factory('User', ['potion', (potion) => potion.register('/user', User)])
-	.factory('Group', ['potion', (potion) => potion.register('/group', Group)]);
+	.factory('User', ['potion', potion => potion.register('/user', User)])
+	.factory('Group', ['potion', potion => potion.register('/group', Group)]);

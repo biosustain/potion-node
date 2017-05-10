@@ -1,4 +1,4 @@
-import {PotionBase, FetchOptions} from './potion';
+import {FetchOptions, PotionBase} from './potion';
 import {Item} from './item';
 
 
@@ -31,11 +31,9 @@ export class Pagination<T extends Item> extends Array<T> {
 	private uri: string;
 	private options: FetchOptions;
 
-	// private items: T[] = [];
-
-	private _page: number;
-	private _perPage: number;
-	private _total: number;
+	private $page: number;
+	private $perPage: number;
+	private $total: number;
 
 	constructor({potion, uri}: {potion: PotionBase, uri: string}, items: T[], count: string, options?: FetchOptions) {
 		super(...items);
@@ -46,17 +44,17 @@ export class Pagination<T extends Item> extends Array<T> {
 
 		this.potion = potion;
 		this.uri = uri;
-		this.options = options || ({} as FetchOptions);
+		this.options = options || {};
 
 		// tslint:disable-next-line:no-magic-numbers
-		const {page = 1, perPage = 25} = this.options.search || {};
-		this._page = page;
-		this._perPage = perPage;
-		this._total = parseInt(count, 10);
+		const {page = 1, perPage = 25}: any = this.options.search || {};
+		this.$page = page;
+		this.$perPage = perPage;
+		this.$total = parseInt(count, 10);
 	}
 
 	get page(): number {
-		return this._page;
+		return this.$page;
 	}
 	// Setting the page will trigger a new query and update the items.
 	set page(page: number) {
@@ -64,26 +62,26 @@ export class Pagination<T extends Item> extends Array<T> {
 	}
 
 	get perPage(): number {
-		return this._perPage;
+		return this.$perPage;
 	}
 
 	get pages(): number {
-		return Math.ceil(this._total / this._perPage);
+		return Math.ceil(this.$total / this.$perPage);
 	}
 
 	get total(): number {
-		return this._total;
+		return this.$total;
 	}
 
 	changePageTo(page: number): Promise<T | T[] | Pagination<T> | any> {
 		(this.options.search as any).page = page;
-		this._page = page;
+		this.$page = page;
 		return this.potion.fetch(this.uri, this.options, this);
 	}
 
 	update(items: T[], count: number): this {
 		this.splice(0, this.length, ...items);
-		this._total = count;
+		this.$total = count;
 		return this;
 	}
 

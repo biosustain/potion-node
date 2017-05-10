@@ -1,10 +1,10 @@
 /* tslint:disable: max-classes-per-file prefer-function-over-method */
 
 import {
-	PotionBase,
-	RequestOptions,
+	FetchOptions,
 	ItemCache,
-	FetchOptions
+	PotionBase,
+	RequestOptions
 } from './potion';
 import {Item} from './item';
 import {Route} from './route';
@@ -64,7 +64,7 @@ describe('potion/core', () => {
 		});
 
 		describe('.fetch()', () => {
-			it('should correctly serialize {data, search} params when making a request', (done) => {
+			it('should correctly serialize {data, search} params when making a request', done => {
 				let search: any;
 				let data: any;
 
@@ -225,7 +225,7 @@ describe('potion/core', () => {
 				cache.clear();
 			});
 
-			it('should correctly deserialize Potion server response', (done) => {
+			it('should correctly deserialize Potion server response', done => {
 				Promise.all([User.fetch(1), User.fetch('00cc8d4b-9682-4655-ad78-1fa4b03e757d')]).then(([user1, user2]: User[]) => {
 					expect(user1.id).toEqual(1);
 					expect(user1.createdAt instanceof Date).toBe(true);
@@ -235,14 +235,14 @@ describe('potion/core', () => {
 				});
 			});
 
-			it('should always cache the Item(s)', (done) => {
+			it('should always cache the Item(s)', done => {
 				User.fetch(1).then(() => {
 					expect(cache.get('/user/1')).not.toBeUndefined();
 					done();
 				});
 			});
 
-			it('should automatically resolve references', (done) => {
+			it('should automatically resolve references', done => {
 				Car.fetch(1).then((car: Car) => {
 					expect(car.user instanceof (User as any)).toBe(true);
 					expect(car.user.id).toEqual(1);
@@ -250,23 +250,23 @@ describe('potion/core', () => {
 				});
 			});
 
-			it('should work with cross-references', (done) => {
+			it('should work with cross-references', done => {
 				Person.fetch(1).then((person: Person) => {
 					expect(person.sibling instanceof (Person as any)).toBe(true);
 					done();
 				});
 			});
 
-			it('should return the original request response for {$schema} references', (done) => {
-				User.schema().then((json) => {
-					expect(json).toEqual(deepOmap(schema, null, (key) => toCamelCase(key)));
+			it('should return the original request response for {$schema} references', done => {
+				User.schema().then(json => {
+					expect(json).toEqual(deepOmap(schema, null, key => toCamelCase(key)));
 					done();
 				});
 			});
 
 			// TODO: this may behave different at some point,
 			// but for now we need to test the lib works properly when such values are parsed.
-			it('should skip {$ref: "#"} references', (done) => {
+			it('should skip {$ref: "#"} references', done => {
 				Engine.fetch(1).then((engine: Engine) => {
 					expect(engine.car).toEqual('#');
 					done();

@@ -1,4 +1,4 @@
-/* tslint:disable: prefer-function-over-method */
+/* tslint:disable: prefer-function-over-method max-classes-per-file */
 
 import {PotionBase} from './potion';
 import {Item} from './item';
@@ -36,7 +36,7 @@ describe('potion/core', () => {
 
 		});
 
-		it('should allow for usage as instance property', (done) => {
+		it('should allow for usage as instance property', done => {
 			User.fetch(1).then((user: User) => {
 				expect(typeof user.attributes === 'function').toBe(true);
 				done();
@@ -48,7 +48,7 @@ describe('potion/core', () => {
 		});
 
 		describe('.GET()', () => {
-			it('should return valid JSON', (done) => {
+			it('should return valid JSON', done => {
 				User.names().then((names: any) => {
 					expect(names instanceof Array).toBe(true);
 					expect(names.length).toEqual(1);

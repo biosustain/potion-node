@@ -1,9 +1,9 @@
 import * as angular from 'angular';
 import {
+	PotionBase,
 	PotionOptions,
-	RequestOptions,
 	PotionResponse,
-	PotionBase
+	RequestOptions
 } from './core';
 import {setPotionPromise} from './core/metadata';
 

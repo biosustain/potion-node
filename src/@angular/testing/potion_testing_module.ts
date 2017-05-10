@@ -1,9 +1,9 @@
 import {NgModule} from '@angular/core';
 import {
-	HttpModule,
-	ConnectionBackend,
 	BaseRequestOptions,
-	Http
+	ConnectionBackend,
+	Http,
+	HttpModule
 } from '@angular/http';
 import {MockBackend} from '@angular/http/testing';
 

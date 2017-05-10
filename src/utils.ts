@@ -14,7 +14,7 @@ export function toSnakeCase(str: string, separator: string = '_'): string {
  * Snake case to camel case
  */
 export function toCamelCase(str: string): string {
-	return str.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
+	return str.replace(/_([a-z0-9])/g, g => g[1].toUpperCase());
 }
 
 
@@ -34,7 +34,7 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
  * Object.map()
  */
 // TODO: Remove this and use deepOmap()
-export function omap(object: Object, callback: (key: string, value: any) => [string, any], context?: any): {[key: string]: any} {
+export function omap(object: {}, callback: (key: string, value: any) => [string, any], context?: any): {[key: string]: any} {
 	const mapped = {};
 	for (const [key, value] of (Object as any).entries(object)) {
 		const [k, v] = callback.call(context, key, value);
@@ -52,10 +52,10 @@ export function omap(object: Object, callback: (key: string, value: any) => [str
 export type KeyMapper = (key: string) => string;
 export type ValueMapper = (value: any) => any;
 
-export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper: KeyMapper | null, context?: any): {[key: string]: any} {
+export function deepOmap(obj: {}, valueMapper: ValueMapper | null, keyMapper: KeyMapper | null, context?: any): {[key: string]: any} {
 	if (Array.isArray(obj)) {
 		return (obj as any[]).map(
-			(value) => typeof value === 'object'
+			value => typeof value === 'object'
 				? deepOmap(value, valueMapper, keyMapper, context)
 				: value
 		);
@@ -83,7 +83,7 @@ export function deepOmap(obj: Object, valueMapper: ValueMapper | null, keyMapper
 /**
  * Merge array of objects into one object.
  */
-export function merge(...objects: {[key: string]: any}[]): any {
+export function merge(...objects: Array<{[key: string]: any}>): any {
 	const result = {};
 	for (const obj of objects) {
 		Object.assign(result, obj);
@@ -95,7 +95,7 @@ export function merge(...objects: {[key: string]: any}[]): any {
 /**
  * Check if an object is empty
  */
-export function isEmpty(obj: Object): boolean {
+export function isEmpty(obj: {}): boolean {
 	return Object.keys(obj).length === 0;
 }
 
@@ -103,14 +103,14 @@ export function isEmpty(obj: Object): boolean {
 /**
  * Transform an Object or Map to pairs of [key, value].
  */
-export function entries<K, V>(object: any): [K, V][] {
+export function entries<K, V>(object: any): Array<[K, V]> {
 	let entries: any;
 	if (object instanceof Map) {
 		entries = object.entries();
 	} else if (typeof object === 'object' && object !== null) {
 		entries = Object.entries(object);
 	}
-	return Array.from(entries) as [K, V][];
+	return Array.from(entries) as Array<[K, V]>;
 }
 
 

@@ -124,7 +124,8 @@ describe('potion/core', () => {
 						case '/user':
 							return buildQueryResponse([
 								{$ref: '/user/1'},
-								{$ref: '/user/2'}
+								{$ref: '/user/2'},
+								{$ref: '/user/3'},
 							], options);
 						case '/person':
 							return buildQueryResponse([
@@ -146,6 +147,12 @@ describe('potion/core', () => {
 							return Promise.resolve({
 								data: {
 									$uri: '/user/2'
+								}
+							});
+						case '/user/3':
+							return Promise.resolve({
+								data: {
+									$uri: '/user/3'
 								}
 							});
 						case '/person/1':
@@ -275,7 +282,7 @@ describe('potion/core', () => {
 					Object.assign(response, {
 						data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
 						headers: {
-							'x-total-count': 2
+							'x-total-count': response.data.length
 						}
 					});
 				}
@@ -287,17 +294,17 @@ describe('potion/core', () => {
 		it('should return a Pagination object', (done) => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users instanceof Pagination).toBe(true);
-				expect(users.length).toEqual(2);
+				expect(users.length).toEqual(3);
 				expect(users.page).toEqual(1);
 				expect(users.perPage).toEqual(25); // Default value if not set with options
 				expect(users.pages).toEqual(1);
-				expect(users.total).toEqual(2);
+				expect(users.total).toEqual(3);
 				done();
 			});
 		});
 
 		it('should contain instances of an Item', (done) => {
-			User.query({}, {paginate: true}).then((users: User[]) => {
+			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				for (const user of users) {
 					expect(user instanceof (User as any)).toBe(true);
 				}
@@ -306,22 +313,23 @@ describe('potion/core', () => {
 		});
 
 		it('should return the right page when called with pagination params ({page, perPage})', (done) => {
-			User.query({page: 2, perPage: 1}, {paginate: true}).then((users: Pagination<User>) => {
+			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users.length).toEqual(1);
 				expect(users.page).toEqual(2);
-				expect(users.perPage).toEqual(1);
+				expect(users.perPage).toEqual(2);
 				expect(users.pages).toEqual(2);
-				expect(users.total).toEqual(2);
-				expect(users.toArray()[0].id).toEqual(2); // Jane
+				expect(users.total).toEqual(3);
+				expect(users.toArray()[0].id).toEqual(3); // Jane
 				done();
 			});
 		});
 
 		it('should update query if {page} is set on the pagination object', (done) => {
-			User.query({page: 2, perPage: 1}, {paginate: true}).then((users: Pagination<User>) => {
+			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
 				users.changePageTo(1).then(() => {
 					expect(users.page).toEqual(1);
 					expect(users.toArray()[0].id).toEqual(1); // John
+					expect(users.length).toEqual(2);
 					done();
 				});
 			});
@@ -602,12 +610,12 @@ describe('potion/core', () => {
 
 				user.save()
 					.then(() => User.fetch(4))
-					.then((user) => {
+					.then((user: User) => {
 						expect(user.name).toEqual(name);
 						user.name = 'John Doe';
 						user.save()
 							.then(() => User.fetch(4))
-							.then((user) => {
+							.then((user: User) => {
 								expect(user.id).toEqual(4);
 								expect(user.name).toEqual('John Doe');
 								done();

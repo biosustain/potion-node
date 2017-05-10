@@ -22,33 +22,37 @@ export interface PaginationOptions {
  *     }
  * });
  */
-export class Pagination<T extends Item> {
+export class Pagination<T extends Item> extends Array<T> {
+	static get [Symbol.species]() {
+		return Pagination;
+	}
+
 	private potion: PotionBase;
 	private uri: string;
 	private options: FetchOptions;
 
-	private items: T[] = [];
+	// private items: T[] = [];
 
 	private _page: number;
 	private _perPage: number;
 	private _total: number;
 
 	constructor({potion, uri}: {potion: PotionBase, uri: string}, items: T[], count: string, options?: FetchOptions) {
+		super(...items);
+		// Set the prototype explicitly.
+		// NOTE: This is necessary and recommended: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work.
+		// Docs: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
+		Object.setPrototypeOf(this, Pagination.prototype);
+
 		this.potion = potion;
 		this.uri = uri;
 		this.options = options || ({} as FetchOptions);
-
-		this.items.push(...items);
 
 		// tslint:disable-next-line:no-magic-numbers
 		const {page = 1, perPage = 25} = this.options.search || {};
 		this._page = page;
 		this._perPage = perPage;
 		this._total = parseInt(count, 10);
-	}
-
-	[Symbol.iterator](): IterableIterator<T> {
-		return this.items.values();
 	}
 
 	get page(): number {
@@ -71,10 +75,6 @@ export class Pagination<T extends Item> {
 		return this._total;
 	}
 
-	get length(): number {
-		return this.items.length;
-	}
-
 	changePageTo(page: number): Promise<T | T[] | Pagination<T> | any> {
 		(this.options.search as any).page = page;
 		this._page = page;
@@ -82,12 +82,17 @@ export class Pagination<T extends Item> {
 	}
 
 	update(items: T[], count: number): this {
-		this.items.splice(0, this.length, ...items);
+		this.splice(0, this.length, ...items);
 		this._total = count;
 		return this;
 	}
 
+	/**
+	 * This will be removed as this class is iterable.
+	 * @deprecated
+	 */
+	// TODO: Remove this
 	toArray(): T[] {
-		return this.items;
+		return this;
 	}
 }

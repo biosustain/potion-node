@@ -119,6 +119,7 @@ describe('potion/core', () => {
 			class User extends Item {
 				static schema: (params?: any, options?: FetchOptions) => Promise<any> = Route.GET<any>('/schema');
 				createdAt: Date;
+				parent?: User;
 			}
 
 			class Car extends Item {
@@ -162,6 +163,43 @@ describe('potion/core', () => {
 									data: {
 										$uri: '/car/1',
 										user: {$ref: '/user/1'}
+									},
+									headers: {}
+								});
+							case '/user/2':
+								return Promise.resolve({
+									data: {
+										$uri: '/user/2',
+										parent: {$ref: '/user/3'},
+										created_at: {
+											$date: 1451060269000
+										}
+									}
+								});
+							case '/user/3':
+								return new Promise((resolve) => {
+									setTimeout(() => resolve({
+										data: {
+											$uri: '/user/3',
+											created_at: {
+												$date: 1451060269000
+											}
+										}
+									}), 100)
+								});
+							case '/car/2':
+								return Promise.resolve({
+									data: {
+										$uri: '/car/2',
+										user: {$ref: '/user/2'}
+									},
+									headers: {}
+								});
+							case '/car/3':
+								return Promise.resolve({
+									data: {
+										$uri: '/car/3',
+										user: {$ref: '/user/2'}
 									},
 									headers: {}
 								});
@@ -248,6 +286,31 @@ describe('potion/core', () => {
 					expect(car.user.id).toEqual(1);
 					done();
 				});
+			});
+
+			it('should not resolve before references are populated', done => {
+				Promise.all([
+					User.fetch(2).then((user: User) => {
+						console.log('user #2:', JSON.stringify(user));
+						expect(cache.get('/user/2')).not.toBeUndefined();
+						expect(user instanceof (User as any)).toBe(true);
+						expect(user.id).toEqual(2);
+						expect(user.createdAt instanceof Date).toBe(true);
+						expect(user.parent instanceof (User as any)).toBe(true);
+					}),
+					Car.fetch(2).then((car: Car) => {
+						console.log('car #2:', JSON.stringify(car));
+						expect(cache.get('/car/2')).not.toBeUndefined();
+						expect(cache.get('/user/2')).not.toBeUndefined();
+						expect(car.user).not.toBeUndefined();
+						expect(car.user instanceof (User as any)).toBe(true);
+						expect(car.user.id).toEqual(2);
+						expect(car.user.createdAt instanceof Date).toBe(true);
+						expect(car.user.parent instanceof (User as any)).toBe(true);
+					})
+				]).then(() => {
+					done();
+				})
 			});
 
 			it('should work with cross-references', done => {

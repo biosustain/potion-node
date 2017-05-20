@@ -146,7 +146,6 @@ export abstract class PotionBase {
 			// try to get item from cache and return a resolved promise with the cached item.
 			// NOTE: Queries are not cached.
 			if  (cache) {
-				console.log(key);
 				if (this.cache.has(key)) {
 					return this.cache.get(key);
 				}
@@ -271,6 +270,7 @@ export abstract class PotionBase {
 
 	private fromPotionJSON(json: any): Promise<{[key: string]: any}> {
 		const {Promise} = this;
+
 		if (typeof json === 'object' && json !== null) {
 			if (isArray(json)) {
 				return Promise.all(json.map(item => this.fromPotionJSON(item)));
@@ -293,36 +293,20 @@ export abstract class PotionBase {
 				}
 
 				const properties: Map<string, any> = new Map();
-				const promises: Map<string, Promise<any>> = new Map();
-
-				// Resolve possible references
-				for (const [key, value] of entries<string, any>(json)) {
-					if (key === '$uri') {
-						properties.set(key, uri);
-					} else {
-						const k = toCamelCase(key);
-						promises.set(k, this.fromPotionJSON(value).then(value => {
-							properties.set(k, value);
-							return value;
-						}));
-					}
-				}
-
 				// Set the id
 				const [id] = params;
 				properties.set('$id', Number.isInteger(id) || /^\d+$/.test(id) ? parseInt(id, 10) : id);
-
-				const unpack = Promise.all(Array.from(promises.values()));
+				const unpack = this.parsePotionJSONProperties(json, properties);
 
 				// Create and cache the resource if it does not exist.
 				if (!this.cache.has(uri)) {
-					this.cache.put(uri, unpack.then(() => Reflect.construct(resource, [mapToObject(properties)])));
+					this.cache.put(uri, unpack.then((properties) => Reflect.construct(resource, [properties])));
 				} else {
 					// If the resource already exists,
 					// update it with new properties.
-					return unpack.then(() => this.cache.get(uri))
-						.then((item) => {
-							Object.assign(item, mapToObject(properties));
+					return Promise.all([unpack, this.cache.get(uri)])
+						.then(([properties, item]) => {
+							Object.assign(item, properties);
 							return item;
 						});
 				}
@@ -361,21 +345,24 @@ export abstract class PotionBase {
 				}
 			}
 
-			const properties: Map<string, any> = new Map();
-			const promises: Map<string, Promise<any>> = new Map();
-
-			for (const [key, value] of entries<string, any>(json)) {
-				const k = toCamelCase(key);
-				promises.set(k, this.fromPotionJSON(value).then(value => {
-					properties.set(k, value);
-					return value;
-				}));
-			}
-
-			return Promise.all(Array.from(promises.values()))
-				.then(() => mapToObject(properties));
+			return this.parsePotionJSONProperties(json);
 		} else {
 			return Promise.resolve(json);
 		}
+	}
+
+	private parsePotionJSONProperties(json: any, properties: Map<any, any> = new Map()): any {
+		const {Promise} = this;
+		const promises: Promise<any>[] = [];
+
+		for (const [key, value] of entries<string, any>(json)) {
+			promises.push(this.fromPotionJSON(value).then(value => {
+				properties.set(toCamelCase(key), value);
+				return value;
+			}));
+		}
+
+		return Promise.all(promises)
+			.then(() => mapToObject(properties));
 	}
 }

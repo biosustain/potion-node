@@ -1,3 +1,4 @@
+// tslint:disable: max-classes-per-file
 import * as angular from 'angular';
 import {
 	PotionBase,

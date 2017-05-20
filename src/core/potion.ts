@@ -221,7 +221,7 @@ export abstract class PotionBase {
 	 * @param {RequestOptions} options
 	 * @returns {PotionResponse} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
 	 */
-	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>; // tslint:disable-line: prefer-function-over-method
+	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
 	// Try to parse a Potion URI and find the associated resource for it,
 	// otherwise return a rejected promise.
@@ -291,7 +291,7 @@ export abstract class PotionBase {
 
 						// Create and cache the resource if it does not exist.
 						if (!this.cache.has(uri)) {
-							this.cache.put(uri, unpack.then((properties) => Reflect.construct(resource, [properties])));
+							this.cache.put(uri, unpack.then(properties => Reflect.construct(resource, [properties])));
 						} else {
 							// If the resource already exists,
 							// update it with new properties.
@@ -336,7 +336,7 @@ export abstract class PotionBase {
 
 	private parsePotionJSONProperties(json: any, properties: Map<any, any> = new Map()): any {
 		const {Promise} = this;
-		const promises: Promise<any>[] = [];
+		const promises: Array<Promise<any>> = [];
 
 		for (const [key, value] of entries<string, any>(json)) {
 			promises.push(this.fromPotionJSON(value).then(value => {

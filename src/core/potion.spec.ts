@@ -177,7 +177,7 @@ describe('potion/core', () => {
 									}
 								});
 							case '/user/3':
-								return new Promise((resolve) => {
+								return new Promise(resolve => {
 									setTimeout(() => resolve({
 										data: {
 											$uri: '/user/3',
@@ -185,7 +185,7 @@ describe('potion/core', () => {
 												$date: 1451060269000
 											}
 										}
-									}), 100)
+									}), 100);
 								});
 							case '/car/2':
 								return Promise.resolve({
@@ -295,7 +295,6 @@ describe('potion/core', () => {
 			it('should not resolve before references are populated', done => {
 				Promise.all([
 					User.fetch(2).then((user: User) => {
-						console.log('user #2:', JSON.stringify(user));
 						expect(cache.get('/user/2')).not.toBeUndefined();
 						expect(user instanceof (User as any)).toBe(true);
 						expect(user.id).toEqual(2);
@@ -303,7 +302,6 @@ describe('potion/core', () => {
 						expect(user.parent instanceof (User as any)).toBe(true);
 					}),
 					Car.fetch(2).then((car: Car) => {
-						console.log('car #2:', JSON.stringify(car));
 						expect(cache.get('/car/2')).not.toBeUndefined();
 						expect(cache.get('/user/2')).not.toBeUndefined();
 						expect(car.user).not.toBeUndefined();
@@ -314,7 +312,7 @@ describe('potion/core', () => {
 					})
 				]).then(() => {
 					done();
-				})
+				});
 			});
 
 			it('should work with cross-references', done => {

@@ -40,6 +40,7 @@ export interface ParsedURI {
 	params: string[];
 }
 
+// TODO: Start using a more standard impl. of these interfaces (either create proper classes for some or use the native Request, etc.)
 export interface URLSearchParams {
 	[key: string]: any;
 }
@@ -130,6 +131,7 @@ export abstract class PotionBase {
 			.then(response => this.deserialize(response))
 			.then(({headers, data}) => {
 				// Return or update Pagination
+				// TODO: Refactor this, looks messy (pagination logic should be handled in the Pagination class)
 				if (paginate) {
 					const count = headers['x-total-count'] || data.length;
 					if (!pagination) {

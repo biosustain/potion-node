@@ -246,7 +246,6 @@ export abstract class PotionBase {
 	}
 
 	private toPotionJSON(json: any): {[key: string]: any} {
-		// console.log(json)
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Item && typeof json.uri === 'string') {
 				return {$ref: `${this.prefix}${json.uri}`};

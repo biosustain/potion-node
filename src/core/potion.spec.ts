@@ -319,8 +319,6 @@ describe('potion/core', () => {
 
 			it('should work with cross-references', done => {
 				Person.fetch(1).then((person: Person) => {
-					console.log(person);
-
 					expect(person.sibling instanceof (Person as any)).toBe(true);
 					done();
 				});

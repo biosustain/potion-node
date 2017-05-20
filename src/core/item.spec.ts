@@ -44,7 +44,7 @@ describe('potion/core', () => {
 				}
 				put(key: string, item: Promise<Item>): Promise<Item> {
 					memcache[key] = item;
-					return Promise.resolve(item);
+					return this.get(key);
 				}
 				remove(key: string): void {
 					delete memcache[key];

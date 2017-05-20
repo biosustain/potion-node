@@ -291,7 +291,7 @@ export abstract class PotionBase {
 
 						// Create and cache the resource if it does not exist.
 						if (!this.cache.has(uri)) {
-							this.cache.put(uri, unpack.then(properties => Reflect.construct(resource, [properties])));
+							return this.cache.put(uri, unpack.then(properties => Reflect.construct(resource, [properties])));
 						} else {
 							// If the resource already exists,
 							// update it with new properties.
@@ -301,8 +301,6 @@ export abstract class PotionBase {
 									return item;
 								});
 						}
-
-						return this.cache.get(uri);
 					});
 			} else if (typeof json.$schema === 'string') {
 				// If we have a schema object,

@@ -30,9 +30,6 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
 }
 
 
-/**
- * Deep Object.map()
- */
 // TODO: Add unit tests (test all possible scenarios)
 export type KeyMapper = (key: string) => string;
 export type ValueMapper = (value: any) => any;
@@ -49,6 +46,13 @@ export function isDate(value: any): value is Date {
 	return value instanceof Date;
 }
 
+/**
+ * Deep Object.map()
+ * @param {Object} obj
+ * @param {ValueMapper} valueMapper - Transform operation to apply on the value.
+ * @param {KeyMapper} keyMapper - Transform operation to apply on the key.
+ * @param {Object} context - What should `this` be when the transform fns are applied.
+ */
 export function omap(obj: {}, keyMapper: KeyMapper | null, valueMapper?: ValueMapper | null, context?: any): {[key: string]: any} {
 	if (isArray(obj)) {
 		// NOTE: Value can be an Array or Object

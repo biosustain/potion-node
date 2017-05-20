@@ -8,7 +8,7 @@ import {
 } from './potion';
 import {Item} from './item';
 import {Route} from './route';
-import {deepOmap, toCamelCase} from '../utils';
+import {omap, toCamelCase} from '../utils';
 
 
 describe('potion/core', () => {
@@ -259,7 +259,7 @@ describe('potion/core', () => {
 
 			it('should return the original request response for {$schema} references', done => {
 				User.schema().then(json => {
-					expect(json).toEqual(deepOmap(schema, null, key => toCamelCase(key)));
+					expect(json).toEqual(omap(schema, key => toCamelCase(key)));
 					done();
 				});
 			});

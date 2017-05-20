@@ -31,46 +31,42 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
 
 
 /**
- * Object.map()
- */
-// TODO: Remove this and use deepOmap()
-export function omap(object: {}, callback: (key: string, value: any) => [string, any], context?: any): {[key: string]: any} {
-	const mapped = {};
-	for (const [key, value] of (Object as any).entries(object)) {
-		const [k, v] = callback.call(context, key, value);
-		mapped[k] = v;
-	}
-	return mapped;
-}
-
-
-/**
  * Deep Object.map()
  */
-// TODO: Rename to omap()
 // TODO: Add unit tests (test all possible scenarios)
 export type KeyMapper = (key: string) => string;
 export type ValueMapper = (value: any) => any;
 
-export function deepOmap(obj: {}, valueMapper: ValueMapper | null, keyMapper: KeyMapper | null, context?: any): {[key: string]: any} {
-	if (Array.isArray(obj)) {
-		return (obj as any[]).map(
-			value => typeof value === 'object'
-				? deepOmap(value, valueMapper, keyMapper, context)
-				: value
-		);
-	} else if (typeof obj === 'object' && obj !== null) {
+// Type guard
+// https://www.typescriptlang.org/docs/handbook/advanced-types.html
+export function isArray(value: any): value is any[] {
+	return Array.isArray(value);
+}
+export function isJsObject(value: any): value is {} {
+	return typeof value === 'object' && !isArray(value) && value !== null;
+}
+export function isDate(value: any): value is Date {
+	return value instanceof Date;
+}
+
+export function omap(obj: {}, keyMapper: KeyMapper | null, valueMapper?: ValueMapper | null, context?: any): {[key: string]: any} {
+	if (isArray(obj)) {
+		// NOTE: Value can be an Array or Object
+		return obj.map(value => typeof value === 'object' ? omap(value, keyMapper, valueMapper, context) : value);
+	} else if (isJsObject(obj)) {
 		const result = {};
 
-		for (let [key, value] of Object.entries(obj)) { // tslint:disable-line: prefer-const
-			key = typeof keyMapper === 'function'
-				? keyMapper.call(context, key)
-				: key;
-			result[key] = typeof value === 'object' || Array.isArray(value)
-				? deepOmap(value, valueMapper, keyMapper, context)
-				: typeof valueMapper === 'function'
-					? valueMapper.call(context, value)
-					: value;
+		for (const [key, value] of entries<string, any>(obj)) { // tslint:disable-line: prefer-const
+			const k = typeof keyMapper === 'function' ? keyMapper.call(context, key) : key;
+
+			// NOTE: Value can be an Array or Object
+			if (typeof value === 'object' && !isDate(value)) {
+				result[k] = omap(value, keyMapper, valueMapper, context);
+			} else if (typeof valueMapper === 'function') {
+				result[k] = valueMapper.call(context, value);
+			} else {
+				result[k] = value;
+			}
 		}
 
 		return result;
@@ -95,7 +91,7 @@ export function merge(...objects: Array<{[key: string]: any}>): any {
 /**
  * Check if an object is empty
  */
-export function isEmpty(obj: {}): boolean {
+export function isObjectEmpty(obj: {}): boolean {
 	return Object.keys(obj).length === 0;
 }
 
@@ -107,7 +103,7 @@ export function entries<K, V>(object: any): Array<[K, V]> {
 	let entries: any;
 	if (object instanceof Map) {
 		entries = object.entries();
-	} else if (typeof object === 'object' && object !== null) {
+	} else if (isJsObject(object)) {
 		entries = Object.entries(object);
 	}
 	return Array.from(entries) as Array<[K, V]>;

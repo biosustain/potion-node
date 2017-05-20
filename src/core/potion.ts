@@ -8,8 +8,8 @@ import {
 import {Item, ItemOptions} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
-	deepOmap,
 	entries,
+	isArray,
 	mapToObject,
 	MemCache,
 	omap,
@@ -192,7 +192,7 @@ export abstract class PotionBase {
 		decorateCtorWithPotionInstance(resource, this);
 		decorateCtorWithPotionURI(resource, uri);
 
-		if (options && Array.isArray(options.readonly)) {
+		if (options && isArray(options.readonly)) {
 			options.readonly.forEach(property => readonly(resource, property));
 		}
 		this.resources[uri] = resource;
@@ -246,15 +246,16 @@ export abstract class PotionBase {
 	}
 
 	private toPotionJSON(json: any): {[key: string]: any} {
+		// console.log(json)
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Item && typeof json.uri === 'string') {
 				return {$ref: `${this.prefix}${json.uri}`};
 			} else if (json instanceof Date) {
 				return {$date: json.getTime()};
-			} else if (Array.isArray(json)) {
+			} else if (isArray(json)) {
 				return json.map(item => this.toPotionJSON(item));
 			} else {
-				return omap(json, (key, value) => [toSnakeCase(key), this.toPotionJSON(value)]);
+				return omap(json, key => toSnakeCase(key), value => this.toPotionJSON(value), this);
 			}
 		} else {
 			return json;
@@ -272,7 +273,7 @@ export abstract class PotionBase {
 	private fromPotionJSON(json: any): Promise<{[key: string]: any}> {
 		const {Promise} = this;
 		if (typeof json === 'object' && json !== null) {
-			if (Array.isArray(json)) {
+			if (isArray(json)) {
 				return Promise.all(json.map(item => this.fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string') {
 				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
@@ -337,7 +338,7 @@ export abstract class PotionBase {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
 				// Though, we want to convert snake case to camel case.
-				return Promise.resolve(deepOmap(json, null, key => toCamelCase(key)));
+				return Promise.resolve(omap(json, key => toCamelCase(key)));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.

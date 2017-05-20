@@ -31,7 +31,7 @@ import {
 	RequestOptions as PotionRequestOptions
 } from '../core';
 
-import {isEmpty, merge} from '../utils';
+import {isArray, isObjectEmpty, merge} from '../utils';
 
 
 /**
@@ -97,14 +97,14 @@ export class Potion extends PotionBase {
 
 	registerFromProvider(resources: PotionResources[]): void {
 		// Remove any values that contain no resources.
-		resources = merge(...resources.filter(item => !isEmpty(item)));
+		resources = merge(...resources.filter(item => !isObjectEmpty(item)));
 
-		if (!isEmpty(resources)) {
+		if (!isObjectEmpty(resources)) {
 			for (const [uri, type] of Object.entries(resources)) {
 				// NOTE: Skip registration of existing resources.
 				if (!this.resources.hasOwnProperty(uri)) {
 					// `type` can be a tuple with resource type and a configuration for the resource type
-					if (Array.isArray(type)) {
+					if (isArray(type)) {
 						const [resource, config] = type;
 						this.register(uri, resource, config);
 					} else {

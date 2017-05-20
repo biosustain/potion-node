@@ -117,7 +117,7 @@ export abstract class PotionBase {
 		if (paginate) {
 			// If no page was provided set to first
 			// Default to 25 items per page
-			search = options.search = Object.assign({page: 1, perPage: 25}, search);
+			search = options.search = {page: 1, perPage: 25, ...search};
 		}
 
 		// Convert the {data, search} object props to snake case.

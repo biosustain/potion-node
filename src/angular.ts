@@ -6,6 +6,8 @@ import {
 	RequestOptions
 } from './core';
 import {setPotionPromise} from './core/metadata';
+import {ItemCache} from './core/potion';
+import {Item} from './core/item';
 
 
 export {Item, Route, readonly} from './core';
@@ -45,6 +47,23 @@ function potionProvider(): any {
 			}
 		}
 
+		class AngularJsCache<T extends Item> implements ItemCache<T> {
+			has(key: string): boolean {
+				return cache.get(key) !== undefined;
+			}
+			get(key: string): Promise<T> {
+				return cache.get<Promise<T>>(key);
+			}
+			put(key: string, item: Promise<T>): Promise<T> {
+				cache.put(key, item);
+				return cache.get<Promise<T>>(key);
+			}
+
+			remove(key: string): void {
+				cache.remove(key);
+			}
+		}
+
 		// Make sure Potion uses $q as the Promise implementation.
 		// NOTE: This is necessary due to the nature of AngularJS change detection system.
 		setPotionPromise(Potion, $q);
@@ -52,7 +71,7 @@ function potionProvider(): any {
 		// Use the $cacheFactory and allow user to override cache.
 		/* tslint:disable: align */
 		return new Potion(Object.assign({
-			cache
+			cache: new AngularJsCache()
 		}, options));
 	}];
 

@@ -36,11 +36,15 @@ describe('potion/core', () => {
 			}
 
 			class MockCache implements ItemCache<Item> {
-				get(key: string): Item {
-					return memcache[key];
+				has(key: string): boolean {
+					return memcache[key] !== undefined;
 				}
-				put(key: string, item: Item): Item {
-					return memcache[key] = item;
+				get(key: string): Promise<Item> {
+					return Promise.resolve(memcache[key]);
+				}
+				put(key: string, item: Promise<Item>): Promise<Item> {
+					memcache[key] = item;
+					return Promise.resolve(item);
 				}
 				remove(key: string): void {
 					delete memcache[key];
@@ -79,8 +83,7 @@ describe('potion/core', () => {
 
 		it('should skip retrieval from Item cache if {cache} option is set to false', done => {
 			User.fetch(1, {cache: false}).then(() => {
-				// `cache.get()` will be called twice during deserialization in Potion()._fromPotionJSON()
-				expect(cache.get).toHaveBeenCalledTimes(2);
+				expect(cache.get).toHaveBeenCalledTimes(1);
 				expect(cache.get('/user/1')).toBeDefined();
 				done();
 			});
@@ -100,7 +103,7 @@ describe('potion/core', () => {
 			members: Person[];
 		}
 
-		// Back references mock classes
+		// Circular references mock classes
 		class M1 extends Item {
 			m2: M2;
 		}
@@ -248,12 +251,16 @@ describe('potion/core', () => {
 
 			const memcache = new Map();
 			class MockCache implements ItemCache<Item> {
-				get(key: string): Item {
+				has(key: string): boolean {
+					return memcache.has(key);
+				}
+
+				get(key: string): Promise<Item> {
 					return memcache.get(key);
 				}
-				put(key: string, item: Item): Item {
-					memcache.set(key, item);
-					return item;
+				put(key: string, item: Promise<Item>): Promise<Item> {
+					return memcache.set(key, item)
+						.get(key);
 				}
 				remove(key: string): void {
 					memcache.delete(key);
@@ -352,7 +359,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should work with back references', done => {
+		it('should work with circular references', done => {
 			M1.query({})
 				.then((m1s: M1[]) => {
 					expect(m1s.length).toEqual(3);

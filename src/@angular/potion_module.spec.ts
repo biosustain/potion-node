@@ -273,8 +273,8 @@ describe('potion/@angular', () => {
 		});
 
 		describe('.query()', () => {
-			it('should work with back references', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				// Back references mock classes
+			it('should work with circular references', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
+				// Circular references mock classes
 				@potion.registerAs('/m1')
 				class M1 extends Item {
 					m2: M2;

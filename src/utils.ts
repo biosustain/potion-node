@@ -1,4 +1,5 @@
-import {ItemCache} from './core';
+import {Item} from './core/item';
+import {ItemCache} from './core/potion';
 
 
 /**
@@ -118,19 +119,18 @@ export function entries<K, V>(object: any): Array<[K, V]> {
  * In-Memory cache
  * Will be used by default by Potion for caching resources.
  */
-export class MemCache implements ItemCache<any> {
-	protected items: Map<string, any>;
+export class MemCache<T extends Item> implements ItemCache<T> {
+	protected items: Map<string, any> = new Map<string, Promise<T>>();
 
-	constructor() {
-		this.items = new Map<string, any>();
+	has(key: string): boolean {
+		return this.items.has(key);
 	}
-
-	get(key: string): any {
+	get(key: string): Promise<T> {
 		return this.items.get(key);
 	}
-
-	put(key: string, item: any): any {
-		return this.items.set(key, item).get(key);
+	put(key: string, item: Promise<T>): Promise<T> {
+		return this.items.set(key, item)
+			.get(key);
 	}
 
 	remove(key: string): void {

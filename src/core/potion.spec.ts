@@ -233,11 +233,15 @@ describe('potion/core', () => {
 				}
 
 				class MockCache implements ItemCache<Item> {
-					get(key: string): Item {
-						return memcache[key];
+					has(key: string): boolean {
+						return memcache[key] !== undefined;
 					}
-					put(key: string, item: Item): Item {
-						return memcache[key] = item;
+					get(key: string): Promise<Item> {
+						return Promise.resolve(memcache[key]);
+					}
+					put(key: string, item: Promise<Item>): Promise<Item> {
+						memcache[key] = item;
+						return Promise.resolve(item);
 					}
 					remove(key: string): void {
 						delete memcache[key];
@@ -315,6 +319,8 @@ describe('potion/core', () => {
 
 			it('should work with cross-references', done => {
 				Person.fetch(1).then((person: Person) => {
+					console.log(person);
+
 					expect(person.sibling instanceof (Person as any)).toBe(true);
 					done();
 				});

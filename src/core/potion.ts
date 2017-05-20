@@ -23,8 +23,9 @@ import {
  * Dictates the implementation of the item cache.
  */
 export interface ItemCache<T extends Item> {
-	get(key: string): T;
-	put(key: string, item: T): T;
+	has(key: string): boolean;
+	get(key: string): Promise<T>;
+	put(key: string, item: Promise<T>): Promise<T>;
 	remove(key: string): void;
 }
 
@@ -141,14 +142,13 @@ export abstract class PotionBase {
 			});
 
 		if (method === 'GET' && !search) {
-			// If a GET request and {cache: true},
-			// try to get item from cache,
-			// and return a resolved promise with the cached item.
-			// Note that queries are not cached.
+			// If a GET request was made and {cache: true},
+			// try to get item from cache and return a resolved promise with the cached item.
+			// NOTE: Queries are not cached.
 			if  (cache) {
-				const item = this.cache.get(key);
-				if (item) {
-					return Promise.resolve(item);
+				console.log(key);
+				if (this.cache.has(key)) {
+					return this.cache.get(key);
 				}
 			}
 
@@ -176,7 +176,7 @@ export abstract class PotionBase {
 						? err
 						: `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
 				return Promise.reject(message);
-				});
+			});
 		} else {
 			return fetch();
 		}
@@ -296,12 +296,6 @@ export abstract class PotionBase {
 				const properties: Map<string, any> = new Map();
 				const promises: Map<string, Promise<any>> = new Map();
 
-				// Cache the resource if it does not exist,
-				// but do it before resolving any possible references (to other resources) on it.
-				if (!this.cache.get(uri)) {
-					this.cache.put(uri, Reflect.construct(resource, []));
-				}
-
 				// Resolve possible references
 				for (const [key, value] of entries<string, any>(json)) {
 					if (key === '$uri') {
@@ -319,21 +313,22 @@ export abstract class PotionBase {
 				const [id] = params;
 				properties.set('$id', Number.isInteger(id) || /^\d+$/.test(id) ? parseInt(id, 10) : id);
 
-				return Promise.all(Array.from(promises.values()))
-					.then(() => {
-						// Try to get existing entry from cache
-						let item = this.cache.get(uri);
-						if (item) {
-							// Update existing entry with new properties
-							Object.assign(item, mapToObject(properties));
-						} else {
-							// Create a new entry
-							item = Reflect.construct(resource, [mapToObject(properties)]);
-							this.cache.put(uri, item);
-						}
+				const unpack = Promise.all(Array.from(promises.values()));
 
-						return item;
-					});
+				// Create and cache the resource if it does not exist.
+				if (!this.cache.has(uri)) {
+					this.cache.put(uri, unpack.then(() => Reflect.construct(resource, [mapToObject(properties)])));
+				} else {
+					// If the resource already exists,
+					// update it with new properties.
+					return unpack.then(() => this.cache.get(uri))
+						.then((item) => {
+							Object.assign(item, mapToObject(properties));
+							return item;
+						});
+				}
+
+				return this.cache.get(uri);
 			} else if (typeof json.$schema === 'string') {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.

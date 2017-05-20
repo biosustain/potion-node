@@ -36,7 +36,7 @@ export interface ItemCache<T extends Item> {
 
 export interface ParsedURI {
 	uri: string;
-	resource: Item;
+	resource: typeof Item;
 	params: string[];
 }
 
@@ -223,25 +223,28 @@ export abstract class PotionBase {
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>; // tslint:disable-line: prefer-function-over-method
 
-	private parseURI(uri: string): ParsedURI {
-		uri = decodeURIComponent(uri);
+	// Try to parse a Potion URI and find the associated resource for it,
+	// otherwise return a rejected promise.
+	private parseURI(uri: string): Promise<ParsedURI> {
+		const {Promise} = this;
 
+		uri = decodeURIComponent(uri);
 		if (uri.indexOf(this.prefix) === 0) {
 			uri = uri.substring(this.prefix.length);
 		}
 
 		for (const [resourceURI, resource] of entries<string, any>(this.resources)) {
 			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return {
+				return Promise.resolve({
 					uri,
 					resource,
 					params: uri.substring(resourceURI.length + 1)
 						.split('/')
-				};
+				});
 			}
 		}
 
-		throw new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`);
+		return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`));
 	}
 
 	private toPotionJSON(json: any): {[key: string]: any} {
@@ -278,40 +281,29 @@ export abstract class PotionBase {
 				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
 				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.
 
-				// Try to parse the URI,
-				// otherwise reject with the exception thrown from parseURI.
-				let resource;
-				let params;
-				let uri;
-				try {
-					const parsedURI = this.parseURI(json.$uri);
-					resource = parsedURI.resource;
-					params = parsedURI.params;
-					uri = parsedURI.uri;
-				} catch (parseURIError) {
-					return Promise.reject(parseURIError);
-				}
+				return this.parseURI(json.$uri)
+					.then(({resource, params, uri}) => {
+						const properties: Map<string, any> = new Map();
+						// Set the id
+						const [id] = params;
+						properties.set('$id', /^\d+$/.test(id) ? parseInt(id, 10) : id);
+						const unpack = this.parsePotionJSONProperties(json, properties);
 
-				const properties: Map<string, any> = new Map();
-				// Set the id
-				const [id] = params;
-				properties.set('$id', Number.isInteger(id) || /^\d+$/.test(id) ? parseInt(id, 10) : id);
-				const unpack = this.parsePotionJSONProperties(json, properties);
+						// Create and cache the resource if it does not exist.
+						if (!this.cache.has(uri)) {
+							this.cache.put(uri, unpack.then((properties) => Reflect.construct(resource, [properties])));
+						} else {
+							// If the resource already exists,
+							// update it with new properties.
+							return Promise.all([unpack, this.cache.get(uri)])
+								.then(([properties, item]) => {
+									Object.assign(item, properties);
+									return item;
+								});
+						}
 
-				// Create and cache the resource if it does not exist.
-				if (!this.cache.has(uri)) {
-					this.cache.put(uri, unpack.then((properties) => Reflect.construct(resource, [properties])));
-				} else {
-					// If the resource already exists,
-					// update it with new properties.
-					return Promise.all([unpack, this.cache.get(uri)])
-						.then(([properties, item]) => {
-							Object.assign(item, properties);
-							return item;
-						});
-				}
-
-				return this.cache.get(uri);
+						return this.cache.get(uri);
+					});
 			} else if (typeof json.$schema === 'string') {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
@@ -325,20 +317,11 @@ export abstract class PotionBase {
 						return Promise.resolve(json.$ref);
 					}
 
-					// Try to parse the URI,
-					// otherwise reject with the exception thrown from parseURI.
-					let uri;
-					try {
-						const parsedURI = this.parseURI(json.$ref);
-						uri = parsedURI.uri;
-					} catch (parseURIError) {
-						return Promise.reject(parseURIError);
-					}
-
-					return this.fetch(uri, {
-						cache: true,
-						method: 'GET'
-					});
+					return this.parseURI(json.$ref)
+						.then(({uri}) => this.fetch(uri, {
+							cache: true,
+							method: 'GET'
+						}));
 				} else if (typeof json.$date !== 'undefined') {
 					// Parse Potion date
 					return Promise.resolve(new Date(json.$date));

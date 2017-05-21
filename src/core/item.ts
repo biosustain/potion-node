@@ -77,14 +77,12 @@ export abstract class Item {
 
 	private $uri: string;
 	private $id: number | string | null = null;
-	private potion: PotionBase;
 
 	/**
 	 * Create an instance of the class that extended the Item.
 	 * @param {Object} properties - An object with any properties that will be added and accessible on the resource.
 	 */
 	constructor(properties: any = {}) {
-		this.potion = potionInstance(this.constructor as typeof Item);
 		Object.assign(this, properties);
 	}
 
@@ -113,7 +111,7 @@ export abstract class Item {
 		const properties = {};
 
 		Object.keys(this)
-			.filter(key => !key.startsWith('$') && key !== 'potion' && !isReadonly(this.constructor, key))
+			.filter(key => !key.startsWith('$') && !isReadonly(this.constructor, key))
 			.forEach(key => {
 				properties[key] = this[key];
 			});
@@ -128,7 +126,9 @@ export abstract class Item {
 		if (this.uri || this.id) {
 			return this.update(this.toJSON());
 		}
-		return this.potion.fetch(potionURI(this.constructor as typeof Item), {
+		const ctor = this.constructor as typeof Item;
+		return potionInstance(ctor)
+			.fetch(potionURI(ctor), {
 			method: 'POST',
 			data: this.toJSON(),
 			cache: true
@@ -140,7 +140,8 @@ export abstract class Item {
 	 * @param {Object} data - An object with any properties to update.
 	 */
 	update(data: any = {}): Promise<this> {
-		return this.potion.fetch(this.uri, {
+		return potionInstance(this.constructor as typeof Item)
+			.fetch(this.uri, {
 			cache: true,
 			method: 'PATCH',
 			data
@@ -152,8 +153,9 @@ export abstract class Item {
 	 */
 	destroy(): Promise<void> {
 		const {uri} = this;
-		const cache = this.potion.cache;
-		return this.potion.fetch(uri, {method: 'DELETE'})
+		const potion = potionInstance(this.constructor as typeof Item);
+		const cache = potion.cache;
+		return potion.fetch(uri, {method: 'DELETE'})
 			.then(clearCache);
 		function clearCache(): void {
 			// Clear the item from cache if exists

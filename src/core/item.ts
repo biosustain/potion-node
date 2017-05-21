@@ -1,5 +1,5 @@
 import {isReadonly, potionInstance, potionURI} from './metadata';
-import {FetchOptions, PotionBase, QueryOptions} from './potion';
+import {FetchOptions, QueryOptions} from './potion';
 import {Pagination} from './pagination';
 
 

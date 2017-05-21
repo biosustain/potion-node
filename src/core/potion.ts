@@ -74,6 +74,16 @@ export interface PotionOptions {
 }
 
 
+export function getErrorMessage(error: any, uri: string): string {
+	if (error instanceof Error) {
+		return error.message;
+	} else if (typeof error === 'string') {
+		return error;
+	}
+	return `An error occurred while Potion tried to retrieve a resource from '${uri}'.`
+}
+
+
 /**
  * This class contains the main logic for interacting with the Flask Potion backend.
  * Note that this class does not contain the logic for making the HTTP requests,
@@ -171,11 +181,7 @@ export abstract class PotionBase {
 				// make sure to remove the pending request so further requests can be made.
 				// Return is necessary.
 				this.pendingGETRequests.delete(uri);
-				const message = err instanceof Error
-					? err.message
-					: typeof err === 'string'
-						? err
-						: `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
+				const message = getErrorMessage(err, uri);
 				return Promise.reject(message);
 			});
 		} else {

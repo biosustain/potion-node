@@ -129,6 +129,8 @@ export abstract class PotionBase {
 			// Deserialize the Potion JSON.
 			.then(response => this.deserialize(response, uri, options, pagination));
 
+		// TODO: Cache requests for queries with params as well,
+		// we just need to create a hash key for the request (uri + search params).
 		if (method === 'GET' && !paginate && !search) {
 			// If a GET request was made and {cache: true} return the item from cache (if it exists).
 			// NOTE: Queries are not cached.

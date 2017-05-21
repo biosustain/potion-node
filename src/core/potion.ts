@@ -126,7 +126,7 @@ export abstract class PotionBase {
 
 		// Serialize request to Potion JSON.
 		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
-		// Deserialize the Potion JSON.
+			// Deserialize the Potion JSON.
 			.then(response => this.deserialize(response, uri, options, pagination));
 
 		if (method === 'GET' && !paginate && !search) {

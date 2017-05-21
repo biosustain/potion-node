@@ -124,25 +124,10 @@ export abstract class PotionBase {
 			uri = `${prefix}${uri}`;
 		}
 
-
-		// Convert the {data, search} object props to snake case.
-		// Serialize all values to Potion JSON.
+		// Serialize request to Potion JSON.
 		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
-			// Convert the data to Potion JSON
-			.then(response => this.deserialize(response))
-			.then(({headers, data}) => {
-				// Return or update Pagination
-				// TODO: Refactor this, looks messy (pagination logic should be handled in the Pagination class)
-				if (paginate) {
-					const count = headers['x-total-count'] || data.length;
-					if (!pagination) {
-						return new Pagination<Item>({uri, potion: this}, data, count, options);
-					} else {
-						return pagination.update(data, count);
-					}
-				}
-				return data;
-			});
+		// Deserialize the Potion JSON.
+			.then(response => this.deserialize(response, uri, options, pagination));
 
 		if (method === 'GET' && !paginate && !search) {
 			// If a GET request was made and {cache: true} return the item from cache (if it exists).
@@ -158,8 +143,8 @@ export abstract class PotionBase {
 					return data;
 				}, err => {
 					// If request fails,
-					// make sure to remove the pending request so further requests can be made.
-					// Return is necessary.
+					// make sure to remove the pending request so further requests can be made,
+					// but fail the pipeline.
 					this.pendingGETRequests.delete(uri);
 					const message = getErrorMessage(err, uri);
 					return Promise.reject(message);
@@ -214,30 +199,17 @@ export abstract class PotionBase {
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
-	// Try to parse a Potion URI and find the associated resource for it,
-	// otherwise return a rejected promise.
-	private parseURI(uri: string): Promise<ParsedURI> {
-		const {Promise} = this;
+	private serialize(options: FetchOptions): RequestOptions {
+		const {search} = options;
 
-		uri = decodeURIComponent(uri);
-		if (uri.indexOf(this.prefix) === 0) {
-			uri = uri.substring(this.prefix.length);
-		}
-
-		for (const [resourceURI, resource] of entries<string, any>(this.resources)) {
-			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return Promise.resolve({
-					uri,
-					resource,
-					params: uri.substring(resourceURI.length + 1)
-						.split('/')
-				});
+		return {
+			...options,
+			...{
+				search: this.toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...search} : search),
+				data: this.toPotionJSON(options.data)
 			}
-		}
-
-		return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`));
+		};
 	}
-
 	private toPotionJSON(json: any): {[key: string]: any} {
 		if (typeof json === 'object' && json !== null) {
 			if (json instanceof Item && typeof json.uri === 'string') {
@@ -254,27 +226,23 @@ export abstract class PotionBase {
 		}
 	}
 
-	private serialize(options: FetchOptions): RequestOptions {
-		const {search} = options;
-
-		return {
-			...options,
-			...{
-				search: this.toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...search} : search),
-				data: this.toPotionJSON(options.data)
-			}
-		};
-	}
-
-	private deserialize({data, headers}: PotionResponse): Promise<PotionResponse> {
+	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions, pagination?: Pagination<any>): Promise<PotionResponse> {
 		return this.fromPotionJSON(data)
-			.then(json => ({
-				headers,
-				data: json
-			}));
+			.then(json => {
+				// Return or update Pagination
+				// TODO: Refactor this, looks messy (pagination logic should be handled in the Pagination class)
+				if (options.paginate) {
+					const count = headers['x-total-count'] || json.length;
+					if (!pagination) {
+						return new Pagination<Item>({uri, potion: this}, json, count, options);
+					} else {
+						return pagination.update(json, count);
+					}
+				}
+				return json;
+			});
 	}
-
-	private fromPotionJSON(json: any): Promise<{[key: string]: any}> {
+	private fromPotionJSON(json: any): Promise<any> {
 		const {Promise} = this;
 
 		if (typeof json === 'object' && json !== null) {
@@ -334,7 +302,29 @@ export abstract class PotionBase {
 			return Promise.resolve(json);
 		}
 	}
+	// Try to parse a Potion URI and find the associated resource for it,
+	// otherwise return a rejected promise.
+	private parseURI(uri: string): Promise<ParsedURI> {
+		const {Promise} = this;
 
+		uri = decodeURIComponent(uri);
+		if (uri.indexOf(this.prefix) === 0) {
+			uri = uri.substring(this.prefix.length);
+		}
+
+		for (const [resourceURI, resource] of entries<string, any>(this.resources)) {
+			if (uri.indexOf(`${resourceURI}/`) === 0) {
+				return Promise.resolve({
+					uri,
+					resource,
+					params: uri.substring(resourceURI.length + 1)
+						.split('/')
+				});
+			}
+		}
+
+		return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`));
+	}
 	private parsePotionJSONProperties(json: any, properties: Map<any, any> = new Map()): any {
 		const {Promise} = this;
 		const promises: Array<Promise<any>> = [];

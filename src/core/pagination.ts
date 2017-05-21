@@ -11,7 +11,6 @@ export interface PaginationOptions {
 /**
  * Array like class with resources.
  * The class is returned when the {paginate} option is set to `true` when a query is made.
- * It implements the [Iterator](https://basarat.gitbooks.io/typescript/content/docs/iterators.html) which means that `for..of` and `.next()` can be used to iterate over the items.
  *
  * @example
  * class User extends Item {}

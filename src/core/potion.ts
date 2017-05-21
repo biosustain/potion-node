@@ -114,8 +114,7 @@ export abstract class PotionBase {
 
 	fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		const options: FetchOptions = {...fetchOptions};
-		const {method, cache, paginate, data} = options;
-		let {search} = options;
+		const {method, cache, paginate, search} = options;
 		const key = uri;
 		const {Promise} = this;
 
@@ -125,18 +124,10 @@ export abstract class PotionBase {
 			uri = `${prefix}${uri}`;
 		}
 
-		if (paginate) {
-			// If no page was provided set to first
-			// Default to 25 items per page
-			search = options.search = {page: 1, perPage: 25, ...search};
-		}
 
 		// Convert the {data, search} object props to snake case.
 		// Serialize all values to Potion JSON.
-		const fetch = () => this.request(`${this.host}${uri}`, {...options, ...{
-				search: this.toPotionJSON(search),
-				data: this.toPotionJSON(data)
-			}})
+		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
 			// Convert the data to Potion JSON
 			.then(response => this.deserialize(response))
 			.then(({headers, data}) => {
@@ -153,7 +144,7 @@ export abstract class PotionBase {
 				return data;
 			});
 
-		if (method === 'GET' && !search) {
+		if (method === 'GET' && !paginate && !search) {
 			// If a GET request was made and {cache: true},
 			// try to get item from cache and return a resolved promise with the cached item.
 			// NOTE: Queries are not cached.
@@ -269,6 +260,18 @@ export abstract class PotionBase {
 		} else {
 			return json;
 		}
+	}
+
+	private serialize(options: FetchOptions): RequestOptions {
+		const {search} = options;
+
+		return {
+			...options,
+			...{
+				search: this.toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...search} : search),
+				data: this.toPotionJSON(options.data)
+			}
+		};
 	}
 
 	private deserialize({data, headers}: PotionResponse): Promise<PotionResponse> {

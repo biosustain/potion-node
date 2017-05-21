@@ -99,6 +99,7 @@ describe('potion/core', () => {
 			let cache;
 			let memcache = {};
 
+			const uuid = '00cc8d4b-9682-4655-ad78-1fa4b03e757d';
 			const schema = {
 				$schema: 'http://json-schema.org/draft-04/hyper-schema#',
 				properties: {
@@ -134,6 +135,8 @@ describe('potion/core', () => {
 				sibling: Person;
 			}
 
+			class Foo extends Item {}
+
 			beforeEach(() => {
 				class Potion extends PotionBase {
 					protected request(uri: string): Promise<any> {
@@ -149,10 +152,10 @@ describe('potion/core', () => {
 										}
 									}
 								});
-							case '/user/00cc8d4b-9682-4655-ad78-1fa4b03e757d':
+							case `/user/${uuid}`:
 								return Promise.resolve({
 									data: {
-										$uri: '/user/00cc8d4b-9682-4655-ad78-1fa4b03e757d',
+										$uri: `/user/${uuid}`,
 										created_at: {
 											$date: 1451060269000
 										}
@@ -224,6 +227,23 @@ describe('potion/core', () => {
 										sibling: {$ref: '/person/1'}
 									}
 								});
+							case '/foo/1':
+								return Promise.resolve({
+									data: {
+										$id: 1,
+										$type: 'foo'
+									},
+									headers: {}
+								});
+
+							case `/foo/${uuid}`:
+								return Promise.resolve({
+									data: {
+										$id: uuid,
+										$type: 'foo'
+									},
+									headers: {}
+								});
 							default:
 								break;
 						}
@@ -258,6 +278,7 @@ describe('potion/core', () => {
 				potion.register('/car', Car);
 				potion.register('/engine', Engine);
 				potion.register('/person', Person);
+				potion.register('/foo', Foo);
 
 				spyOn(potion, 'fetch').and.callThrough();
 				spyOn(cache, 'get').and.callThrough();
@@ -268,11 +289,10 @@ describe('potion/core', () => {
 			});
 
 			it('should correctly deserialize Potion server response', done => {
-				Promise.all([User.fetch(1), User.fetch('00cc8d4b-9682-4655-ad78-1fa4b03e757d')]).then(([user1, user2]: User[]) => {
-					expect(user1.id).toEqual(1);
-					expect(user1.createdAt instanceof Date).toBe(true);
-					expect(user2.id).toEqual('00cc8d4b-9682-4655-ad78-1fa4b03e757d');
-					expect(user2.createdAt instanceof Date).toBe(true);
+				User.fetch(1)
+					.then((user: User) => {
+					expect(user.id).toEqual(1);
+					expect(user.createdAt instanceof Date).toBeTruthy();
 					done();
 				});
 			});
@@ -334,6 +354,24 @@ describe('potion/core', () => {
 			it('should skip {$ref: "#"} references', done => {
 				Engine.fetch(1).then((engine: Engine) => {
 					expect(engine.car).toEqual('#');
+					done();
+				});
+			});
+
+			it('should work with responses that provide {$id, $type} instead of {$uri}', done => {
+				Promise.all([Foo.fetch(1), Foo.fetch(uuid)])
+					.then(([foo1, foo2]) => {
+						expect(foo1.uri).toEqual('/foo/1');
+						expect(foo2.uri).toEqual(`/foo/${uuid}`);
+						done();
+					});
+			});
+
+			it('should work with {$uri} as string', done => {
+				User.fetch(uuid)
+					.then((user: User) => {
+					expect(user.id).toEqual(uuid);
+					expect(user.createdAt instanceof Date).toBeTruthy();
 					done();
 				});
 			});

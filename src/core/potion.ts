@@ -35,9 +35,9 @@ export interface ItemCache<T extends Item> {
  */
 
 export interface ParsedURI {
-	uri: string;
 	resource: typeof Item;
-	params: string[];
+	id: string | number;
+	uri: string;
 }
 
 // TODO: Start using a more standard impl. of these interfaces (either create proper classes for some or use the native Request, etc.)
@@ -81,6 +81,37 @@ export function getErrorMessage(error: any, uri: string): string {
 		return error;
 	}
 	return `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
+}
+
+export function canAggregateURI({$type, $id}: {[key: string]: any}): boolean {
+	return (typeof $id === 'string' || Number.isInteger($id)) && typeof $type === 'string';
+}
+
+export function getURI({$uri, $ref, $type, $id}: {[key: string]: any}): string {
+	if (typeof $uri === 'string') {
+		return decodeURIComponent($uri);
+	} else if (typeof $ref === 'string') {
+		return decodeURIComponent($ref);
+	} else if (canAggregateURI({$type, $id})) {
+		return `/${$type}/${$id}`;
+	}
+	return '';
+}
+
+export function removePrefix(uri: string, prefix: string): string {
+	if (uri.indexOf(prefix) === 0) {
+		return uri.substring(prefix.length);
+	}
+	return uri;
+}
+
+export function parseID(id: any): string | number | null {
+	if (typeof id === 'string') {
+		return /^\d+$/.test(id) ? parseInt(id, 10) : id;
+	} else if (Number.isInteger(id)) {
+		return id;
+	}
+	return null;
 }
 
 
@@ -250,16 +281,15 @@ export abstract class PotionBase {
 		if (typeof json === 'object' && json !== null) {
 			if (isArray(json)) {
 				return Promise.all(json.map(item => this.fromPotionJSON(item)));
-			} else if (typeof json.$uri === 'string') {
-				// TODO: the json may also have {$type, $id} that can be used to recognize a resource
-				// If neither combination is provided, it should throw and let the user now Flask Potion needs to be configured with one of these two strategies.
-
-				return this.parseURI(json.$uri)
-					.then(({resource, params, uri}) => {
+			} else if (typeof json.$uri === 'string' || canAggregateURI(json)) {
+				// NOTE: The json may also have {$type, $id} that can be used to recognize a resource instead of {$uri}.
+				// If neither combination is provided it will throw.
+				return this.parseURI(json)
+					.then(({resource, id, uri}) => {
 						const properties: Map<string, any> = new Map();
-						// Set the id
-						const [id] = params;
-						properties.set('$id', /^\d+$/.test(id) ? parseInt(id, 10) : id);
+						// NOTE: {id}
+						properties.set('$id', id);
+						properties.set('$uri', uri);
 						const unpack = this.parsePotionJSONProperties(json, properties);
 
 						// Create and cache the resource if it does not exist.
@@ -288,7 +318,7 @@ export abstract class PotionBase {
 						return Promise.resolve(json.$ref);
 					}
 
-					return this.parseURI(json.$ref)
+					return this.parseURI(json)
 						.then(({uri}) => this.fetch(uri, {
 							cache: true,
 							method: 'GET'
@@ -306,26 +336,32 @@ export abstract class PotionBase {
 	}
 	// Try to parse a Potion URI and find the associated resource for it,
 	// otherwise return a rejected promise.
-	private parseURI(uri: string): Promise<ParsedURI> {
+	private parseURI({$ref, $uri, $type, $id}: {[key: string]: any}): Promise<ParsedURI> {
 		const {Promise} = this;
+		const uri = removePrefix(getURI({$ref, $uri, $type, $id}), this.prefix);
 
-		uri = decodeURIComponent(uri);
-		if (uri.indexOf(this.prefix) === 0) {
-			uri = uri.substring(this.prefix.length);
-		}
+		const entry = entries<string, any>(this.resources)
+			.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
 
-		for (const [resourceURI, resource] of entries<string, any>(this.resources)) {
-			if (uri.indexOf(`${resourceURI}/`) === 0) {
-				return Promise.resolve({
-					uri,
-					resource,
-					params: uri.substring(resourceURI.length + 1)
-						.split('/')
+		if (!entry) {
+			return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown Potion resource.`));
+		} else {
+			const [resourceURI, resource] = entry;
+			const params = {resource, uri};
+			const id = parseID($id);
+
+			if (id !== null) {
+				Object.assign(params, {id});
+			} else {
+				const [part] = uri.substring(resourceURI.length + 1)
+					.split('/');
+				Object.assign(params, {
+					id: parseID(part)
 				});
 			}
-		}
 
-		return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown potion resource.`));
+			return Promise.resolve(params);
+		}
 	}
 	private parsePotionJSONProperties(json: any, properties: Map<any, any> = new Map()): any {
 		const {Promise} = this;

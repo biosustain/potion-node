@@ -145,36 +145,28 @@ export abstract class PotionBase {
 			});
 
 		if (method === 'GET' && !paginate && !search) {
-			// If a GET request was made and {cache: true},
-			// try to get item from cache and return a resolved promise with the cached item.
+			// If a GET request was made and {cache: true} return the item from cache (if it exists).
 			// NOTE: Queries are not cached.
-			if  (cache) {
-				if (this.cache.has(key)) {
-					return this.cache.get(key);
-				}
+			if  (cache && this.cache.has(key)) {
+				return this.cache.get(key);
 			}
 
-			// If we already asked for the resource,
-			// return the exiting pending request promise.
-			if (this.pendingGETRequests.has(uri)) {
-				return this.pendingGETRequests.get(uri);
+			// Cache the request so that further requests for the same resource will not make an aditional XHR.
+			if (!this.pendingGETRequests.has(uri)) {
+				this.pendingGETRequests.set(uri, fetch().then(data => {
+					this.pendingGETRequests.delete(uri);
+					return data;
+				}, err => {
+					// If request fails,
+					// make sure to remove the pending request so further requests can be made.
+					// Return is necessary.
+					this.pendingGETRequests.delete(uri);
+					const message = getErrorMessage(err, uri);
+					return Promise.reject(message);
+				}));
 			}
 
-			const request = fetch();
-			// Save pending request
-			this.pendingGETRequests.set(uri, request);
-
-			return request.then(data => {
-				this.pendingGETRequests.delete(uri);
-				return data;
-			}, err => {
-				// If request fails,
-				// make sure to remove the pending request so further requests can be made.
-				// Return is necessary.
-				this.pendingGETRequests.delete(uri);
-				const message = getErrorMessage(err, uri);
-				return Promise.reject(message);
-			});
+			return this.pendingGETRequests.get(uri);
 		} else {
 			return fetch();
 		}

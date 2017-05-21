@@ -80,7 +80,7 @@ export function getErrorMessage(error: any, uri: string): string {
 	} else if (typeof error === 'string') {
 		return error;
 	}
-	return `An error occurred while Potion tried to retrieve a resource from '${uri}'.`
+	return `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
 }
 
 

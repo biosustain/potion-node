@@ -9,7 +9,6 @@ import {Item, ItemOptions} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
 	entries,
-	isArray,
 	mapToObject,
 	MemCache,
 	omap,
@@ -200,7 +199,7 @@ export abstract class PotionBase {
 		decorateCtorWithPotionInstance(resource, this);
 		decorateCtorWithPotionURI(resource, uri);
 
-		if (options && isArray(options.readonly)) {
+		if (options && Array.isArray(options.readonly)) {
 			options.readonly.forEach(property => readonly(resource, property));
 		}
 		this.resources[uri] = resource;
@@ -249,7 +248,7 @@ export abstract class PotionBase {
 				return {$ref: `${this.prefix}${json.uri}`};
 			} else if (json instanceof Date) {
 				return {$date: json.getTime()};
-			} else if (isArray(json)) {
+			} else if (Array.isArray(json)) {
 				return json.map(item => this.toPotionJSON(item));
 			} else {
 				return omap(json, key => toSnakeCase(key), value => this.toPotionJSON(value), this);
@@ -279,7 +278,7 @@ export abstract class PotionBase {
 		const {Promise} = this;
 
 		if (typeof json === 'object' && json !== null) {
-			if (isArray(json)) {
+			if (Array.isArray(json)) {
 				return Promise.all(json.map(item => this.fromPotionJSON(item)));
 			} else if (typeof json.$uri === 'string' || canAggregateURI(json)) {
 				// NOTE: The json may also have {$type, $id} that can be used to recognize a resource instead of {$uri}.

@@ -31,7 +31,7 @@ import {
 	RequestOptions as PotionRequestOptions
 } from '../core';
 
-import {isArray, isObjectEmpty, merge} from '../utils';
+import {isObjectEmpty, merge} from '../utils';
 
 
 /**
@@ -104,7 +104,7 @@ export class Potion extends PotionBase {
 				// NOTE: Skip registration of existing resources.
 				if (!this.resources.hasOwnProperty(uri)) {
 					// `type` can be a tuple with resource type and a configuration for the resource type
-					if (isArray(type)) {
+					if (Array.isArray(type)) {
 						const [resource, config] = type;
 						this.register(uri, resource, config);
 					} else {

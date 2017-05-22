@@ -13,7 +13,6 @@ export {
 } from './core/potion';
 export {Route, route} from './core/route';
 export {
-	isArray,
 	isJsObject,
 	isObjectEmpty,
 	KeyMapper,

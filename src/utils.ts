@@ -37,11 +37,8 @@ export type ValueMapper = (value: any) => any;
 
 // Type guard
 // https://www.typescriptlang.org/docs/handbook/advanced-types.html
-export function isArray(value: any): value is any[] {
-	return Array.isArray(value);
-}
 export function isJsObject(value: any): value is {} {
-	return typeof value === 'object' && !isArray(value) && value !== null;
+	return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
 export function isDate(value: any): value is Date {
 	return value instanceof Date;
@@ -55,7 +52,7 @@ export function isDate(value: any): value is Date {
  * @param {Object} context - What should `this` be when the transform fns are applied.
  */
 export function omap(obj: {}, keyMapper: KeyMapper | null, valueMapper?: ValueMapper | null, context?: any): {[key: string]: any} {
-	if (isArray(obj)) {
+	if (Array.isArray(obj)) {
 		// NOTE: Value can be an Array or Object
 		return obj.map(value => typeof value === 'object' ? omap(value, keyMapper, valueMapper, context) : value);
 	} else if (isJsObject(obj)) {

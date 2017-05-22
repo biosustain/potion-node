@@ -1,3 +1,4 @@
+import {isFunction} from './utils';
 import {PotionBase} from './potion';
 import {Item} from './item';
 
@@ -67,9 +68,9 @@ export function isReadonly(ctor: any, key: string): boolean {
  * }
  */
 export function readonly(target: any, property: string): void {
-	const constructor = typeof target === 'function'
+	const constructor = isFunction(target)
 		? target
-		: typeof target.constructor === 'function'
+		: isFunction(target.constructor)
 			? target.constructor
 			: null;
 

@@ -13,8 +13,8 @@ import {
 	MemCache,
 	omap,
 	toCamelCase,
-	toSnakeCase
-} from '../utils';
+	toPotionJSON
+} from './utils';
 
 
 /**
@@ -81,6 +81,7 @@ export function getErrorMessage(error: any, uri: string): string {
 	}
 	return `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
 }
+
 
 export function canAggregateURI({$type, $id}: {[key: string]: any}): boolean {
 	return (typeof $id === 'string' || Number.isInteger($id)) && typeof $type === 'string';
@@ -232,30 +233,16 @@ export abstract class PotionBase {
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
 	private serialize(options: FetchOptions): RequestOptions {
+		const {prefix} = this;
 		const {search} = options;
 
 		return {
 			...options,
 			...{
-				search: this.toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...search} : search),
-				data: this.toPotionJSON(options.data)
+				search: toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...search} : search, prefix),
+				data: toPotionJSON(options.data, prefix)
 			}
 		};
-	}
-	private toPotionJSON(json: any): {[key: string]: any} {
-		if (typeof json === 'object' && json !== null) {
-			if (json instanceof Item && typeof json.uri === 'string') {
-				return {$ref: `${this.prefix}${json.uri}`};
-			} else if (json instanceof Date) {
-				return {$date: json.getTime()};
-			} else if (Array.isArray(json)) {
-				return json.map(item => this.toPotionJSON(item));
-			} else {
-				return omap(json, key => toSnakeCase(key), value => this.toPotionJSON(value), this);
-			}
-		} else {
-			return json;
-		}
 	}
 
 	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions, pagination?: Pagination<any>): Promise<PotionResponse> {

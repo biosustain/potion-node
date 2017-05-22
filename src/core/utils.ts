@@ -1,5 +1,5 @@
-import {Item} from './core/item';
-import {ItemCache} from './core/potion';
+import {Item} from './item';
+import {ItemCache} from './potion';
 
 
 /**
@@ -31,7 +31,6 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
 }
 
 
-// TODO: Add unit tests (test all possible scenarios)
 export type KeyMapper = (key: string) => string;
 export type ValueMapper = (value: any) => any;
 
@@ -43,15 +42,24 @@ export function isJsObject(value: any): value is {} {
 export function isDate(value: any): value is Date {
 	return value instanceof Date;
 }
+export function isFunction(value: any): value is Function {
+	return typeof value === 'function';
+}
+export function isAPotionItem(value: any): value is Item {
+	return value instanceof Item;
+}
+
 
 /**
  * Deep Object.map()
+ * NOTE: We assume that every nested value is either an Object, Array or some primitive value (also Date),
+ * but we do not account for any other kind of object as it would not be the case for Potion.
  * @param {Object} obj
  * @param {ValueMapper} valueMapper - Transform operation to apply on the value.
  * @param {KeyMapper} keyMapper - Transform operation to apply on the key.
  * @param {Object} context - What should `this` be when the transform fns are applied.
  */
-export function omap(obj: {}, keyMapper: KeyMapper | null, valueMapper?: ValueMapper | null, context?: any): {[key: string]: any} {
+export function omap(obj: {} | any[], keyMapper: KeyMapper | null, valueMapper?: ValueMapper | null, context?: any): {[key: string]: any} | any[] {
 	if (Array.isArray(obj)) {
 		// NOTE: Value can be an Array or Object
 		return obj.map(value => typeof value === 'object' ? omap(value, keyMapper, valueMapper, context) : value);
@@ -59,12 +67,12 @@ export function omap(obj: {}, keyMapper: KeyMapper | null, valueMapper?: ValueMa
 		const result = {};
 
 		for (const [key, value] of entries<string, any>(obj)) { // tslint:disable-line: prefer-const
-			const k = typeof keyMapper === 'function' ? keyMapper.call(context, key) : key;
+			const k = isFunction(keyMapper) ? keyMapper.call(context, key) : key;
 
 			// NOTE: Value can be an Array or Object
-			if (typeof value === 'object' && !isDate(value)) {
+			if (typeof value === 'object' && !isDate(value) && !isAPotionItem(value)) {
 				result[k] = omap(value, keyMapper, valueMapper, context);
-			} else if (typeof valueMapper === 'function') {
+			} else if (isFunction(valueMapper)) {
 				result[k] = valueMapper.call(context, value);
 			} else {
 				result[k] = value;
@@ -75,6 +83,24 @@ export function omap(obj: {}, keyMapper: KeyMapper | null, valueMapper?: ValueMa
 	}
 
 	return obj;
+}
+
+
+/**
+ * Convert an Object to Potion JSON
+ */
+export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
+	if (typeof json === 'object' && json !== null) {
+		if (json instanceof Item && typeof json.uri === 'string') {
+			return {$ref: `${typeof prefix === 'string' ? prefix : ''}${json.uri}`};
+		} else if (json instanceof Date) {
+			return {$date: json.getTime()};
+		} else if (Array.isArray(json)) {
+			return json.map(item => toPotionJSON(item, prefix));
+		}
+		return omap(json, key => toSnakeCase(key), value => toPotionJSON(value, prefix));
+	}
+	return json;
 }
 
 

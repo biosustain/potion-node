@@ -31,7 +31,7 @@ import {
 	RequestOptions as PotionRequestOptions
 } from '../core';
 
-import {isObjectEmpty, merge} from '../utils';
+import {isObjectEmpty, merge} from '../core/utils';
 
 
 /**

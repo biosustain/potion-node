@@ -13,13 +13,17 @@ export {
 } from './core/potion';
 export {Route, route} from './core/route';
 export {
+	isAPotionItem,
+	isDate,
+	isFunction,
 	isJsObject,
 	isObjectEmpty,
 	KeyMapper,
 	omap,
 	mapToObject,
 	merge,
-	toSnakeCase,
 	toCamelCase,
+	toPotionJSON,
+	toSnakeCase,
 	ValueMapper
-} from './utils';
+} from './core/utils';

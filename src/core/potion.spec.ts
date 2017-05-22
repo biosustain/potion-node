@@ -8,7 +8,7 @@ import {
 } from './potion';
 import {Item} from './item';
 import {Route} from './route';
-import {omap, toCamelCase} from '../utils';
+import {omap, toCamelCase} from './utils';
 
 
 describe('potion/core', () => {

@@ -1,5 +1,6 @@
 /* tslint:disable: prefer-function-over-method max-classes-per-file */
 
+import {isFunction} from './utils';
 import {PotionBase} from './potion';
 import {Item} from './item';
 import {Route} from './route';
@@ -38,13 +39,13 @@ describe('potion/core', () => {
 
 		it('should allow for usage as instance property', done => {
 			User.fetch(1).then((user: User) => {
-				expect(typeof user.attributes === 'function').toBe(true);
+				expect(isFunction(user.attributes)).toBe(true);
 				done();
 			});
 		});
 
 		it('should allow for usage as static property', () => {
-			expect(typeof User.names === 'function').toBe(true);
+			expect(isFunction(User.names)).toBe(true);
 		});
 
 		describe('.GET()', () => {

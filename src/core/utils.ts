@@ -42,6 +42,7 @@ export function isJsObject(value: any): value is {} {
 export function isDate(value: any): value is Date {
 	return value instanceof Date;
 }
+// tslint:disable-next-line: ban-types
 export function isFunction(value: any): value is Function {
 	return typeof value === 'function';
 }

@@ -1,3 +1,5 @@
+// tslint:disable: max-classes-per-file no-empty
+
 import {Item} from './item';
 import {
 	entries,
@@ -146,7 +148,7 @@ describe('potion/utils', () => {
 
 		it('should not traverse Date objects', () => {
 			const now = new Date();
-			expect(omap({ping: now}, keyToUpperCase)).toEqual({PING: now})
+			expect(omap({ping: now}, keyToUpperCase)).toEqual({PING: now});
 		});
 	});
 

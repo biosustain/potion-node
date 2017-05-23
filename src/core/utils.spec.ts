@@ -2,7 +2,8 @@
 
 import {Item} from './item';
 import {
-	entries, getErrorMessage,
+	entries,
+	getErrorMessage,
 	getPotionURI,
 	hasTypeAndId,
 	isAPotionItem,

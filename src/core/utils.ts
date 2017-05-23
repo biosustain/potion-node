@@ -88,6 +88,22 @@ export function omap(obj: {} | any[], keyMapper: KeyMapper | null, valueMapper?:
 
 
 /**
+ * Aggregate a str based on an Error object and uri
+ */
+export function getErrorMessage(error: any, uri?: string): string {
+	const message = 'An error occurred while Potion tried to retrieve a resource';
+	if (error instanceof Error) {
+		return error.message;
+	} else if (typeof error === 'string') {
+		return error;
+	} else if (typeof uri === 'string') {
+		return `${message} from '${uri}'.`;
+	}
+	return `${message}.`;
+}
+
+
+/**
  * Convert an Object to Potion JSON
  */
 export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
@@ -102,6 +118,45 @@ export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
 		return omap(json, key => toSnakeCase(key), value => toPotionJSON(value, prefix));
 	}
 	return json;
+}
+
+/**
+ * Parse a Potion ID
+ */
+export function parsePotionID(id: any): string | number | null {
+	if (typeof id === 'string') {
+		return /^\d+$/.test(id) ? parseInt(id, 10) : id;
+	} else if (Number.isInteger(id)) {
+		return id;
+	}
+	return null;
+}
+
+/**
+ * Get the Potion URI from a Potion JSON object
+ */
+export function hasTypeAndId({$type, $id}: {[key: string]: any}): boolean {
+	return (typeof $id === 'string' || Number.isInteger($id)) && typeof $type === 'string';
+}
+export function getPotionURI({$uri, $ref, $type, $id}: {[key: string]: any}): string {
+	if (typeof $uri === 'string') {
+		return decodeURIComponent($uri);
+	} else if (typeof $ref === 'string') {
+		return decodeURIComponent($ref);
+	} else if (hasTypeAndId({$type, $id})) {
+		return `/${$type}/${$id}`;
+	}
+	return '';
+}
+
+/**
+ * Remove some string from another string
+ */
+export function removeStrFromURI(uri: string, str: string): string {
+	if (uri.indexOf(str) === 0) {
+		return uri.substring(str.length);
+	}
+	return uri;
 }
 
 

@@ -2,7 +2,9 @@
 
 import {Item} from './item';
 import {
-	entries,
+	entries, getErrorMessage,
+	getPotionURI,
+	hasTypeAndId,
 	isAPotionItem,
 	isDate,
 	isFunction,
@@ -12,6 +14,8 @@ import {
 	MemCache,
 	merge,
 	omap,
+	parsePotionID,
+	removeStrFromURI,
 	toCamelCase,
 	toPotionJSON,
 	toSnakeCase
@@ -152,6 +156,15 @@ describe('potion/utils', () => {
 		});
 	});
 
+	describe('getErrorMessage()', () => {
+		it('should aggregate an error message', () => {
+			expect(getErrorMessage(new Error('Oops.'))).toEqual('Oops.');
+			expect(getErrorMessage('Oops.')).toEqual('Oops.');
+			expect(getErrorMessage(null)).toEqual('An error occurred while Potion tried to retrieve a resource.');
+			expect(getErrorMessage(null, '/foo/1')).toEqual('An error occurred while Potion tried to retrieve a resource from \'/foo/1\'.');
+		});
+	});
+
 	describe('toPotionJSON()', () => {
 		it('should serialize an Object to Potion JSON', () => {
 			const foo = new Foo({createdAt: new Date()});
@@ -189,6 +202,43 @@ describe('potion/utils', () => {
 				timestamp: {$date: now.getTime()},
 				foo: {$ref: '/foo/1'}
 			});
+		});
+	});
+
+	describe('parsePotionID()', () => {
+		it('should properly parse a Potion ID', () => {
+			expect(parsePotionID(1)).toEqual(1);
+			expect(parsePotionID('1')).toEqual(1);
+			const uuid = '00cc8d4b-9682-4655-ad78-1fa4b03e757d';
+			expect(parsePotionID(uuid)).toEqual(uuid);
+			expect(parsePotionID({})).toBeNull();
+		});
+	});
+
+	describe('hasTypeAndId()', () => {
+		it('should check if the JSON contains the necessary information for aggregating a Potion URI', () => {
+			expect(hasTypeAndId({})).toBeFalsy();
+			expect(hasTypeAndId({$type: 'foo'})).toBeFalsy();
+			expect(hasTypeAndId({$type: 1, $id: 1})).toBeFalsy();
+			expect(hasTypeAndId({$type: 'foo', $id: 1})).toBeTruthy();
+			expect(hasTypeAndId({$type: 'foo', $id: '1'})).toBeTruthy();
+		});
+	});
+
+	describe('getPotionURI()', () => {
+		it('should aggregate a Potion URI from a Potion JSON object', () => {
+			expect(getPotionURI({})).toEqual('');
+			expect(getPotionURI({$uri: '/foo/1'})).toEqual('/foo/1');
+			expect(getPotionURI({$ref: '/foo/1'})).toEqual('/foo/1');
+			expect(getPotionURI({$type: 'foo', $id: 1})).toEqual('/foo/1');
+			expect(getPotionURI({$type: 'foo', $id: '1'})).toEqual('/foo/1');
+		});
+	});
+
+	describe('removeStrFromURI()', () => {
+		it('should remove some string from another string', () => {
+			expect(removeStrFromURI('/foo/1', '')).toEqual('/foo/1');
+			expect(removeStrFromURI('/prefix/foo/1', '/prefix')).toEqual('/foo/1');
 		});
 	});
 

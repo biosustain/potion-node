@@ -13,6 +13,8 @@ export {
 } from './core/potion';
 export {Route, route} from './core/route';
 export {
+	getPotionURI,
+	hasTypeAndId,
 	isAPotionItem,
 	isDate,
 	isFunction,
@@ -22,6 +24,7 @@ export {
 	omap,
 	mapToObject,
 	merge,
+	parsePotionID,
 	toCamelCase,
 	toPotionJSON,
 	toSnakeCase,

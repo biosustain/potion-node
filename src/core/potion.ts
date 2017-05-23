@@ -9,9 +9,14 @@ import {Item, ItemOptions} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
 	entries,
+	getErrorMessage,
+	getPotionURI,
+	hasTypeAndId,
 	mapToObject,
 	MemCache,
 	omap,
+	parsePotionID,
+	removeStrFromURI,
 	toCamelCase,
 	toPotionJSON
 } from './utils';
@@ -70,48 +75,6 @@ export interface PotionOptions {
 	host?: string;
 	prefix?: string;
 	cache?: ItemCache<Item>;
-}
-
-
-export function getErrorMessage(error: any, uri: string): string {
-	if (error instanceof Error) {
-		return error.message;
-	} else if (typeof error === 'string') {
-		return error;
-	}
-	return `An error occurred while Potion tried to retrieve a resource from '${uri}'.`;
-}
-
-
-export function canAggregateURI({$type, $id}: {[key: string]: any}): boolean {
-	return (typeof $id === 'string' || Number.isInteger($id)) && typeof $type === 'string';
-}
-
-export function getURI({$uri, $ref, $type, $id}: {[key: string]: any}): string {
-	if (typeof $uri === 'string') {
-		return decodeURIComponent($uri);
-	} else if (typeof $ref === 'string') {
-		return decodeURIComponent($ref);
-	} else if (canAggregateURI({$type, $id})) {
-		return `/${$type}/${$id}`;
-	}
-	return '';
-}
-
-export function removePrefix(uri: string, prefix: string): string {
-	if (uri.indexOf(prefix) === 0) {
-		return uri.substring(prefix.length);
-	}
-	return uri;
-}
-
-export function parseID(id: any): string | number | null {
-	if (typeof id === 'string') {
-		return /^\d+$/.test(id) ? parseInt(id, 10) : id;
-	} else if (Number.isInteger(id)) {
-		return id;
-	}
-	return null;
 }
 
 
@@ -267,7 +230,7 @@ export abstract class PotionBase {
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
 				return Promise.all(json.map(item => this.fromPotionJSON(item)));
-			} else if (typeof json.$uri === 'string' || canAggregateURI(json)) {
+			} else if (typeof json.$uri === 'string' || hasTypeAndId(json)) {
 				// NOTE: The json may also have {$type, $id} that can be used to recognize a resource instead of {$uri}.
 				// If neither combination is provided it will throw.
 				return this.parseURI(json)
@@ -324,7 +287,7 @@ export abstract class PotionBase {
 	// otherwise return a rejected promise.
 	private parseURI({$ref, $uri, $type, $id}: {[key: string]: any}): Promise<ParsedURI> {
 		const {Promise} = this;
-		const uri = removePrefix(getURI({$ref, $uri, $type, $id}), this.prefix);
+		const uri = removeStrFromURI(getPotionURI({$ref, $uri, $type, $id}), this.prefix);
 
 		const entry = entries<string, any>(this.resources)
 			.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
@@ -334,7 +297,7 @@ export abstract class PotionBase {
 		} else {
 			const [resourceURI, resource] = entry;
 			const params = {resource, uri};
-			const id = parseID($id);
+			const id = parsePotionID($id);
 
 			if (id !== null) {
 				Object.assign(params, {id});
@@ -342,7 +305,7 @@ export abstract class PotionBase {
 				const [part] = uri.substring(resourceURI.length + 1)
 					.split('/');
 				Object.assign(params, {
-					id: parseID(part)
+					id: parsePotionID(part)
 				});
 			}
 

@@ -109,7 +109,7 @@ export function getErrorMessage(error: any, uri?: string): string {
 export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
 	if (typeof json === 'object' && json !== null) {
 		if (json instanceof Item && typeof json.uri === 'string') {
-			return {$ref: `${typeof prefix === 'string' ? prefix : ''}${json.uri}`};
+			return {$ref: `${addPrefixToURI(json.uri, prefix)}`};
 		} else if (json instanceof Date) {
 			return {$date: json.getTime()};
 		} else if (Array.isArray(json)) {
@@ -152,9 +152,19 @@ export function getPotionURI({$uri, $ref, $type, $id}: {[key: string]: any}): st
 /**
  * Remove some string from another string
  */
-export function removeStrFromURI(uri: string, str: string): string {
-	if (uri.indexOf(str) === 0) {
+export function removePrefixFromURI(uri: string, str: string): string {
+	if (uri.includes(str)) {
 		return uri.substring(str.length);
+	}
+	return uri;
+}
+
+/**
+ * Add a prefix to some string (if not already there)
+ */
+export function addPrefixToURI(uri: string, prefix?: string): string {
+	if (typeof prefix === 'string' && !uri.includes(prefix)) {
+		return `${prefix}${uri}`;
 	}
 	return uri;
 }

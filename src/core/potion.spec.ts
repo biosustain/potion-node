@@ -64,7 +64,7 @@ describe('potion/core', () => {
 		});
 
 		describe('.fetch()', () => {
-			it('should correctly serialize {data, search} params when making a request', done => {
+			it('should correctly serialize {data, search} to Potion JSON params when making a request', done => {
 				let search: any;
 				let data: any;
 
@@ -77,17 +77,36 @@ describe('potion/core', () => {
 					}
 				}
 
-				const potion = new Potion();
+				const potion = new Potion({prefix: '/api'});
 				const today = new Date();
 
+				@potion.registerAs('/foo')
+				class Foo extends Item {}
+				const foo = new Foo();
+				Object.assign(foo, {
+					$uri: '/foo/1',
+					$id: 1
+				});
+
 				potion
-					.fetch('/user', {method: 'POST', data: {firstName: 'John', lastName: 'Doe', birthDate: today, features: [{eyeColor: 'blue'}]}, search: {isAdmin: false}})
+					.fetch('/user', {
+						method: 'POST',
+						data: {
+							foo,
+							firstName: 'John',
+							lastName: 'Doe',
+							birthDate: today,
+							features: [{eyeColor: 'blue'}]
+						},
+						search: {isAdmin: false}
+					})
 					.then(() => {
-						expect(Object.keys(data)).toEqual(['first_name', 'last_name', 'birth_date', 'features']);
+						expect(Object.keys(data)).toEqual(['foo', 'first_name', 'last_name', 'birth_date', 'features']);
 						expect(Object.keys(search)).toEqual(['is_admin']);
 
 						expect(data.birth_date).toEqual({$date: today.getTime()});
 						expect(data.features).toEqual([{eye_color: 'blue'}]);
+						expect(data.foo).toEqual({$ref: '/api/foo/1'});
 
 						done();
 					});

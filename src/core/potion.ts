@@ -8,6 +8,7 @@ import {
 import {Item, ItemOptions} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
+	addPrefixToURI,
 	entries,
 	getErrorMessage,
 	getPotionURI,
@@ -16,7 +17,7 @@ import {
 	MemCache,
 	omap,
 	parsePotionID,
-	removeStrFromURI,
+	removePrefixFromURI,
 	toCamelCase,
 	toPotionJSON
 } from './utils';
@@ -113,10 +114,7 @@ export abstract class PotionBase {
 		const {Promise} = this;
 
 		// Add the API prefix if not present
-		const {prefix} = this;
-		if (uri.indexOf(prefix) === -1) {
-			uri = `${prefix}${uri}`;
-		}
+		uri = addPrefixToURI(uri, this.prefix);
 
 		// Serialize request to Potion JSON.
 		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
@@ -287,7 +285,7 @@ export abstract class PotionBase {
 	// otherwise return a rejected promise.
 	private parseURI({$ref, $uri, $type, $id}: {[key: string]: any}): Promise<ParsedURI> {
 		const {Promise} = this;
-		const uri = removeStrFromURI(getPotionURI({$ref, $uri, $type, $id}), this.prefix);
+		const uri = removePrefixFromURI(getPotionURI({$ref, $uri, $type, $id}), this.prefix);
 
 		const entry = entries<string, any>(this.resources)
 			.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);

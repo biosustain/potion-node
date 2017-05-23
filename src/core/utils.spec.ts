@@ -2,6 +2,7 @@
 
 import {Item} from './item';
 import {
+	addPrefixToURI,
 	entries,
 	getErrorMessage,
 	getPotionURI,
@@ -16,7 +17,7 @@ import {
 	merge,
 	omap,
 	parsePotionID,
-	removeStrFromURI,
+	removePrefixFromURI,
 	toCamelCase,
 	toPotionJSON,
 	toSnakeCase
@@ -204,6 +205,17 @@ describe('potion/utils', () => {
 				foo: {$ref: '/foo/1'}
 			});
 		});
+
+		it('should only append a prefix to $ref if $uri does not already contain it', () => {
+			const foo = new Foo();
+			Object.assign(foo, {
+				$uri: '/prefix/foo/1',
+				$id: 1
+			});
+
+			const json = toPotionJSON(foo, '/prefix');
+			expect(json).toEqual({$ref: '/prefix/foo/1'});
+		});
 	});
 
 	describe('parsePotionID()', () => {
@@ -236,10 +248,17 @@ describe('potion/utils', () => {
 		});
 	});
 
-	describe('removeStrFromURI()', () => {
+	describe('addPrefixToURI()', () => {
+		it('should add a prefix to a string (if it does not already contain it)', () => {
+			expect(addPrefixToURI('/foo/1', '/prefix')).toEqual('/prefix/foo/1');
+			expect(addPrefixToURI('/prefix/foo/1', '/prefix')).toEqual('/prefix/foo/1');
+		});
+	});
+
+	describe('removePrefixFromURI()', () => {
 		it('should remove some string from another string', () => {
-			expect(removeStrFromURI('/foo/1', '')).toEqual('/foo/1');
-			expect(removeStrFromURI('/prefix/foo/1', '/prefix')).toEqual('/foo/1');
+			expect(removePrefixFromURI('/foo/1', '')).toEqual('/foo/1');
+			expect(removePrefixFromURI('/prefix/foo/1', '/prefix')).toEqual('/foo/1');
 		});
 	});
 

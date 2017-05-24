@@ -4,11 +4,10 @@ import {Item} from './item';
 import {
 	addPrefixToURI,
 	entries,
+	fromSchemaJSON,
 	getErrorMessage,
 	getPotionURI,
 	hasTypeAndId,
-	isAPotionItem,
-	isDate,
 	isFunction,
 	isJsObject,
 	isObjectEmpty,
@@ -70,20 +69,6 @@ describe('potion/utils', () => {
 		});
 	});
 
-	describe('isDate()', () => {
-		it('should check if a value is a Date', () => {
-			expect(isDate(true)).toBeFalsy();
-			expect(isDate('')).toBeFalsy();
-			expect(isDate(1)).toBeFalsy();
-			expect(isDate(null)).toBeFalsy();
-			expect(isDate(undefined)).toBeFalsy();
-			expect(isDate([])).toBeFalsy();
-			expect(isDate({})).toBeFalsy();
-			expect(isDate(new noop())).toBeFalsy();
-			expect(isDate(new Date())).toBeTruthy();
-		});
-	});
-
 	describe('isFunction()', () => {
 		it('should check if a value is a Function', () => {
 			expect(isFunction(true)).toBeFalsy();
@@ -99,62 +84,53 @@ describe('potion/utils', () => {
 		});
 	});
 
-	describe('isAPotionItem()', () => {
-		it('should check if a value is a Function', () => {
-			expect(isAPotionItem(true)).toBeFalsy();
-			expect(isAPotionItem('')).toBeFalsy();
-			expect(isAPotionItem(1)).toBeFalsy();
-			expect(isAPotionItem(null)).toBeFalsy();
-			expect(isAPotionItem(undefined)).toBeFalsy();
-			expect(isAPotionItem([])).toBeFalsy();
-			expect(isAPotionItem({})).toBeFalsy();
-			expect(isAPotionItem(new Date())).toBeFalsy();
-			expect(isAPotionItem(() => {})).toBeFalsy();
-			expect(isAPotionItem(noop)).toBeFalsy();
-			expect(isAPotionItem(new noop())).toBeFalsy();
-			expect(isAPotionItem(new Foo())).toBeTruthy();
+	describe('fromSchemaJSON()', () => {
+		it('should convert a schema JSON to a JS object', () => {
+			const schema = {
+				$schema: 'http://json-schema.org/draft-04/hyper-schema#',
+				properties: {
+					created_at: {
+						additionalProperties: false,
+						default: 'Fri, 23 Sep 2016 14:47:34 GMT',
+						properties: {
+							$date: {
+								type: 'integer'
+							}
+						},
+						type: 'object'
+					}
+				},
+				type: 'object'
+			};
+
+			expect(fromSchemaJSON(schema)).toEqual({
+				$schema: 'http://json-schema.org/draft-04/hyper-schema#',
+				properties: {
+					createdAt: {
+						additionalProperties: false,
+						default: 'Fri, 23 Sep 2016 14:47:34 GMT',
+						properties: {
+							$date: {
+								type: 'integer'
+							}
+						},
+						type: 'object'
+					}
+				},
+				type: 'object'
+			});
 		});
 	});
 
 	describe('omap()', () => {
-		it('should recursively map an object keys/values to provided transformation fns', () => {
-			const obj1 = {ping: true};
-			const obj2 = {
-				ping: {
-					value: {
-						pong: true
-					}
-				}
-			};
-			const arr = [obj1, obj2];
-
-			const obj1Map = omap(obj1, keyToUpperCase, not);
+		it('should map an object\'s keys/values to provided transformation fns', () => {
+			const obj1Map = omap({ping: true}, keyToUpperCase, not);
 			expect(obj1Map).toEqual({PING: false});
-
-			const obj2Map = omap(obj2, keyToUpperCase, not);
-			expect(obj2Map).toEqual({
-				PING: {
-					VALUE: {
-						PONG: false
-					}
-				}
-			});
-
-			expect(omap(arr, keyToUpperCase, not)).toEqual([
-				{PING: false},
-				{
-					PING: {
-						VALUE: {
-							PONG: false
-						}
-					}
-				}
-			]);
 		});
 
-		it('should not traverse Date objects', () => {
-			const now = new Date();
-			expect(omap({ping: now}, keyToUpperCase)).toEqual({PING: now});
+		it('should still work without a value map fn', () => {
+			const obj1Map = omap({ping: true}, keyToUpperCase);
+			expect(obj1Map).toEqual({PING: true});
 		});
 	});
 

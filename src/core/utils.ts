@@ -31,58 +31,45 @@ export function mapToObject(map: Map<any, any>): {[key: string]: any} {
 }
 
 
-export type KeyMapper = (key: string) => string;
-export type ValueMapper = (value: any) => any;
-
-// Type guard
-// https://www.typescriptlang.org/docs/handbook/advanced-types.html
+/**
+ * Object type guard
+ * Docs: https://www.typescriptlang.org/docs/handbook/advanced-types.html
+ */
 export function isJsObject(value: any): value is {} {
 	return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
-export function isDate(value: any): value is Date {
-	return value instanceof Date;
+/**
+ * Check if an object is empty
+ */
+export function isObjectEmpty(obj: {}): boolean {
+	return Object.keys(obj).length === 0;
 }
+
+/**
+ * Function type guard
+ */
 // tslint:disable-next-line: ban-types
 export function isFunction(value: any): value is Function {
 	return typeof value === 'function';
 }
-export function isAPotionItem(value: any): value is Item {
-	return value instanceof Item;
-}
 
 
+export type KeyMapFunction = (key: string) => string;
+export type ValueMapFunction = (value: any) => any;
 /**
- * Deep Object.map()
- * NOTE: We assume that every nested value is either an Object, Array or some primitive value (also Date),
- * but we do not account for any other kind of object as it would not be the case for Potion.
+ * Object.map()
+ * NOTE: This is NOT a recursive fn.
  * @param {Object} obj
- * @param {ValueMapper} valueMapper - Transform operation to apply on the value.
- * @param {KeyMapper} keyMapper - Transform operation to apply on the key.
- * @param {Object} context - What should `this` be when the transform fns are applied.
+ * @param {Function} keyMapFunction - Transform operation to apply on the key.
+ * @param {Function} [valueMapFunction] - Transform operation to apply on the value.
+ * @returns {Object}
  */
-export function omap(obj: {} | any[], keyMapper: KeyMapper | null, valueMapper?: ValueMapper | null, context?: any): {[key: string]: any} | any[] {
-	if (Array.isArray(obj)) {
-		// NOTE: Value can be an Array or Object
-		return obj.map(value => typeof value === 'object' ? omap(value, keyMapper, valueMapper, context) : value);
-	} else if (isJsObject(obj)) {
-		const result = {};
-
-		for (const [key, value] of entries<string, any>(obj)) { // tslint:disable-line: prefer-const
-			const k = isFunction(keyMapper) ? keyMapper.call(context, key) : key;
-
-			// NOTE: Value can be an Array or Object
-			if (typeof value === 'object' && !isDate(value) && !isAPotionItem(value)) {
-				result[k] = omap(value, keyMapper, valueMapper, context);
-			} else if (isFunction(valueMapper)) {
-				result[k] = valueMapper.call(context, value);
-			} else {
-				result[k] = value;
-			}
-		}
-
-		return result;
+export function omap(obj: {[key: string]: any}, keyMapFunction: KeyMapFunction, valueMapFunction?: ValueMapFunction): {[key: string]: any} {
+	if (isJsObject(obj)) {
+		return Object.entries(obj)
+			.map(([key, value]) => [isFunction(keyMapFunction) ? keyMapFunction(key) : key, isFunction(valueMapFunction) ? valueMapFunction(value) : value])
+			.reduce((a: {}, [key, value]) => Object.assign(a, {[key]: value}), {});
 	}
-
 	return obj;
 }
 
@@ -100,6 +87,21 @@ export function getErrorMessage(error: any, uri?: string): string {
 		return `${message} from '${uri}'.`;
 	}
 	return `${message}.`;
+}
+
+
+/**
+ * Convert JSON schema to a JS object
+ */
+export function fromSchemaJSON(json: any): {[key: string]: any} {
+	if (Array.isArray(json)) {
+		return json.map(value => typeof value === 'object' ? fromSchemaJSON(value) : value);
+	} else if (isJsObject(json)) {
+		return entries<string, any>(json)
+			.map(([key, value]) => [toCamelCase(key), typeof value === 'object' ? fromSchemaJSON(value) : value])
+			.reduce((a, [key, value]) => Object.assign(a, {[key]: value}), {});
+	}
+	return json;
 }
 
 
@@ -179,14 +181,6 @@ export function merge(...objects: Array<{[key: string]: any}>): any {
 		Object.assign(result, obj);
 	}
 	return result;
-}
-
-
-/**
- * Check if an object is empty
- */
-export function isObjectEmpty(obj: {}): boolean {
-	return Object.keys(obj).length === 0;
 }
 
 

@@ -10,12 +10,12 @@ import {Pagination, PaginationOptions} from './pagination';
 import {
 	addPrefixToURI,
 	entries,
+	fromSchemaJSON,
 	getErrorMessage,
 	getPotionURI,
 	hasTypeAndId,
 	mapToObject,
 	MemCache,
-	omap,
 	parsePotionID,
 	removePrefixFromURI,
 	toCamelCase,
@@ -256,7 +256,7 @@ export abstract class PotionBase {
 				// If we have a schema object,
 				// we want to resolve it as it is and not try to resolve references or do any conversions.
 				// Though, we want to convert snake case to camel case.
-				return Promise.resolve(omap(json, key => toCamelCase(key)));
+				return Promise.resolve(fromSchemaJSON(json));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
 					// Hack to not try to resolve self references.

@@ -8,7 +8,6 @@ import {
 } from './potion';
 import {Item} from './item';
 import {Route} from './route';
-import {omap, toCamelCase} from './utils';
 
 
 describe('potion/core', () => {
@@ -363,7 +362,22 @@ describe('potion/core', () => {
 
 			it('should return the original request response for {$schema} references', done => {
 				User.schema().then(json => {
-					expect(json).toEqual(omap(schema, key => toCamelCase(key)));
+					expect(json).toEqual({
+						$schema: 'http://json-schema.org/draft-04/hyper-schema#',
+						properties: {
+							createdAt: {
+								additionalProperties: false,
+								default: 'Fri, 23 Sep 2016 14:47:34 GMT',
+								properties: {
+									$date: {
+										type: 'integer'
+									}
+								},
+								type: 'object'
+							}
+						},
+						type: 'object'
+					});
 					done();
 				});
 			});

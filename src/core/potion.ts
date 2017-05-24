@@ -9,12 +9,10 @@ import {Item, ItemOptions} from './item';
 import {Pagination, PaginationOptions} from './pagination';
 import {
 	addPrefixToURI,
-	entries,
 	fromSchemaJSON,
 	getErrorMessage,
 	getPotionURI,
 	hasTypeAndId,
-	mapToObject,
 	MemCache,
 	parsePotionID,
 	removePrefixFromURI,
@@ -93,7 +91,7 @@ export interface PotionOptions {
  * }
  */
 export abstract class PotionBase {
-	readonly resources: {[key: string]: Item} = {};
+	readonly resources: {[key: string]: typeof Item} = {};
 	readonly cache: ItemCache<Item>;
 	host: string;
 	readonly prefix: string;
@@ -157,7 +155,7 @@ export abstract class PotionBase {
 	 * @param {Item} resource
 	 * @param {ItemOptions} options - Set the property options for any instance of the resource (setting a property to readonly for instance).
 	 */
-	register(uri: string, resource: any, options?: ItemOptions): Item {
+	register(uri: string, resource: typeof Item, options?: ItemOptions): typeof Item {
 		decorateCtorWithPotionInstance(resource, this);
 		decorateCtorWithPotionURI(resource, uri);
 
@@ -233,10 +231,7 @@ export abstract class PotionBase {
 				// If neither combination is provided it will throw.
 				return this.parseURI(json)
 					.then(({resource, id, uri}) => {
-						const properties: Map<string, any> = new Map();
-						// NOTE: {id}
-						properties.set('$id', id);
-						properties.set('$uri', uri);
+						const properties = {$id: id, $uri: uri};
 						const unpack = this.parsePotionJSONProperties(json, properties);
 
 						// Create and cache the resource if it does not exist.
@@ -287,7 +282,7 @@ export abstract class PotionBase {
 		const {Promise} = this;
 		const uri = removePrefixFromURI(getPotionURI({$ref, $uri, $type, $id}), this.prefix);
 
-		const entry = entries<string, any>(this.resources)
+		const entry = Object.entries(this.resources)
 			.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
 
 		if (!entry) {
@@ -310,18 +305,16 @@ export abstract class PotionBase {
 			return Promise.resolve(params);
 		}
 	}
-	private parsePotionJSONProperties(json: any, properties: Map<any, any> = new Map()): any {
+	private parsePotionJSONProperties(json: any, properties: {} = {}): any {
 		const {Promise} = this;
-		const promises: Array<Promise<any>> = [];
-
-		for (const [key, value] of entries<string, any>(json)) {
-			promises.push(this.fromPotionJSON(value).then(value => {
-				properties.set(toCamelCase(key), value);
-				return value;
+		return Promise.all(Object.entries(json)
+			.map(([key, value]) => this.fromPotionJSON(value)
+				.then(value => {
+					Object.assign(properties, {[toCamelCase(key)]: value});
+					return value;
+				})))
+			.then(() => ({
+				...properties
 			}));
-		}
-
-		return Promise.all(promises)
-			.then(() => mapToObject(properties));
 	}
 }

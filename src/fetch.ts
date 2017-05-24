@@ -42,7 +42,7 @@ export class Potion extends PotionBase {
 		// TODO: when URL will be supported we will switch to it
 		if (search) {
 			let count = 1;
-			const entries = (Object as any).entries(search);
+			const entries = Object.entries(search);
 			const size = entries.length;
 			for (const [key, value] of entries) {
 				if (count === 1) {

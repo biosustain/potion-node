@@ -21,7 +21,6 @@ export {
 	isObjectEmpty,
 	KeyMapFunction,
 	omap,
-	mapToObject,
 	merge,
 	parsePotionID,
 	toCamelCase,

@@ -20,18 +20,6 @@ export function toCamelCase(str: string): string {
 
 
 /**
- * Transform a Map to Object
- */
-export function mapToObject(map: Map<any, any>): {[key: string]: any} {
-	const obj = {};
-	for (const [key, value] of entries<string, any>(map)) {
-		obj[key] = value;
-	}
-	return obj;
-}
-
-
-/**
  * Object type guard
  * Docs: https://www.typescriptlang.org/docs/handbook/advanced-types.html
  */
@@ -97,7 +85,7 @@ export function fromSchemaJSON(json: any): {[key: string]: any} {
 	if (Array.isArray(json)) {
 		return json.map(value => typeof value === 'object' ? fromSchemaJSON(value) : value);
 	} else if (isJsObject(json)) {
-		return entries<string, any>(json)
+		return Object.entries<any>(json)
 			.map(([key, value]) => [toCamelCase(key), typeof value === 'object' ? fromSchemaJSON(value) : value])
 			.reduce((a, [key, value]) => Object.assign(a, {[key]: value}), {});
 	}
@@ -160,7 +148,6 @@ export function removePrefixFromURI(uri: string, str: string): string {
 	}
 	return uri;
 }
-
 /**
  * Add a prefix to some string (if not already there)
  */
@@ -181,20 +168,6 @@ export function merge(...objects: Array<{[key: string]: any}>): any {
 		Object.assign(result, obj);
 	}
 	return result;
-}
-
-
-/**
- * Transform an Object or Map to pairs of [key, value].
- */
-export function entries<K, V>(object: any): Array<[K, V]> {
-	let entries: any;
-	if (object instanceof Map) {
-		entries = object.entries();
-	} else if (isJsObject(object)) {
-		entries = Object.entries(object);
-	}
-	return Array.from(entries) as Array<[K, V]>;
 }
 
 

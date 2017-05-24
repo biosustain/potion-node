@@ -136,7 +136,7 @@ export class Potion extends PotionBase {
 		if (search) {
 			const params = new URLSearchParams('', new PotionQueryEncoder());
 
-			for (const [key, value] of (Object as any).entries(search)) {
+			for (const [key, value] of Object.entries(search)) {
 				// We need to `encodeURIComponent()` when we have complex search queries.
 				// E.g. `search: {where: {foo: 1, bar: 2}}`, when URLSearchParams will be sent with the request,
 				// it will end up as `[object Object]`, thus, we need to encode the value.

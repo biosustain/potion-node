@@ -3,7 +3,6 @@
 import {Item} from './item';
 import {
 	addPrefixToURI,
-	entries,
 	fromSchemaJSON,
 	getErrorMessage,
 	getPotionURI,
@@ -11,7 +10,6 @@ import {
 	isFunction,
 	isJsObject,
 	isObjectEmpty,
-	mapToObject,
 	MemCache,
 	merge,
 	omap,
@@ -45,14 +43,6 @@ describe('potion/utils', () => {
 			expect(toCamelCase('snake_case')).toEqual('snakeCase');
 			expect(toCamelCase('snake_case_2')).toEqual('snakeCase2');
 			expect(toCamelCase('2_snake_case')).toEqual('2SnakeCase');
-		});
-	});
-
-	describe('mapToObject()', () => {
-		it('should convert a Map to Object', () => {
-			const map = new Map();
-			map.set('ping', 'pong');
-			expect(mapToObject(map)).toEqual({ping: 'pong'});
 		});
 	});
 
@@ -248,16 +238,6 @@ describe('potion/utils', () => {
 		it('should check whether an object is empty or not', () => {
 			expect(isObjectEmpty({ping: true})).toBeFalsy();
 			expect(isObjectEmpty({})).toBeTruthy();
-		});
-	});
-
-	describe('entries()', () => {
-		it('should return an array of [key, value] pairs for a Map or {}', () => {
-			const map = new Map();
-			map.set('ping', 'pong');
-			expect(entries(map)).toEqual([['ping', 'pong']]);
-
-			expect(entries({ping: true})).toEqual([['ping', true]]);
 		});
 	});
 

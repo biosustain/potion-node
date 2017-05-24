@@ -579,7 +579,7 @@ describe('potion/core', () => {
 
 						switch (options.method) {
 							case 'POST':
-								john = Object.assign({}, options.data, {$uri: '/user/4'});
+								john = {...options.data, $uri: '/user/4'};
 								return Promise.resolve(john);
 							case 'PATCH':
 								Object.assign(john, options.data, {$uri: '/user/4'});

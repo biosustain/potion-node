@@ -11,7 +11,7 @@ export {readonly, Item, Route} from './core';
 
 export class Potion extends PotionBase {
 	constructor(options?: PotionOptions) {
-		super(Object.assign({}, options));
+		super({...options});
 	}
 
 	// Use window.fetch for making requests,

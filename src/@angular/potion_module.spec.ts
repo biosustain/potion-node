@@ -340,7 +340,7 @@ describe('potion/@angular', () => {
 						// Simulate latency
 						setTimeout(() => {
 							connection.mockRespond(response);
-						}, 1500);
+						}, 250);
 					} else {
 						connection.mockRespond(response);
 					}

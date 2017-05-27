@@ -97,7 +97,7 @@ export abstract class PotionBase {
 	readonly prefix: string;
 
 	private readonly Promise: typeof Promise = potionPromise(this); // NOTE: This is needed only to provide support for AngularJS.
-	private pendingGETRequests: Map<string, any> = new Map();
+	private requests: Map<string, any> = new Map();
 
 	constructor({host = '', prefix = '', cache}: PotionOptions = {}) {
 		this.cache = cache || new MemCache();
@@ -108,11 +108,11 @@ export abstract class PotionBase {
 	fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
 		const options: FetchOptions = {...fetchOptions};
 		const {method, cache, paginate, search} = options;
-		const key = uri;
-		const {Promise} = this;
+		const {Promise, prefix} = this;
+		const key = removePrefixFromURI(uri, prefix);
 
 		// Add the API prefix if not present
-		uri = addPrefixToURI(uri, this.prefix);
+		uri = addPrefixToURI(uri, prefix);
 
 		// Serialize request to Potion JSON.
 		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
@@ -129,21 +129,21 @@ export abstract class PotionBase {
 			}
 
 			// Cache the request so that further requests for the same resource will not make an aditional XHR.
-			if (!this.pendingGETRequests.has(uri)) {
-				this.pendingGETRequests.set(uri, fetch().then(data => {
-					this.pendingGETRequests.delete(uri);
+			if (!this.requests.has(key)) {
+				this.requests.set(key, fetch().then(data => {
+					this.requests.delete(key);
 					return data;
 				}, err => {
 					// If request fails,
 					// make sure to remove the pending request so further requests can be made,
 					// but fail the pipeline.
-					this.pendingGETRequests.delete(uri);
+					this.requests.delete(key);
 					const message = getErrorMessage(err, uri);
 					return Promise.reject(message);
 				}));
 			}
 
-			return this.pendingGETRequests.get(uri);
+			return this.requests.get(key);
 		} else {
 			return fetch();
 		}
@@ -231,18 +231,18 @@ export abstract class PotionBase {
 				// If neither combination is provided it will throw.
 				return this.parseURI(json)
 					.then(({resource, id, uri}) => {
-						const properties = {$id: id, $uri: uri};
-						const unpack = this.parsePotionJSONProperties(json, properties);
+						const attrs = {$id: id, $uri: uri};
+						const properties = this.parsePotionJSONProperties(json);
 
 						// Create and cache the resource if it does not exist.
 						if (!this.cache.has(uri)) {
-							return this.cache.put(uri, unpack.then(properties => Reflect.construct(resource, [properties])));
+							return this.cache.put(uri, properties.then(properties => Reflect.construct(resource, [{...properties, ...attrs}])));
 						} else {
 							// If the resource already exists,
 							// update it with new properties.
-							return Promise.all([unpack, this.cache.get(uri)])
+							return Promise.all([properties, this.cache.get(uri)])
 								.then(([properties, item]) => {
-									Object.assign(item, properties);
+									Object.assign(item, properties, attrs);
 									return item;
 								});
 						}
@@ -305,16 +305,16 @@ export abstract class PotionBase {
 			return Promise.resolve(params);
 		}
 	}
-	private parsePotionJSONProperties(json: any, properties: {} = {}): any {
+	private parsePotionJSONProperties(json: any): any {
 		const {Promise} = this;
-		return Promise.all(Object.entries(json)
-			.map(([key, value]) => this.fromPotionJSON(value)
-				.then(value => {
-					Object.assign(properties, {[toCamelCase(key)]: value});
-					return value;
-				})))
-			.then(() => ({
-				...properties
-			}));
+		const entries = Object.entries(json);
+		const values = entries.map(([, value]) => this.fromPotionJSON(value));
+		const keys = entries.map(([key]) => toCamelCase(key));
+
+		return Promise.all(values)
+			.then(values => values.map((value, index) => [keys[index], value])
+				.reduce((a, [key, value]) => Object.assign(a, {
+					[key]: value
+				}), {}));
 	}
 }

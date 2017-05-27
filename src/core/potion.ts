@@ -15,7 +15,7 @@ import {
 	hasTypeAndId,
 	MemCache,
 	parsePotionID,
-	removePrefixFromURI,
+	removePrefixFromURI, replaceSelfReferences, toSelfReference,
 	toCamelCase,
 	toPotionJSON
 } from './utils';
@@ -57,6 +57,7 @@ export interface RequestOptions {
 
 export interface FetchOptions extends RequestOptions {
 	paginate?: boolean;
+	origin?: any
 }
 
 export interface QueryOptions extends PaginationOptions {
@@ -105,50 +106,6 @@ export abstract class PotionBase {
 		this.prefix = prefix;
 	}
 
-	fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
-		const options: FetchOptions = {...fetchOptions};
-		const {method, cache, paginate, search} = options;
-		const {Promise, prefix} = this;
-		const key = removePrefixFromURI(uri, prefix);
-
-		// Add the API prefix if not present
-		uri = addPrefixToURI(uri, prefix);
-
-		// Serialize request to Potion JSON.
-		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
-			// Deserialize the Potion JSON.
-			.then(response => this.deserialize(response, uri, options, pagination));
-
-		// TODO: Cache requests for queries with params as well,
-		// we just need to create a hash key for the request (uri + search params).
-		if (method === 'GET' && !paginate && !search) {
-			// If a GET request was made and {cache: true} return the item from cache (if it exists).
-			// NOTE: Queries are not cached.
-			if  (cache && this.cache.has(key)) {
-				return this.cache.get(key);
-			}
-
-			// Cache the request so that further requests for the same resource will not make an aditional XHR.
-			if (!this.requests.has(key)) {
-				this.requests.set(key, fetch().then(data => {
-					this.requests.delete(key);
-					return data;
-				}, err => {
-					// If request fails,
-					// make sure to remove the pending request so further requests can be made,
-					// but fail the pipeline.
-					this.requests.delete(key);
-					const message = getErrorMessage(err, uri);
-					return Promise.reject(message);
-				}));
-			}
-
-			return this.requests.get(key);
-		} else {
-			return fetch();
-		}
-	}
-
 	/**
 	 * Register a resource.
 	 * @param {String} uri - Path on which the resource is registered.
@@ -191,6 +148,57 @@ export abstract class PotionBase {
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
+	fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
+		const origin = removePrefixFromURI(uri, this.prefix);
+		return this.proxy(uri, {...fetchOptions, origin}, pagination)
+			.then((item) => replaceSelfReferences(item));
+	}
+
+	private proxy(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): any {
+		const options: FetchOptions = {...fetchOptions};
+		const {method, cache, paginate, search} = options;
+		const {Promise, prefix} = this;
+		const key = removePrefixFromURI(uri, prefix);
+
+		// Add the API prefix if not present
+		uri = addPrefixToURI(uri, prefix);
+
+		// Serialize request to Potion JSON.
+		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
+		// Deserialize the Potion JSON.
+			.then(response => this.deserialize(response, uri, options, pagination));
+
+		// TODO: Cache requests for queries with params as well,
+		// we just need to create a hash key for the request (uri + search params).
+		if (method === 'GET' && !paginate && !search) {
+			// If a GET request was made and {cache: true} return the item from cache (if it exists).
+			// NOTE: Queries are not cached.
+			if  (cache && this.cache.has(key)) {
+				return this.cache.get(key);
+			}
+
+			// Cache the request so that further requests for the same resource will not make an aditional XHR.
+			if (!this.requests.has(key)) {
+				this.requests.set(key, fetch().then(data => {
+					this.requests.delete(key);
+					return data;
+				}, err => {
+					// If request fails,
+					// make sure to remove the pending request so further requests can be made,
+					// but fail the pipeline.
+					this.requests.delete(key);
+					const message = getErrorMessage(err, uri);
+					return Promise.reject(message);
+				}));
+			}
+
+			return this.requests.get(key);
+		} else {
+			return fetch();
+		}
+
+	}
+
 	private serialize(options: FetchOptions): RequestOptions {
 		const {prefix} = this;
 		const {search} = options;
@@ -203,9 +211,8 @@ export abstract class PotionBase {
 			}
 		};
 	}
-
 	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions, pagination?: Pagination<any>): Promise<PotionResponse> {
-		return this.fromPotionJSON(data)
+		return this.fromPotionJSON(data, options.origin)
 			.then(json => {
 				// Return or update Pagination
 				// TODO: Refactor this, looks messy (pagination logic should be handled in the Pagination class)
@@ -220,19 +227,20 @@ export abstract class PotionBase {
 				return json;
 			});
 	}
-	private fromPotionJSON(json: any): Promise<any> {
+
+	private fromPotionJSON(json: any, origin?: string): Promise<any> {
 		const {Promise} = this;
 
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
-				return Promise.all(json.map(item => this.fromPotionJSON(item)));
+				return Promise.all(json.map(item => this.fromPotionJSON(item, origin)));
 			} else if (typeof json.$uri === 'string' || hasTypeAndId(json)) {
 				// NOTE: The json may also have {$type, $id} that can be used to recognize a resource instead of {$uri}.
 				// If neither combination is provided it will throw.
 				return this.parseURI(json)
 					.then(({resource, id, uri}) => {
 						const attrs = {$id: id, $uri: uri};
-						const properties = this.parsePotionJSONProperties(json);
+						const properties = this.parsePotionJSONProperties(json, origin);
 
 						// Create and cache the resource if it does not exist.
 						if (!this.cache.has(uri)) {
@@ -261,10 +269,17 @@ export abstract class PotionBase {
 					}
 
 					return this.parseURI(json)
-						.then(({uri}) => this.fetch(uri, {
-							cache: true,
-							method: 'GET'
-						}));
+						.then(({uri}) => {
+							console.log(uri, origin)
+							if (uri === origin) {
+								return Promise.resolve(toSelfReference(uri));
+							}
+							return this.proxy(uri, {
+								cache: true,
+								method: 'GET',
+								origin
+							});
+						});
 				} else if (typeof json.$date !== 'undefined') {
 					// Parse Potion date
 					return Promise.resolve(new Date(json.$date));
@@ -276,6 +291,19 @@ export abstract class PotionBase {
 			return Promise.resolve(json);
 		}
 	}
+	private parsePotionJSONProperties(json: any, origin?: string): any {
+		const {Promise} = this;
+		const entries = Object.entries(json);
+		const values = entries.map(([, value]) => this.fromPotionJSON(value, origin));
+		const keys = entries.map(([key]) => toCamelCase(key));
+
+		return Promise.all(values)
+			.then(values => values.map((value, index) => [keys[index], value])
+				.reduce((a, [key, value]) => Object.assign(a, {
+					[key]: value
+				}), {}));
+	}
+
 	// Try to parse a Potion URI and find the associated resource for it,
 	// otherwise return a rejected promise.
 	private parseURI({$ref, $uri, $type, $id}: {[key: string]: any}): Promise<ParsedURI> {
@@ -304,17 +332,5 @@ export abstract class PotionBase {
 
 			return Promise.resolve(params);
 		}
-	}
-	private parsePotionJSONProperties(json: any): any {
-		const {Promise} = this;
-		const entries = Object.entries(json);
-		const values = entries.map(([, value]) => this.fromPotionJSON(value));
-		const keys = entries.map(([key]) => toCamelCase(key));
-
-		return Promise.all(values)
-			.then(values => values.map((value, index) => [keys[index], value])
-				.reduce((a, [key, value]) => Object.assign(a, {
-					[key]: value
-				}), {}));
 	}
 }

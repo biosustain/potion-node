@@ -1,4 +1,5 @@
 import {Item} from './item';
+import {Pagination} from './pagination';
 import {ItemCache} from './potion';
 
 
@@ -90,6 +91,55 @@ export function fromSchemaJSON(json: any): {[key: string]: any} {
 			.reduce((a, [key, value]) => Object.assign(a, {[key]: value}), {});
 	}
 	return json;
+}
+
+
+export class SelfReference {
+	constructor(private uri: string) {}
+	matches(uri: any): boolean {
+		return this.uri === uri;
+	}
+}
+
+/**
+ * Search through Potion JSON and replace SelfReference object that matches the json {uri} with the root object (the Potion JSON).
+ * NOTE: Potion JSON object is actually a Potion Item.
+ */
+export function replaceSelfReferences(json: any, root?: any): any {
+	if (typeof json !== 'object' || json === null) {
+		return json;
+	} else if (json instanceof Pagination) {
+		// TODO: Pagination items may also have self refs., replace them
+		return json;
+	} else if (Array.isArray(json)) {
+		// TODO: Arrays may also require a different handling
+		return json.map(value => replaceSelfReferences(value, json));
+	} else if (json instanceof SelfReference) {
+		// There's nothing to do with a SelfReference object, so just return it.
+		return json;
+	} else if (Object.keys(json).length > 0) { // TODO: We may want to guard against an actual Item
+		// NOTE: Object.keys() will only work for custom classes or objects builtins will be empty, which is what we want.
+		for (const [key, value] of Object.entries(json)) {
+			const target = root || json;
+			if (value instanceof SelfReference && value.matches(target.uri)) {
+				Object.assign(json, {[key]: target});
+			} else if (typeof value === 'object') {
+				Object.assign(json, {
+					[key]: replaceSelfReferences(value, target)
+				});
+			}
+		}
+		return json;
+	}
+
+	return json;
+}
+
+/**
+ * Generate a self reference
+ */
+export function toSelfReference(uri: string): SelfReference {
+	return new SelfReference(uri);
 }
 
 

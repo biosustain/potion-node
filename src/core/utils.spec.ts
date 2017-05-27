@@ -14,10 +14,10 @@ import {
 	merge,
 	omap,
 	parsePotionID,
-	removePrefixFromURI,
+	removePrefixFromURI, replaceSelfReferences, toSelfReference,
 	toCamelCase,
 	toPotionJSON,
-	toSnakeCase
+	toSnakeCase, SelfReference
 } from './utils';
 
 
@@ -130,6 +130,50 @@ describe('potion/utils', () => {
 			expect(getErrorMessage('Oops.')).toEqual('Oops.');
 			expect(getErrorMessage(null)).toEqual('An error occurred while Potion tried to retrieve a resource.');
 			expect(getErrorMessage(null, '/foo/1')).toEqual('An error occurred while Potion tried to retrieve a resource from \'/foo/1\'.');
+		});
+	});
+
+	describe('replaceSelfReferences()', () => {
+		it('should return the original value if it\'s null or not an object', () => {
+			expect(replaceSelfReferences(null)).toEqual(null);
+			expect(replaceSelfReferences('ping')).toEqual('ping');
+			expect(replaceSelfReferences(1)).toEqual(1);
+			expect(replaceSelfReferences(undefined)).toEqual(undefined);
+			expect(replaceSelfReferences(noop)).toEqual(noop);
+		});
+
+		it('should replace self references in a object', () => {
+			const uri = '/ping/1';
+			const json = {
+				uri,
+				ping: true,
+				pong: false,
+				self: new SelfReference(uri)
+			};
+			replaceSelfReferences(json);
+			expect(json.self as any).toEqual(json);
+		});
+
+		it('should recursively replace self references in a object', () => {
+			const uri = '/foo/1';
+			const foo = {
+				uri,
+				bar: {
+					foo: new SelfReference(uri)
+				}
+			};
+			replaceSelfReferences(foo);
+			expect(foo.bar.foo as any).toEqual(foo);
+		});
+	});
+
+	describe('toSelfReference()', () => {
+		it('should convert a string to a SelfReference', () => {
+			const str = '/foo/1';
+			const ref = toSelfReference(str);
+
+			expect(ref instanceof SelfReference).toBeTruthy();
+			expect(ref.matches(str)).toBeTruthy();
 		});
 	});
 

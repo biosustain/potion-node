@@ -1,6 +1,7 @@
+// tslint:disable: max-classes-per-file
 import {Item} from './item';
 import {Pagination} from './pagination';
-import {ItemCache} from './potion';
+import {ItemCache, PotionResources} from './potion';
 
 
 /**
@@ -160,17 +161,61 @@ export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
 	return json;
 }
 
+
+export type PotionID = string | number | null;
 /**
  * Parse a Potion ID
  */
-export function parsePotionID(id: any): string | number | null {
-	if (typeof id === 'string') {
+export function parsePotionID(id: any): PotionID {
+	if (typeof id === 'string' && id.length > 0) {
 		return /^\d+$/.test(id) ? parseInt(id, 10) : id;
 	} else if (Number.isInteger(id)) {
 		return id;
 	}
 	return null;
 }
+
+/**
+ * Get a Potion ID from a URI
+ */
+export function getPotionID(uri: string, resourceURI: string): PotionID {
+	const index = uri.indexOf(`${resourceURI}/`);
+	if (index !== -1) {
+		const id = uri.substring(index)
+			.split('/')
+			.pop();
+		return parsePotionID(id);
+	}
+	return null;
+}
+
+
+/**
+ * Find a Potion resource based on URI
+ */
+export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: typeof Item} | undefined {
+	const entry = Object.entries(resources)
+		.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
+	if (entry) {
+		const [resourceURI, resource] = entry;
+		return {
+			resourceURI,
+			resource
+		};
+	}
+}
+
+/**
+ * Check if some string is a Potion URI
+ */
+export function isPotionURI(uri: string, resources: PotionResources): boolean {
+	const entry = findPotionResource(uri, resources);
+	if (entry) {
+		return getPotionID(uri, entry.resourceURI) !== null;
+	}
+	return false;
+}
+
 
 /**
  * Get the Potion URI from a Potion JSON object

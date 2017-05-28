@@ -3,21 +3,27 @@
 import {Item} from './item';
 import {
 	addPrefixToURI,
+	findPotionResource,
 	fromSchemaJSON,
 	getErrorMessage,
+	getPotionID,
 	getPotionURI,
 	hasTypeAndId,
 	isFunction,
 	isJsObject,
 	isObjectEmpty,
+	isPotionURI,
 	MemCache,
 	merge,
 	omap,
 	parsePotionID,
-	removePrefixFromURI, replaceSelfReferences, toSelfReference,
+	removePrefixFromURI,
+	replaceSelfReferences,
+	SelfReference,
 	toCamelCase,
 	toPotionJSON,
-	toSnakeCase, SelfReference
+	toSelfReference,
+	toSnakeCase
 } from './utils';
 
 
@@ -235,6 +241,40 @@ describe('potion/utils', () => {
 			const uuid = '00cc8d4b-9682-4655-ad78-1fa4b03e757d';
 			expect(parsePotionID(uuid)).toEqual(uuid);
 			expect(parsePotionID({})).toBeNull();
+			expect(parsePotionID('')).toBeNull();
+		});
+	});
+
+	describe('getPotionID()', () => {
+		it('should get a Potion ID from an URI', () => {
+			expect(getPotionID('/foo/1', '/foo')).toEqual(1);
+			expect(getPotionID('/prefix/foo/1', '/foo')).toEqual(1);
+			const uuid = '00cc8d4b-9682-4655-ad78-1fa4b03e757d';
+			expect(getPotionID(`/foo/${uuid}`, '/foo')).toEqual(uuid);
+			expect(getPotionID('/foo', '/foo')).toBeNull();
+		});
+	});
+
+	describe('findPotionResource()', () => {
+		it('should return a Potion resource if found, otherwise undefined', () => {
+			const resources = {'/foo': Foo};
+
+			expect(findPotionResource('/foo', resources)).toBeUndefined();
+			expect(findPotionResource('/bar', resources)).toBeUndefined();
+			expect(findPotionResource('/foo/1', resources)).toEqual({
+				resourceURI: '/foo',
+				resource: Foo
+			});
+		});
+	});
+
+	describe('isPotionURI()', () => {
+		it('should check if some string is a Potion URI', () => {
+			const resources = {'/foo': Foo};
+
+			expect(isPotionURI('/foo', resources)).toBeFalsy();
+			expect(isPotionURI('/foo/1', resources)).toBeTruthy();
+			expect(isPotionURI('/bar', resources)).toBeFalsy();
 		});
 	});
 

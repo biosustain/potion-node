@@ -9,15 +9,20 @@ import {Item, ItemOptions} from './item';
 import {Pagination} from './pagination';
 import {
 	addPrefixToURI,
+	findPotionResource,
 	fromSchemaJSON,
 	getErrorMessage,
+	getPotionID,
 	getPotionURI,
 	hasTypeAndId,
+	isPotionURI,
 	MemCache,
 	parsePotionID,
-	removePrefixFromURI, replaceSelfReferences, toSelfReference,
+	removePrefixFromURI,
+	replaceSelfReferences,
 	toCamelCase,
-	toPotionJSON
+	toPotionJSON,
+	toSelfReference
 } from './utils';
 
 
@@ -64,21 +69,25 @@ export interface QueryOptions {
 
 export interface FetchExtras {
 	pagination?: Pagination<any>;
-	origin?: string;
+	origin?: string[];
 }
 
 export type FetchOptions = FetchExtras & RequestOptions;
+
 
 export interface PotionResponse {
 	data: any;
 	headers: any;
 }
 
-
 export interface PotionOptions {
 	host?: string;
 	prefix?: string;
 	cache?: ItemCache<Item>;
+}
+
+export interface PotionResources {
+	[key: string]: typeof Item;
 }
 
 
@@ -96,7 +105,7 @@ export interface PotionOptions {
  * }
  */
 export abstract class PotionBase {
-	readonly resources: {[key: string]: typeof Item} = {};
+	readonly resources: PotionResources = {};
 	readonly cache: ItemCache<Item>;
 	host: string;
 	readonly prefix: string;
@@ -152,9 +161,16 @@ export abstract class PotionBase {
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
-	fetch(uri: string, options?: RequestOptions, extras?: FetchExtras): Promise<Item | Item[] | Pagination<Item> | any> {
+	// tslint:disable-next-line: member-ordering
+	fetch(uri: string, requestOptions?: RequestOptions, extras?: FetchExtras): Promise<Item | Item[] | Pagination<Item> | any> {
 		const origin = removePrefixFromURI(uri, this.prefix);
-		return this.resolve(uri, {...options, ...extras, origin})
+		const options = {...requestOptions, ...extras, origin: []};
+		if (isPotionURI(uri, this.resources)) {
+			Object.assign(options, {
+				origin: [origin]
+			});
+		}
+		return this.resolve(uri, options)
 			.then(json => replaceSelfReferences(json));
 	}
 
@@ -212,7 +228,7 @@ export abstract class PotionBase {
 		};
 	}
 	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions): Promise<PotionResponse> {
-		return this.fromPotionJSON(data, options.origin)
+		return this.fromPotionJSON(data, options.origin as string[])
 			.then(json => {
 				// If {paginate} is enabled, return or update Pagination.
 				if (options.paginate) {
@@ -229,7 +245,7 @@ export abstract class PotionBase {
 			});
 	}
 
-	private fromPotionJSON(json: any, origin?: string): Promise<any> {
+	private fromPotionJSON(json: any, origin: string[]): Promise<any> {
 		const {Promise} = this;
 
 		if (typeof json === 'object' && json !== null) {
@@ -241,6 +257,12 @@ export abstract class PotionBase {
 				return this.parseURI(json)
 					.then(({resource, id, uri}) => {
 						const attrs = {$id: id, $uri: uri};
+
+						// Since we have a resource, we append to origin list (because later it will get replaced with itself).
+						if (!origin.includes(uri)) {
+							origin.push(uri);
+						}
+
 						const properties = this.parsePotionJSONProperties(json, origin);
 
 						// Create and cache the resource if it does not exist.
@@ -271,8 +293,7 @@ export abstract class PotionBase {
 
 					return this.parseURI(json)
 						.then(({uri}) => {
-							console.log(uri, origin)
-							if (uri === origin) {
+							if (origin.includes(uri)) {
 								return Promise.resolve(toSelfReference(uri));
 							}
 							return this.resolve(uri, {
@@ -287,12 +308,12 @@ export abstract class PotionBase {
 				}
 			}
 
-			return this.parsePotionJSONProperties(json);
+			return this.parsePotionJSONProperties(json, origin);
 		} else {
 			return Promise.resolve(json);
 		}
 	}
-	private parsePotionJSONProperties(json: any, origin?: string): any {
+	private parsePotionJSONProperties(json: any, origin: string[]): any {
 		const {Promise} = this;
 		const entries = Object.entries(json);
 		const values = entries.map(([, value]) => this.fromPotionJSON(value, origin));
@@ -310,24 +331,20 @@ export abstract class PotionBase {
 	private parseURI({$ref, $uri, $type, $id}: {[key: string]: any}): Promise<ParsedURI> {
 		const {Promise} = this;
 		const uri = removePrefixFromURI(getPotionURI({$ref, $uri, $type, $id}), this.prefix);
-
-		const entry = Object.entries(this.resources)
-			.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
+		const entry = findPotionResource(uri, this.resources);
 
 		if (!entry) {
 			return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown Potion resource.`));
 		} else {
-			const [resourceURI, resource] = entry;
+			const {resourceURI, resource} = entry;
 			const params = {resource, uri};
 			const id = parsePotionID($id);
 
 			if (id !== null) {
 				Object.assign(params, {id});
 			} else {
-				const [part] = uri.substring(resourceURI.length + 1)
-					.split('/');
 				Object.assign(params, {
-					id: parsePotionID(part)
+					id: getPotionID(uri, resourceURI)
 				});
 			}
 

@@ -14,12 +14,15 @@ export {
 } from './core/potion';
 export {Route, route} from './core/route';
 export {
+	findPotionResource,
 	fromSchemaJSON,
+	getPotionID,
 	getPotionURI,
 	hasTypeAndId,
 	isFunction,
 	isJsObject,
 	isObjectEmpty,
+	isPotionURI,
 	KeyMapFunction,
 	omap,
 	merge,

@@ -10,6 +10,7 @@ import {Pagination} from './pagination';
 import {
 	addPrefixToURI,
 	findPotionResource,
+	findRoots,
 	fromSchemaJSON,
 	getErrorMessage,
 	getPotionID,
@@ -171,7 +172,7 @@ export abstract class PotionBase {
 			});
 		}
 		return this.resolve(uri, options)
-			.then(json => replaceSelfReferences(json));
+			.then(json => replaceSelfReferences(json, findRoots(json)));
 	}
 
 	private resolve(uri: string, options: FetchOptions): Promise<any> {

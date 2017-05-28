@@ -4,6 +4,7 @@ import {Item} from './item';
 import {
 	addPrefixToURI,
 	findPotionResource,
+	findRoots,
 	fromSchemaJSON,
 	getErrorMessage,
 	getPotionID,
@@ -59,7 +60,7 @@ describe('potion/utils', () => {
 			expect(isJsObject(1)).toBeFalsy();
 			expect(isJsObject(null)).toBeFalsy();
 			expect(isJsObject(undefined)).toBeFalsy();
-			expect(isJsObject([])).toBeFalsy();
+			expect(isJsObject([])).toBeTruthy();
 			expect(isJsObject({})).toBeTruthy();
 			expect(isJsObject(new Date())).toBeTruthy();
 		});
@@ -139,13 +140,72 @@ describe('potion/utils', () => {
 		});
 	});
 
+	describe('findRoots()', () => {
+		it('should find {uri} objects', () => {
+			const uri = '/ping/1';
+			const json = {
+				uri,
+				ping: true,
+				pong: false,
+				self: new SelfReference(uri)
+			};
+
+			const roots = findRoots(json);
+
+			expect(roots.length).toEqual(1);
+			expect(roots[0].uri).toEqual(uri);
+		});
+
+		it('should recursively find {uri} objects', () => {
+			const foo1Uri = '/foo/1';
+			const foo2Uri = '/foo/2';
+			const bar1Uri = '/bar/1';
+			const bar2Uri = '/bar/2';
+			const json = [
+				{
+					uri: foo1Uri,
+					bars: [{
+						uri: bar1Uri,
+						foo: new SelfReference(foo1Uri),
+						sibling: {
+							uri: bar2Uri,
+							sibling: new SelfReference(bar1Uri)
+						}
+					}]
+				},
+				{
+					uri: foo2Uri,
+					bars: []
+				}
+			];
+
+			const roots = findRoots(json);
+			const uris = roots.map(root => root.uri);
+
+			expect(roots.length).toEqual(4);
+			expect(uris[0]).toEqual(foo1Uri);
+			expect(uris[1]).toEqual(bar1Uri);
+			expect(uris[2]).toEqual(bar2Uri);
+			expect(uris[3]).toEqual(foo2Uri);
+		});
+
+		it('should not contain duplicates', () => {
+			const uri = '/foo/1';
+			const json = [{uri}, {uri}];
+			const roots = findRoots(json);
+
+			expect(roots.length).toEqual(1);
+			expect(roots[0].uri).toEqual(uri);
+		});
+	});
+
 	describe('replaceSelfReferences()', () => {
 		it('should return the original value if it\'s null or not an object', () => {
-			expect(replaceSelfReferences(null)).toEqual(null);
-			expect(replaceSelfReferences('ping')).toEqual('ping');
-			expect(replaceSelfReferences(1)).toEqual(1);
-			expect(replaceSelfReferences(undefined)).toEqual(undefined);
-			expect(replaceSelfReferences(noop)).toEqual(noop);
+			expect(replaceSelfReferences(null, [])).toEqual(null);
+			expect(replaceSelfReferences('ping', [])).toEqual('ping');
+			expect(replaceSelfReferences(1, [])).toEqual(1);
+			expect(replaceSelfReferences(undefined, [])).toEqual(undefined);
+			expect(replaceSelfReferences(noop, [])).toEqual(noop);
 		});
 
 		it('should replace self references in a object', () => {
@@ -156,20 +216,131 @@ describe('potion/utils', () => {
 				pong: false,
 				self: new SelfReference(uri)
 			};
-			replaceSelfReferences(json);
+			replaceSelfReferences(json, findRoots(json));
 			expect(json.self as any).toEqual(json);
 		});
 
 		it('should recursively replace self references in a object', () => {
-			const uri = '/foo/1';
-			const foo = {
-				uri,
-				bar: {
-					foo: new SelfReference(uri)
-				}
+			const fooUri = '/foo/1';
+			const bar1Uri = '/bar/1';
+			const bar2Uri = '/bar/2';
+			const json = {
+				uri: fooUri,
+				bars: [{
+					uri: bar1Uri,
+					foo: new SelfReference(fooUri),
+					sibling: {
+						uri: bar2Uri,
+						sibling: new SelfReference(bar1Uri)
+					}
+				}]
 			};
-			replaceSelfReferences(foo);
-			expect(foo.bar.foo as any).toEqual(foo);
+
+			// Replace all refs
+			replaceSelfReferences(json, findRoots(json));
+
+			const bar = json.bars[0];
+			const fooRef: any = bar.foo;
+			const siblingRef: any = bar.sibling;
+
+			expect(fooRef.uri).toEqual(json.uri);
+			expect(Array.isArray(fooRef.bars)).toBeTruthy();
+			expect(siblingRef.uri).toEqual(bar2Uri);
+			expect(siblingRef.sibling.uri).toEqual(bar.uri);
+		});
+
+		it('should recursively replace self references in an array', () => {
+			const foo1Uri = '/foo/1';
+			const foo2Uri = '/foo/2';
+			const bar1Uri = '/bar/1';
+			const bar2Uri = '/bar/2';
+			const json = [
+				{
+					uri: foo1Uri,
+					bars: [{
+						uri: bar1Uri,
+						foo: new SelfReference(foo1Uri),
+						sibling: {
+							uri: bar2Uri,
+							sibling: new SelfReference(bar1Uri)
+						}
+					}]
+				},
+				{
+					uri: foo2Uri,
+					sibling: new SelfReference(foo1Uri),
+					bars: []
+				}
+			];
+
+			// Replace all refs
+			replaceSelfReferences(json, findRoots(json));
+
+			const foo1 = json[0];
+			const foo2: any = json[1];
+			const foo1Bar = foo1.bars[0];
+			const foo1Ref: any = foo1Bar.foo;
+			const foo1BarSiblingRef: any = foo1Bar.sibling;
+			const foo2SiblingRef = foo2.sibling;
+
+			expect(foo1Ref.uri).toEqual(foo1.uri);
+			expect(Array.isArray(foo1Ref.bars)).toBeTruthy();
+			expect(foo1BarSiblingRef.uri).toEqual(bar2Uri);
+			expect(foo1BarSiblingRef.sibling.uri).toEqual(foo1Bar.uri);
+			expect(foo2SiblingRef.uri).toEqual(foo1.uri);
+		});
+
+		it('should work with cross references', () => {
+			const person1Uri = '/person/1';
+			const person2Uri = '/person/2';
+
+			const group1Uri = '/group/1';
+			const group2Uri = '/group/2';
+
+			const people = [
+				{
+					uri: person1Uri,
+					groups: [
+						{
+							uri: group1Uri,
+							members: [new SelfReference(person1Uri), new SelfReference(person2Uri)]
+						},
+						{
+							uri: group2Uri,
+							members: [new SelfReference(person1Uri), new SelfReference(person2Uri)]
+						}
+					]
+				},
+				{
+					uri: person2Uri,
+					groups: [
+						{
+							uri: group1Uri,
+							members: [new SelfReference(person1Uri), new SelfReference(person2Uri)]
+						},
+						{
+							uri: group2Uri,
+							members: [new SelfReference(person1Uri), new SelfReference(person2Uri)]
+						}
+					]
+				}
+			];
+
+			// Replace all refs
+			replaceSelfReferences(people, findRoots(people));
+
+			for (const person of people) {
+				expect(person.groups.length).toEqual(2);
+				for (const group of person.groups) {
+					const {uri}: any = {...group};
+					expect(uri === group1Uri || uri === group2Uri).toBeTruthy();
+					expect(group.members.length).toEqual(2);
+					for (const member of group.members) {
+						const {uri}: any = {...member};
+						expect(uri === person1Uri || uri === person2Uri).toBeTruthy();
+					}
+				}
+			}
 		});
 	});
 

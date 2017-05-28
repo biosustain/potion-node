@@ -25,8 +25,8 @@ export function toCamelCase(str: string): string {
  * Object type guard
  * Docs: https://www.typescriptlang.org/docs/handbook/advanced-types.html
  */
-export function isJsObject(value: any): value is {} {
-	return typeof value === 'object' && !Array.isArray(value) && value !== null;
+export function isJsObject(value: any): value is {[key: string]; any} {
+	return typeof value === 'object' && value !== null;
 }
 /**
  * Check if an object is empty
@@ -55,7 +55,7 @@ export type ValueMapFunction = (value: any) => any;
  * @returns {Object}
  */
 export function omap(obj: {[key: string]: any}, keyMapFunction: KeyMapFunction, valueMapFunction?: ValueMapFunction): {[key: string]: any} {
-	if (isJsObject(obj)) {
+	if (isJsObject(obj) && !Array.isArray(obj)) {
 		return Object.entries(obj)
 			.map(([key, value]) => [isFunction(keyMapFunction) ? keyMapFunction(key) : key, isFunction(valueMapFunction) ? valueMapFunction(value) : value])
 			.reduce((a: {}, [key, value]) => Object.assign(a, {[key]: value}), {});
@@ -96,9 +96,9 @@ export function fromSchemaJSON(json: any): {[key: string]: any} {
 
 
 export class SelfReference {
-	constructor(private uri: string) {}
+	constructor(readonly $uri: string) {}
 	matches(uri: any): boolean {
-		return this.uri === uri;
+		return this.$uri === uri;
 	}
 }
 
@@ -106,27 +106,31 @@ export class SelfReference {
  * Search through Potion JSON and replace SelfReference object that matches the json {uri} with the root object (the Potion JSON).
  * NOTE: Potion JSON object is actually a Potion Item.
  */
-export function replaceSelfReferences(json: any, root?: any): any {
+export function replaceSelfReferences(json: any, roots: any[]): any {
 	if (typeof json !== 'object' || json === null) {
 		return json;
 	} else if (json instanceof Pagination) {
-		// TODO: Pagination items may also have self refs., replace them
+		for (const [index, item] of Array.from(json.entries())) {
+			json[index] = replaceSelfReferences(item, roots);
+		}
 		return json;
 	} else if (Array.isArray(json)) {
-		// TODO: Arrays may also require a different handling
-		return json.map(value => replaceSelfReferences(value, json));
+		return json.map(value => replaceSelfReferences(value, roots));
 	} else if (json instanceof SelfReference) {
-		// There's nothing to do with a SelfReference object, so just return it.
-		return json;
-	} else if (Object.keys(json).length > 0) { // TODO: We may want to guard against an actual Item
+		// TODO: Ideally we want to return the ref instead of the self reference class,
+		// but it's not that simple (causes an infinite loop).
+		return roots.find(item => json.matches(item.uri));
+	} else if (Object.keys(json).length > 0) {
 		// NOTE: Object.keys() will only work for custom classes or objects builtins will be empty, which is what we want.
 		for (const [key, value] of Object.entries(json)) {
-			const target = root || json;
-			if (value instanceof SelfReference && value.matches(target.uri)) {
-				Object.assign(json, {[key]: target});
-			} else if (typeof value === 'object') {
+			if (value instanceof SelfReference) {
+				const ref = roots.find(item => value.matches(item.uri));
 				Object.assign(json, {
-					[key]: replaceSelfReferences(value, target)
+					[key]: ref
+				});
+			} else if (isJsObject(value)) {
+				Object.assign(json, {
+					[key]: replaceSelfReferences(value, roots)
 				});
 			}
 		}
@@ -135,6 +139,37 @@ export function replaceSelfReferences(json: any, root?: any): any {
 
 	return json;
 }
+
+/**
+ * Recursively find every object with {uri} and return a list with all,
+ * so later SelfReferences can be resolved by `replaceSelfReferences()`.
+ */
+export function findRoots(json: any): any[] {
+	const roots: any[] = [];
+	if (Array.isArray(json) || json instanceof Pagination) {
+		for (const value of json) {
+			roots.push(...findRoots(value));
+		}
+	} else if (isJsObject(json) && Object.keys(json).length > 0) {
+		if (json.uri) {
+			roots.push(json);
+		}
+		for (const value of Object.values(json)) {
+			roots.push(...findRoots(value));
+		}
+	}
+
+	// Remove duplicate entries
+	const result: any[] = [];
+	for (const root of roots) {
+		if (result.findIndex(item => root.uri === item.uri) === -1) {
+			result.push(root);
+		}
+	}
+
+	return result;
+}
+
 
 /**
  * Generate a self reference
@@ -148,7 +183,7 @@ export function toSelfReference(uri: string): SelfReference {
  * Convert an Object to Potion JSON
  */
 export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
-	if (typeof json === 'object' && json !== null) {
+	if (isJsObject(json)) {
 		if (json instanceof Item && typeof json.uri === 'string') {
 			return {$ref: `${addPrefixToURI(json.uri, prefix)}`};
 		} else if (json instanceof Date) {

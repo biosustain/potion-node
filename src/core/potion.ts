@@ -154,11 +154,11 @@ export abstract class PotionBase {
 
 	fetch(uri: string, options?: RequestOptions, extras?: FetchExtras): Promise<Item | Item[] | Pagination<Item> | any> {
 		const origin = removePrefixFromURI(uri, this.prefix);
-		return this.proxy(uri, {...options, ...extras, origin})
+		return this.resolve(uri, {...options, ...extras, origin})
 			.then(json => replaceSelfReferences(json));
 	}
 
-	private proxy(uri: string, options: FetchOptions): Promise<any> {
+	private resolve(uri: string, options: FetchOptions): Promise<any> {
 		const {Promise, prefix} = this;
 
 		const cacheKey = removePrefixFromURI(uri, prefix);
@@ -275,7 +275,7 @@ export abstract class PotionBase {
 							if (uri === origin) {
 								return Promise.resolve(toSelfReference(uri));
 							}
-							return this.proxy(uri, {
+							return this.resolve(uri, {
 								cache: true,
 								method: 'GET',
 								origin

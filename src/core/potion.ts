@@ -6,7 +6,7 @@ import {
 	readonly
 } from './metadata';
 import {Item, ItemOptions} from './item';
-import {Pagination, PaginationOptions} from './pagination';
+import {Pagination} from './pagination';
 import {
 	addPrefixToURI,
 	fromSchemaJSON,
@@ -50,20 +50,24 @@ export interface URLSearchParams {
 
 export interface RequestOptions {
 	method?: string;
-	search?: URLSearchParams | null;
+	search?: URLSearchParams | QueryOptions | null;
 	data?: any;
 	cache?: boolean;
-}
-
-export interface FetchOptions extends RequestOptions {
 	paginate?: boolean;
-	origin?: any
 }
-
-export interface QueryOptions extends PaginationOptions {
+export interface QueryOptions {
+	page?: number;
+	perPage?: number;
 	where?: any;
 	sort?: any;
 }
+
+export interface FetchExtras {
+	pagination?: Pagination<any>;
+	origin?: string;
+}
+
+export type FetchOptions = FetchExtras & RequestOptions;
 
 export interface PotionResponse {
 	data: any;
@@ -148,51 +152,47 @@ export abstract class PotionBase {
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
-	fetch(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): Promise<Item | Item[] | Pagination<Item> | any> {
+	fetch(uri: string, options?: RequestOptions, extras?: FetchExtras): Promise<Item | Item[] | Pagination<Item> | any> {
 		const origin = removePrefixFromURI(uri, this.prefix);
-		return this.proxy(uri, {...fetchOptions, origin}, pagination)
-			.then((item) => replaceSelfReferences(item));
+		return this.proxy(uri, {...options, ...extras, origin})
+			.then(json => replaceSelfReferences(json));
 	}
 
-	private proxy(uri: string, fetchOptions?: FetchOptions, pagination?: Pagination<any>): any {
-		const options: FetchOptions = {...fetchOptions};
-		const {method, cache, paginate, search} = options;
+	private proxy(uri: string, options: FetchOptions): Promise<any> {
 		const {Promise, prefix} = this;
-		const key = removePrefixFromURI(uri, prefix);
 
+		const cacheKey = removePrefixFromURI(uri, prefix);
 		// Add the API prefix if not present
 		uri = addPrefixToURI(uri, prefix);
 
 		// Serialize request to Potion JSON.
 		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
 		// Deserialize the Potion JSON.
-			.then(response => this.deserialize(response, uri, options, pagination));
+			.then(response => this.deserialize(response, uri, options));
 
-		// TODO: Cache requests for queries with params as well,
-		// we just need to create a hash key for the request (uri + search params).
-		if (method === 'GET' && !paginate && !search) {
+		if (options.method === 'GET' && !options.paginate && !options.search) {
 			// If a GET request was made and {cache: true} return the item from cache (if it exists).
 			// NOTE: Queries are not cached.
-			if  (cache && this.cache.has(key)) {
-				return this.cache.get(key);
+			if  (options.cache && this.cache.has(cacheKey)) {
+				return this.cache.get(cacheKey);
 			}
 
 			// Cache the request so that further requests for the same resource will not make an aditional XHR.
-			if (!this.requests.has(key)) {
-				this.requests.set(key, fetch().then(data => {
-					this.requests.delete(key);
+			if (!this.requests.has(cacheKey)) {
+				this.requests.set(cacheKey, fetch().then(data => {
+					this.requests.delete(cacheKey);
 					return data;
 				}, err => {
 					// If request fails,
 					// make sure to remove the pending request so further requests can be made,
 					// but fail the pipeline.
-					this.requests.delete(key);
+					this.requests.delete(cacheKey);
 					const message = getErrorMessage(err, uri);
 					return Promise.reject(message);
 				}));
 			}
 
-			return this.requests.get(key);
+			return this.requests.get(cacheKey);
 		} else {
 			return fetch();
 		}
@@ -211,17 +211,18 @@ export abstract class PotionBase {
 			}
 		};
 	}
-	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions, pagination?: Pagination<any>): Promise<PotionResponse> {
+	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions): Promise<PotionResponse> {
 		return this.fromPotionJSON(data, options.origin)
 			.then(json => {
 				// Return or update Pagination
-				// TODO: Refactor this, looks messy (pagination logic should be handled in the Pagination class)
 				if (options.paginate) {
 					const count = headers['x-total-count'] || json.length;
-					if (!pagination) {
-						return new Pagination<Item>({uri, potion: this}, json, count, options);
+					if (options.pagination instanceof Pagination) {
+						return options.pagination.update(json, count);
 					} else {
-						return pagination.update(json, count);
+						const pagination = new Pagination<Item>({uri, potion: this}, json, count, options);
+						Object.assign(options, {pagination});
+						return pagination;
 					}
 				}
 				return json;

@@ -1,11 +1,6 @@
 /* tslint:disable: max-classes-per-file prefer-function-over-method */
 
-import {
-	FetchOptions,
-	ItemCache,
-	PotionBase,
-	RequestOptions
-} from './potion';
+import {ItemCache, PotionBase, RequestOptions} from './potion';
 import {Item} from './item';
 import {Route} from './route';
 
@@ -136,7 +131,7 @@ describe('potion/core', () => {
 			};
 
 			class User extends Item {
-				static schema: (params?: any, options?: FetchOptions) => Promise<any> = Route.GET<any>('/schema');
+				static schema: (params?: any, options?: RequestOptions) => Promise<any> = Route.GET<any>('/schema');
 				createdAt: Date;
 				parent?: User;
 			}

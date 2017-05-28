@@ -1,10 +1,11 @@
 export {ItemOptions, Item} from './core/item';
 export {readonly} from './core/metadata';
-export {PaginationOptions, Pagination} from './core/pagination';
+export {Pagination} from './core/pagination';
 export {
 	ItemCache,
 	URLSearchParams,
 	RequestOptions,
+	FetchExtras,
 	FetchOptions,
 	QueryOptions,
 	PotionOptions,

@@ -1,5 +1,5 @@
 import {isReadonly, potionInstance, potionURI} from './metadata';
-import {FetchOptions, QueryOptions} from './potion';
+import {QueryOptions, RequestOptions} from './potion';
 import {Pagination} from './pagination';
 
 
@@ -39,7 +39,7 @@ export abstract class Item {
 	 * @param {Number|String} id
 	 * @param {boolean} {cache} - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
 	 */
-	static fetch<T extends Item>(id: number | string, {cache = true}: FetchOptions = {}): Promise<T> {
+	static fetch<T extends Item>(id: number | string, {cache = true}: RequestOptions = {}): Promise<T> {
 		const uri: string = potionURI(this);
 		return potionInstance(this).fetch(`${uri}/${id}`, {
 			method: 'GET',
@@ -54,7 +54,7 @@ export abstract class Item {
 	 * @param {boolean} {paginate} - Setting {paginate: true} will result in the return value to be a Pagination object.
 	 * @param {boolean} {cache} - Cache the HTTP request.
 	 */
-	static query<T extends Item>(queryOptions?: QueryOptions | null, {paginate = false, cache = true}: FetchOptions = {}): Promise<T[] | Pagination<T>> {
+	static query<T extends Item>(queryOptions?: QueryOptions | null, {paginate = false, cache = true}: RequestOptions = {}): Promise<T[] | Pagination<T>> {
 		const uri: string = potionURI(this);
 		return potionInstance(this).fetch(uri, {
 			method: 'GET',

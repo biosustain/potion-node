@@ -2,12 +2,6 @@ import {FetchOptions, PotionBase} from './potion';
 import {Item} from './item';
 
 
-export interface PaginationOptions {
-	page?: number;
-	perPage?: number;
-}
-
-
 /**
  * Array like class with resources.
  * The class is returned when the {paginate} option is set to `true` when a query is made.
@@ -28,13 +22,12 @@ export class Pagination<T extends Item> extends Array<T> {
 
 	private potion: PotionBase;
 	private uri: string;
-	private options: FetchOptions;
 
 	private $page: number;
 	private $perPage: number;
 	private $total: number;
 
-	constructor({potion, uri}: {potion: PotionBase, uri: string}, items: T[], count: string, options?: FetchOptions) {
+	constructor({potion, uri}: {potion: PotionBase, uri: string}, items: T[], count: string, private options: FetchOptions) {
 		super(...items);
 		// Set the prototype explicitly.
 		// NOTE: This is necessary and recommended: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work.
@@ -43,10 +36,9 @@ export class Pagination<T extends Item> extends Array<T> {
 
 		this.potion = potion;
 		this.uri = uri;
-		this.options = options || {};
 
-		// tslint:disable-next-line:no-magic-numbers
-		const {page = 1, perPage = 25}: any = this.options.search || {};
+		// tslint:disable-next-line: no-magic-numbers
+		const {page = 1, perPage = 25}: any = {...this.options.search};
 		this.$page = page;
 		this.$perPage = perPage;
 		this.$total = parseInt(count, 10);
@@ -73,13 +65,21 @@ export class Pagination<T extends Item> extends Array<T> {
 	}
 
 	changePageTo(page: number): Promise<T | T[] | Pagination<T> | any> {
+		const {pagination} = this.options;
 		(this.options.search as any).page = page;
 		this.$page = page;
-		return this.potion.fetch(this.uri, this.options, this);
+		return this.potion.fetch(this.uri, this.options, {
+			pagination
+		});
 	}
 
 	update(items: T[], count: number): this {
-		this.splice(0, this.length, ...items);
+		// NOTE: Using `.splice()` would create a new instance of this,
+		// thus we iterate and replace at index instead.
+		for (const [index, item] of Array.from(items.entries())) {
+			this[index] = item;
+		}
+
 		this.$total = count;
 		return this;
 	}

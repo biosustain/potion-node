@@ -390,7 +390,7 @@ describe('potion/core', () => {
 					switch (uri) {
 						case '/user':
 							/* tslint:disable: variable-name */
-							const {page, per_page} = options.search || {page: 1, per_page: 25};
+							const {page, per_page}: any = options.search || {page: 1, per_page: 25};
 							/* tslint:enable: variable-name */
 
 							const response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};

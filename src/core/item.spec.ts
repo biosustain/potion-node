@@ -326,16 +326,17 @@ describe('potion/core', () => {
 				expect(users.perPage).toEqual(2);
 				expect(users.pages).toEqual(2);
 				expect(users.total).toEqual(3);
-				expect(users.toArray()[0].id).toEqual(3); // Jane
+				expect(users[0].id).toEqual(3); // Jane
 				done();
 			});
 		});
 
 		it('should update query if {page} is set on the pagination object', done => {
 			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
+				expect(users.page).toEqual(2);
 				users.changePageTo(1).then(() => {
 					expect(users.page).toEqual(1);
-					expect(users.toArray()[0].id).toEqual(1); // John
+					expect(users[0].id).toEqual(1); // John
 					expect(users.length).toEqual(2);
 					done();
 				});

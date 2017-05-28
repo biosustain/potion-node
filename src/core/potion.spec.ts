@@ -165,23 +165,6 @@ describe('potion/core', () => {
 										}
 									}
 								});
-							case `/user/${uuid}`:
-								return Promise.resolve({
-									data: {
-										$uri: `/user/${uuid}`,
-										created_at: {
-											$date: 1451060269000
-										}
-									}
-								});
-							case '/car/1':
-								return Promise.resolve({
-									data: {
-										$uri: '/car/1',
-										user: {$ref: '/user/1'}
-									},
-									headers: {}
-								});
 							case '/user/2':
 								return Promise.resolve({
 									data: {
@@ -203,6 +186,24 @@ describe('potion/core', () => {
 										}
 									}), 100);
 								});
+							case `/user/${uuid}`:
+								return Promise.resolve({
+									data: {
+										$uri: `/user/${uuid}`,
+										created_at: {
+											$date: 1451060269000
+										}
+									}
+								});
+
+							case '/car/1':
+								return Promise.resolve({
+									data: {
+										$uri: '/car/1',
+										user: {$ref: '/user/1'}
+									},
+									headers: {}
+								});
 							case '/car/2':
 								return Promise.resolve({
 									data: {
@@ -219,6 +220,7 @@ describe('potion/core', () => {
 									},
 									headers: {}
 								});
+
 							case '/engine/1':
 								return Promise.resolve({
 									data: {
@@ -226,6 +228,7 @@ describe('potion/core', () => {
 										type: 'Diesel'
 									}
 								});
+
 							case '/person/1':
 								return Promise.resolve({
 									data: {
@@ -240,6 +243,7 @@ describe('potion/core', () => {
 										sibling: {$ref: '/person/1'}
 									}
 								});
+
 							case '/foo/1':
 								return Promise.resolve({
 									data: {
@@ -248,7 +252,6 @@ describe('potion/core', () => {
 									},
 									headers: {}
 								});
-
 							case `/foo/${uuid}`:
 								return Promise.resolve({
 									data: {
@@ -348,7 +351,7 @@ describe('potion/core', () => {
 				});
 			});
 
-			it('should work with cross-references', done => {
+			it('should work with circular references', done => {
 				Person.fetch(1).then((person: Person) => {
 					expect(person.sibling instanceof Person).toBeTruthy();
 					expect(person.sibling.sibling instanceof Person).toBeTruthy();

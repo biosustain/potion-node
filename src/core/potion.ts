@@ -214,7 +214,7 @@ export abstract class PotionBase {
 	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions): Promise<PotionResponse> {
 		return this.fromPotionJSON(data, options.origin)
 			.then(json => {
-				// Return or update Pagination
+				// If {paginate} is enabled, return or update Pagination.
 				if (options.paginate) {
 					const count = headers['x-total-count'] || json.length;
 					if (options.pagination instanceof Pagination) {

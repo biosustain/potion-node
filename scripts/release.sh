@@ -15,4 +15,11 @@ cp ./LICENSE ${NPM_DIR}
 cp ./README.md ${NPM_DIR}
 
 # 4. Publish package
-npm publish ${NPM_DIR}
+# NOTE: We publish to next tag if we are in branch next
+TAG=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "${TAG}" = "next" ]; then
+    npm publish ${NPM_DIR} --tag next
+else:
+    npm publish ${NPM_DIR}
+fi

@@ -172,7 +172,10 @@ export abstract class PotionBase {
 			});
 		}
 		return this.resolve(uri, options)
-			.then(json => replaceSelfReferences(json, findRoots(json)));
+			.then(json => {
+				replaceSelfReferences(json, findRoots(json));
+				return json;
+			});
 	}
 
 	private resolve(uri: string, options: FetchOptions): Promise<any> {

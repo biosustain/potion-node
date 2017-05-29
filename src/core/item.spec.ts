@@ -122,7 +122,6 @@ describe('potion/core', () => {
 		beforeEach(() => {
 			class Potion extends PotionBase {
 				protected request(uri: string, options?: RequestOptions): Promise<any> {
-
 					switch (uri) {
 						case '/user':
 							return buildQueryResponse([
@@ -130,16 +129,6 @@ describe('potion/core', () => {
 								{$ref: '/user/2'},
 								{$ref: '/user/3'}
 						], options);
-						case '/person':
-							return buildQueryResponse([
-								{$ref: '/person/1'},
-								{$ref: '/person/2'}
-							], options);
-						case '/group':
-							return buildQueryResponse([
-								{$ref: '/group/1'},
-								{$ref: '/group/2'}
-							], options);
 						case '/user/1':
 							return Promise.resolve({
 								data: {
@@ -158,6 +147,12 @@ describe('potion/core', () => {
 									$uri: '/user/3'
 								}
 							});
+
+						case '/person':
+							return buildQueryResponse([
+								{$ref: '/person/1'},
+								{$ref: '/person/2'}
+							], options);
 						case '/person/1':
 							return Promise.resolve({
 								data: {
@@ -178,6 +173,12 @@ describe('potion/core', () => {
 									]
 								}
 							});
+
+						case '/group':
+							return buildQueryResponse([
+								{$ref: '/group/1'},
+								{$ref: '/group/2'}
+							], options);
 						case '/group/1':
 							return Promise.resolve({
 								data: {
@@ -209,7 +210,7 @@ describe('potion/core', () => {
 							return new Promise(resolve => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}});
-								}, 500);
+								}, 250);
 							});
 						case '/m1/3':
 							return Promise.resolve({data: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}});
@@ -229,7 +230,7 @@ describe('potion/core', () => {
 							return new Promise(resolve => {
 								setTimeout(() => {
 									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}});
-								}, 500);
+								}, 250);
 							});
 						case '/m3/2':
 							return Promise.resolve({data: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
@@ -298,7 +299,7 @@ describe('potion/core', () => {
 			}
 		});
 
-		it('should return a Pagination object', done => {
+		it('should return a Pagination object if {paginated: true}', done => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users instanceof Pagination).toBe(true);
 				expect(users.length).toEqual(3);
@@ -310,7 +311,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should contain instances of an Item', done => {
+		it('should contain instances of an Item if {paginated: true}', done => {
 			User.query({}, {paginate: true}).then((users: Pagination<User>) => {
 				for (const user of users) {
 					expect(user instanceof (User as any)).toBe(true);
@@ -319,7 +320,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should return the right page when called with pagination params ({page, perPage})', done => {
+		it('should return the right page if if {paginated: true} and called with pagination params ({page, perPage})', done => {
 			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users.length).toEqual(1);
 				expect(users.page).toEqual(2);
@@ -331,7 +332,7 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should update query if {page} is set on the pagination object', done => {
+		it('should update query if {paginated: true} and {page} is set on the pagination object', done => {
 			User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
 				expect(users.page).toEqual(2);
 				users.changePageTo(1).then(() => {
@@ -343,16 +344,16 @@ describe('potion/core', () => {
 			});
 		});
 
-		it('should work with cross-references', done => {
+		it('should work with circular references when using pagination', done => {
 			Person.query(undefined, {paginate: true}).then((people: Person[]) => {
 				expect(people.length).toEqual(2);
 				for (const person of people) {
 					expect(person.groups.length).toEqual(2);
 					for (const group of person.groups) {
-						expect(group instanceof (Group as any)).toBe(true);
-						expect(group.members.length).toEqual(2);
+					 	expect(group instanceof Group).toBe(true);
+					 	expect(group.members.length).toEqual(2);
 						for (const member of group.members) {
-							expect(member instanceof (Person as any)).toBe(true);
+							expect(member instanceof Person).toBe(true);
 						}
 					}
 				}

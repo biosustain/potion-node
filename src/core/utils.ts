@@ -103,28 +103,34 @@ export class SelfReference {
 }
 
 /**
- * Search through Potion JSON and replace SelfReference object that matches the json {uri} with the root object (the Potion JSON).
- * NOTE: Potion JSON object is actually a Potion Item.
+ * Walk through Potion JSON and replace SelfReference objects from the roots (roots are just a lost of Potion item references).
+ * NOTE: This method mutates values and adds an extra key to objects ({$skip} - for preventing a stackoverflow exception).
+ * @param json - Any value to walk through.
+ * @param {Array<Item>} roots - A list of Potion items found in the passed JSON.
  */
-export function replaceSelfReferences(json: any, roots: any[]): any {
+// TODO: Improve performance of this
+export function replaceSelfReferences(json: any, roots: Item[]): any {
 	if (typeof json !== 'object' || json === null) {
 		return json;
-	} else if (json instanceof Pagination) {
-		for (const [index, item] of Array.from(json.entries())) {
-			json[index] = replaceSelfReferences(item, roots);
-		}
+	} else if (json.$skip) {
+		// If the object we want to walk through is a ref we already replaced, just skip it.
 		return json;
+	} else if (json instanceof Pagination) {
+		const pagination = json.update(json.map(value => replaceSelfReferences(value, roots)), json.total);
+		return Object.assign(pagination, {$skip: true})
 	} else if (Array.isArray(json)) {
-		return json.map(value => replaceSelfReferences(value, roots));
+		const list = json.map(value => replaceSelfReferences(value, roots));
+		return Object.assign(list, {$skip: true});
 	} else if (json instanceof SelfReference) {
-		// TODO: Ideally we want to return the ref instead of the self reference class,
-		// but it's not that simple (causes an infinite loop).
+		// Find the ref in the roots.
 		return roots.find(item => json.matches(item.uri));
 	} else if (Object.keys(json).length > 0) {
 		// NOTE: Object.keys() will only work for custom classes or objects builtins will be empty, which is what we want.
+		// NOTE: Arrays will also work with Object.keys() and return the indexes.
 		for (const [key, value] of Object.entries(json)) {
 			if (value instanceof SelfReference) {
 				const ref = roots.find(item => value.matches(item.uri));
+				Object.assign(ref, {$skip: true});
 				Object.assign(json, {
 					[key]: ref
 				});
@@ -141,10 +147,11 @@ export function replaceSelfReferences(json: any, roots: any[]): any {
 }
 
 /**
- * Recursively find every object with {uri} and return a list with all,
- * so later SelfReferences can be resolved by `replaceSelfReferences()`.
+ * Recursively find every object with {uri} (a Potion item usually) and return a list with all.
+ * @param json - A Potion JSON.
+ * @return {Array<Item>}
  */
-export function findRoots(json: any): any[] {
+export function findRoots(json: any): Item[] {
 	const roots: any[] = [];
 	if (Array.isArray(json) || json instanceof Pagination) {
 		for (const value of json) {
@@ -159,7 +166,7 @@ export function findRoots(json: any): any[] {
 		}
 	}
 
-	// Remove duplicate entries
+	// Remove duplicate entries.
 	const result: any[] = [];
 	for (const root of roots) {
 		if (result.findIndex(item => root.uri === item.uri) === -1) {

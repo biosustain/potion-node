@@ -20,6 +20,6 @@ TAG=$(git rev-parse --abbrev-ref HEAD)
 
 if [ "${TAG}" = "next" ]; then
     npm publish ${NPM_DIR} --tag next
-else:
+else
     npm publish ${NPM_DIR}
 fi

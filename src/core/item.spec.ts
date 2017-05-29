@@ -350,8 +350,8 @@ describe('potion/core', () => {
 				for (const person of people) {
 					expect(person.groups.length).toEqual(2);
 					for (const group of person.groups) {
-					 	expect(group instanceof Group).toBe(true);
-					 	expect(group.members.length).toEqual(2);
+						expect(group instanceof Group).toBe(true);
+						expect(group.members.length).toEqual(2);
 						for (const member of group.members) {
 							expect(member instanceof Person).toBe(true);
 						}

@@ -20,17 +20,17 @@
 ### Installation
 ----------------
 Install this package with [NPM](https://www.npmjs.com):
-```shell
+```bash
 $(node bin)/npm install potion-client
 ```
 
 Or [Yarn](https://yarnpkg.com/en):
-```shell
+```bash
 yarn install potion-client
 ```
 
 It can also be used with [JSPM](http://jspm.io):
-```shell
+```bash
 $(npm bin)/jspm install potion=npm:potion-client
 ```
 
@@ -58,20 +58,45 @@ class Foo extends Item {
 
 
 ### Contribute
-----------------
+--------------
 If you'd like to contribute:
 1. Clone the repository `git clone https://github.com/biosustain/potion-node`;
 2. Install all the deps `yarn install`/`npm install`. 
 
 Now you can start hacking :)
 
-Before you make a pull request, make sure that the builds and tests will run successfully:
+Before you make a pull request, you can check if builds and tests will run successfully:
 1. Run the tests using `npm run test` (*if you wish to run tests on file change, use `npm run test:continuous`*);
-2. Lint the code with `npm run lint`;
-3. Use `npm run build` to build the `.ts` files and see if any errors have occurred.
+2. Use `npm run build` to build the `.ts` files and see if any errors have occurred.
 
-If you're a contributor and you wish to publish the package,
-make sure you update the package version in `package.json` according to the [semver](http://semver.org/) spec and:
-```shell
-make publish
+If you're a contributor and you wish to publish the package, use the release scripts from `package.json`. 
+
+For example, if you wish to publish a patch, use:
+```bash
+npm run release
+```
+
+Note that the `master` branch will publish to the `latest` tag, whereas the `next` branch will publish to the `next` tag on NPM.
+This can be useful for making pre releases or major changes and allowing users to test the lib,
+but not break apps depending on the latest version.
+
+As a rule of thumb, in the `next` branch, you should **always** make a pre release,
+allowing for publish the stable version in the `master` branch:
+```bash
+# Make a patch pre release so that:
+# 1.0.0 -> 1.0.1-0
+# using:
+npm run release:prerelease
+# NOTE: Subsequent runs of the command above,
+# will result in: 1.0.1-1, 1.0.1-2, etc.
+
+# Make a major pre release so that:
+# 1.0.0 -> 2.0.0-0
+# using:
+npm run release:premajor
+# From there on,
+# to increment the pre release version so that:
+# 2.0.0-0 -> 2.0.0-1
+# use:
+npm run release:prerelease
 ```

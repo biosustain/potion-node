@@ -72,6 +72,6 @@
 		"node": ">=7.4"
 	},
 	"publishConfig": {
-		"tag": "latest"
+		"tag": "next"
 	}
 }

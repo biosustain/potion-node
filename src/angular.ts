@@ -18,7 +18,7 @@ const potion = angular.module('potion', [])
 	.provider('potion', potionProvider);
 
 
-function potionProvider(): any {
+function potionProvider(this: any): any {
 	const options = {};
 
 	// tslint:disable-next-line: no-invalid-this

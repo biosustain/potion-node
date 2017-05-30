@@ -271,7 +271,7 @@ export abstract class PotionBase {
 
 						// Create and cache the resource if it does not exist.
 						if (!this.cache.has(uri)) {
-							return this.cache.put(uri, properties.then(properties => Reflect.construct(resource, [{...properties, ...attrs}])));
+							return this.cache.put(uri, properties.then((properties: {}) => Reflect.construct(resource, [{...properties, ...attrs}])));
 						} else {
 							// If the resource already exists,
 							// update it with new properties.

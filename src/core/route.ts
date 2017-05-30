@@ -9,7 +9,7 @@ export type RouteType<T> = (params?: any, options?: RequestOptions) => Promise<T
 // tslint:disable:no-invalid-this
 export function route<T>(path: string, {method}: RequestOptions = {}): RouteType<T> {
 	// tslint:disable-next-line:only-arrow-functions
-	return function(params?: any, {paginate = false, cache = true}: RequestOptions = {}): Promise<T> {
+	return function(this: any, params?: any, {paginate = false, cache = true}: RequestOptions = {}): Promise<T> {
 		const isCtor = isFunction(this);
 		const uri = `${isCtor ? potionURI(this) : this.uri}${path}`;
 

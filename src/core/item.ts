@@ -34,6 +34,8 @@ export interface ItemOptions {
  * });
  */
 export abstract class Item {
+	[key: string]: any;
+
 	/**
 	 * Get a resource by id.
 	 * @param {Number|String} id
@@ -108,11 +110,11 @@ export abstract class Item {
 	 * Get the JSON repr. of this item.
 	 */
 	toJSON(): any {
-		const properties = {};
+		const properties: {[key: string]: any} = {};
 
 		Object.keys(this)
 			.filter(key => !key.startsWith('$') && !isReadonly(this.constructor, key))
-			.forEach(key => {
+			.forEach((key: string) => {
 				properties[key] = this[key];
 			});
 

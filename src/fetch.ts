@@ -59,7 +59,7 @@ export class Potion extends PotionBase {
 
 		return fetch(new Request(uri, init), init).then(response => {
 			if (response.ok) {
-				const headers = {};
+				const headers: {[key: string]: any} = {};
 				if (response.headers) {
 					response.headers.forEach((value, key) => {
 						headers[key] = value;

@@ -152,7 +152,7 @@ export class Potion extends PotionBase {
 
 		return this.http.request(uri, requestOptions)
 			.map((response: any) => {
-				let headers = {};
+				let headers: {[key: string]: any} = {};
 				let data;
 
 				// If `response` is a Response object,

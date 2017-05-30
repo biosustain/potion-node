@@ -19,7 +19,6 @@ import {
 	isPotionURI,
 	MemCache,
 	parsePotionID,
-	removeCircularFlag,
 	removePrefixFromURI,
 	replaceSelfReferences,
 	toCamelCase,
@@ -175,7 +174,6 @@ export abstract class PotionBase {
 		return this.resolve(uri, options)
 			.then(json => {
 				replaceSelfReferences(json, findRoots(json));
-				removeCircularFlag(json);
 				return json;
 			});
 	}

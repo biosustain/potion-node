@@ -18,7 +18,6 @@ import {
 	merge,
 	omap,
 	parsePotionID,
-	removeCircularFlag,
 	removePrefixFromURI,
 	replaceSelfReferences,
 	SelfReference,
@@ -197,46 +196,6 @@ describe('potion/utils', () => {
 
 			expect(roots.length).toEqual(1);
 			expect(roots[0].uri).toEqual(uri);
-		});
-	});
-
-	describe('removeCircularFlag()', () => {
-		it('should recursively find and remove {$circular} from arrays', () => {
-			const arr: any = [
-				{
-					uri: '/child/1',
-					$circular: true
-				}
-			];
-			arr.$circular = true;
-
-			const json: any = [
-				{
-					uri: '/foo/1',
-					bars: [{
-						uri: '/bar/1',
-						children: arr
-					}],
-					$circular: true
-				},
-				{
-					uri: '/foo/2',
-					$circular: true
-				}
-			];
-			json.$circular = true;
-
-			removeCircularFlag(json);
-
-			const foo1 = json[0];
-			const bar1 = foo1.bars[0];
-			const bar1Child = bar1.children[0];
-			const foo2 = json[1];
-
-			expect(json.$circular).toBeUndefined();
-			expect(foo1.$circular).toBeTruthy();
-			expect(bar1Child.$circular).toBeTruthy();
-			expect(foo2.$circular).toBeTruthy();
 		});
 	});
 

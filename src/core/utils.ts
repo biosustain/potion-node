@@ -104,23 +104,25 @@ export class SelfReference {
 
 /**
  * Walk through Potion JSON and replace SelfReference objects from the roots (roots are just a lost of Potion item references).
- * NOTE: This method mutates values and adds an extra key to objects ({$circular} - for preventing a stackoverflow exception).
  * @param json - Any value to walk through.
  * @param {Array<Item>} roots - A list of Potion items found in the passed JSON.
  */
-// TODO: Improve performance of this
+// NOTE: Keep refs. to looped things in this set instead of altering the objects themselves.
+// TODO: It's uncertain if this may need to be created every time we replace refs., we might need to do so.
+const set = new WeakSet();
 export function replaceSelfReferences(json: any, roots: Item[]): any {
 	if (typeof json !== 'object' || json === null) {
 		return json;
-	} else if (json.$circular) {
+	} else if (set.has(json)) {
 		// If the object we want to walk through is a ref we already replaced, just skip it.
 		return json;
 	} else if (json instanceof Pagination) {
-		const pagination = json.update(json.map(value => replaceSelfReferences(value, roots)), json.total);
-		return Object.assign(pagination, {$circular: true});
+		return json.update(json.map(value => replaceSelfReferences(value, roots)), json.total);
 	} else if (Array.isArray(json)) {
 		const list = json.map(value => replaceSelfReferences(value, roots));
-		return Object.assign(list, {$circular: true});
+		// Cache the list so we don't loop over it again
+		set.add(list);
+		return list;
 	} else if (json instanceof SelfReference) {
 		// Find the ref in the roots.
 		return roots.find(item => json.matches(item.uri));
@@ -130,7 +132,6 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 		for (const [key, value] of Object.entries(json)) {
 			if (value instanceof SelfReference) {
 				const ref = roots.find(item => value.matches(item.uri));
-				Object.assign(ref, {$circular: true});
 				Object.assign(json, {
 					[key]: ref
 				});
@@ -175,21 +176,6 @@ export function findRoots(json: any): Item[] {
 	}
 
 	return result;
-}
-
-/**
- * Remove {$circular} from arrays
- */
-export function removeCircularFlag(json: any): any {
-	if (Array.isArray(json)) {
-		if ((json as any).$circular) {
-			delete (json as any).$circular;
-		}
-		for (const value of Object.values(json)) {
-			removeCircularFlag(value);
-		}
-	}
-	return json;
 }
 
 

@@ -27,15 +27,14 @@
 		"pretest": "npm run lint",
 		"test": "karma start karma.config.ts --browsers PhantomJS --single-run --log-level error",
 		"test:continuous": "karma start karma.config.ts",
-		"prebuild": "npm run clean",
+		"prebuild": "npm run test && npm run clean",
 		"build": "ngc",
 		"release:prerelease": "scripts/release.sh prerelease",
 		"release": "scripts/release.sh patch",
 		"release:preminor": "scripts/release.sh preminor",
 		"release:minor": "scripts/release.sh minor",
 		"release:premajor": "scripts/release.sh premajor",
-		"release:major": "scripts/release.sh major",
-		"preversion": "npm run test"
+		"release:major": "scripts/release.sh major"
 	},
 	"dependencies": {
 		"reflect-metadata": "^0.1.10"

@@ -3,11 +3,12 @@
 # Use a different dist folder
 NPM_DIR=./lib/
 
-# 1. Update package version, tag and commit
-npm version $1 -m "Release %s"
-
-# 2. Build artifacts
+# 1. Build artifacts
+# NOTE: This makes sure build errors are caught before incrementing and committing version
 npm run build
+
+# 2. Update package version, tag and commit
+npm version $1 -m "Release %s"
 
 # 3. Copy npm package file, LICENSE and README to dist folder
 cp ./package.json ${NPM_DIR}

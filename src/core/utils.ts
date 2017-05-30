@@ -104,7 +104,7 @@ export class SelfReference {
 
 /**
  * Walk through Potion JSON and replace SelfReference objects from the roots (roots are just a lost of Potion item references).
- * NOTE: This method mutates values and adds an extra key to objects ({$skip} - for preventing a stackoverflow exception).
+ * NOTE: This method mutates values and adds an extra key to objects ({$circular} - for preventing a stackoverflow exception).
  * @param json - Any value to walk through.
  * @param {Array<Item>} roots - A list of Potion items found in the passed JSON.
  */
@@ -112,15 +112,15 @@ export class SelfReference {
 export function replaceSelfReferences(json: any, roots: Item[]): any {
 	if (typeof json !== 'object' || json === null) {
 		return json;
-	} else if (json.$skip) {
+	} else if (json.$circular) {
 		// If the object we want to walk through is a ref we already replaced, just skip it.
 		return json;
 	} else if (json instanceof Pagination) {
 		const pagination = json.update(json.map(value => replaceSelfReferences(value, roots)), json.total);
-		return Object.assign(pagination, {$skip: true});
+		return Object.assign(pagination, {$circular: true});
 	} else if (Array.isArray(json)) {
 		const list = json.map(value => replaceSelfReferences(value, roots));
-		return Object.assign(list, {$skip: true});
+		return Object.assign(list, {$circular: true});
 	} else if (json instanceof SelfReference) {
 		// Find the ref in the roots.
 		return roots.find(item => json.matches(item.uri));
@@ -130,7 +130,7 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 		for (const [key, value] of Object.entries(json)) {
 			if (value instanceof SelfReference) {
 				const ref = roots.find(item => value.matches(item.uri));
-				Object.assign(ref, {$skip: true});
+				Object.assign(ref, {$circular: true});
 				Object.assign(json, {
 					[key]: ref
 				});
@@ -175,6 +175,21 @@ export function findRoots(json: any): Item[] {
 	}
 
 	return result;
+}
+
+/**
+ * Remove {$circular} from arrays
+ */
+export function removeCircularFlag(json: any): any {
+	if (Array.isArray(json)) {
+		if ((json as any).$circular) {
+			delete (json as any).$circular;
+		}
+		for (const value of Object.values(json)) {
+			removeCircularFlag(value);
+		}
+	}
+	return json;
 }
 
 

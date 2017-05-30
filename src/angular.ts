@@ -36,7 +36,8 @@ function potionProvider(): any {
 
 		class Potion extends PotionBase {
 			// tslint:disable-next-line: prefer-function-over-method
-			protected request(url: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
+			protected request(url: string, options?: RequestOptions): Promise<PotionResponse> {
+				const {method = 'GET', search, data, cache = true}: RequestOptions = {...options};
 				return $http({url, method, data, cache, params: search})
 					.then(({headers, data}) => {
 						const response: any = {data};

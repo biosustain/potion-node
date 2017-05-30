@@ -115,7 +115,9 @@ export class Potion extends PotionBase {
 		}
 	}
 
-	protected request(uri: string, {method = 'GET', search, data}: PotionRequestOptions = {}): Promise<any> {
+	protected request(uri: string, options?: PotionRequestOptions): Promise<any> {
+		const {search, data, method = 'GET'}: PotionRequestOptions = {...options};
+
 		let requestOptions = new RequestOptions({
 			method: method as string,
 			url: uri

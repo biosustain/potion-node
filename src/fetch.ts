@@ -19,7 +19,8 @@ export class Potion extends PotionBase {
 	// Polyfill at https://github.com/github/fetch.
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
 	// tslint:disable-next-line: prefer-function-over-method
-	protected request(uri: string, {method = 'GET', search, data, cache = true}: RequestOptions = {}): Promise<PotionResponse> {
+	protected request(uri: string, options?: RequestOptions): Promise<PotionResponse> {
+		const {method = 'GET', search, data, cache = true}: RequestOptions = {...options};
 		const headers: Headers = new Headers();
 		const init: any = {
 			method,

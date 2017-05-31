@@ -15,33 +15,9 @@ import {Item} from './item';
  *     }
  * });
  */
-export class Pagination<T extends Item> extends Array<T> {
+export class Pagination<T extends Item> implements Iterable<T> {
 	static get [Symbol.species]() {
 		return Pagination;
-	}
-
-	private potion: PotionBase;
-	private uri: string;
-
-	private $page: number;
-	private $perPage: number;
-	private $total: number;
-
-	constructor({potion, uri}: {potion: PotionBase, uri: string}, items: T[], count: string, private options: FetchOptions) {
-		super(...items);
-		// Set the prototype explicitly.
-		// NOTE: This is necessary and recommended: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work.
-		// Docs: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
-		Object.setPrototypeOf(this, Pagination.prototype);
-
-		this.potion = potion;
-		this.uri = uri;
-
-		// tslint:disable-next-line: no-magic-numbers
-		const {page = 1, perPage = 25}: any = {...this.options.search};
-		this.$page = page;
-		this.$perPage = perPage;
-		this.$total = parseInt(count, 10);
 	}
 
 	get page(): number {
@@ -64,6 +40,40 @@ export class Pagination<T extends Item> extends Array<T> {
 		return this.$total;
 	}
 
+	get length(): number {
+		return this.items.length;
+	}
+
+	private potion: PotionBase;
+	private uri: string;
+
+	private $page: number;
+	private $perPage: number;
+	private $total: number;
+
+	constructor({potion, uri}: {potion: PotionBase, uri: string}, private items: T[], count: string, private options: FetchOptions) {
+		this.potion = potion;
+		this.uri = uri;
+
+		// tslint:disable-next-line: no-magic-numbers
+		const {page = 1, perPage = 25}: any = {...this.options.search};
+		this.$page = page;
+		this.$perPage = perPage;
+		this.$total = parseInt(count, 10);
+	}
+
+	// https://basarat.gitbooks.io/typescript/docs/iterators.html
+	[Symbol.iterator](): IterableIterator<T> {
+		return this.items.values();
+	}
+
+	toArray(): T[] {
+		return this.items.slice(0);
+	}
+	at(index: number): T {
+		return this.items[index];
+	}
+
 	changePageTo(page: number): Promise<T | T[] | Pagination<T> | any> {
 		const {pagination} = this.options;
 		(this.options.search as any).page = page;
@@ -74,22 +84,9 @@ export class Pagination<T extends Item> extends Array<T> {
 	}
 
 	update(items: T[], count: number): this {
-		// NOTE: Using `.splice()` would create a new instance of this,
-		// thus we iterate and replace at index instead.
-		for (const [index, item] of Array.from(items.entries())) {
-			this[index] = item;
-		}
+		this.items.splice(0, this.items.length, ...items);
 
 		this.$total = count;
-		return this;
-	}
-
-	/**
-	 * This will be removed as this class is iterable.
-	 * @deprecated
-	 */
-	// TODO: Remove this
-	toArray(): T[] {
 		return this;
 	}
 }

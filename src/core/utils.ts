@@ -117,7 +117,9 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 		// If the object we're about to walk through is a ref. we already parsed, just skip it and return it.
 		return json;
 	} else if (json instanceof Pagination) {
-		return json.update(json.map(value => replaceSelfReferences(value, roots)), json.total);
+		const items = json.toArray()
+			.map(value => replaceSelfReferences(value, roots));
+		return json.update(items, json.total);
 	} else if (Array.isArray(json)) {
 		return json.map(value => replaceSelfReferences(value, roots));
 	} else if (json instanceof SelfReference) {

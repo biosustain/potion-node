@@ -1,5 +1,4 @@
-/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers prefer-function-over-method  */
-
+/* tslint:disable: max-file-line-count max-classes-per-file no-magic-numbers prefer-function-over-method  */
 import {readonly} from './metadata';
 import {ItemCache, PotionBase, RequestOptions} from './potion';
 import {Item} from './item';
@@ -327,7 +326,7 @@ describe('potion/core', () => {
 				expect(users.perPage).toEqual(2);
 				expect(users.pages).toEqual(2);
 				expect(users.total).toEqual(3);
-				expect(users[0].id).toEqual(3); // Jane
+				expect(users.at(0).id).toEqual(3); // Jane
 				done();
 			});
 		});
@@ -337,7 +336,7 @@ describe('potion/core', () => {
 				expect(users.page).toEqual(2);
 				users.changePageTo(1).then(() => {
 					expect(users.page).toEqual(1);
-					expect(users[0].id).toEqual(1); // John
+					expect(users.at(0).id).toEqual(1); // John
 					expect(users.length).toEqual(2);
 					done();
 				});

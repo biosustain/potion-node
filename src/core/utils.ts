@@ -114,21 +114,24 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 	if (typeof json !== 'object' || json === null) {
 		return json;
 	} else if (set.has(json)) {
-		// If the object we want to walk through is a ref we already replaced, just skip it.
+		// If the object we're about to walk through is a ref. we already parsed, just skip it and return it.
 		return json;
 	} else if (json instanceof Pagination) {
 		return json.update(json.map(value => replaceSelfReferences(value, roots)), json.total);
 	} else if (Array.isArray(json)) {
-		const list = json.map(value => replaceSelfReferences(value, roots));
-		// Cache the list so we don't loop over it again
-		set.add(list);
-		return list;
+		return json.map(value => replaceSelfReferences(value, roots));
 	} else if (json instanceof SelfReference) {
 		// Find the ref in the roots.
 		return roots.find(item => json.matches(item.uri));
 	} else if (Object.keys(json).length > 0) {
-		// NOTE: Object.keys() will only work for custom classes or objects builtins will be empty, which is what we want.
+		// Object.keys() will only output the keys for custom classes, whereas objects builtins will be empty (which is what we want).
 		// NOTE: Arrays will also work with Object.keys() and return the indexes.
+
+		// We only add an object to the known sets if it's a reference (has {uri}).
+		if (!Array.isArray(json) && json.uri) {
+			set.add(json);
+		}
+
 		for (const [key, value] of Object.entries(json)) {
 			if (value instanceof SelfReference) {
 				const ref = roots.find(item => value.matches(item.uri));
@@ -154,15 +157,17 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
  */
 export function findRoots(json: any): Item[] {
 	const roots: any[] = [];
-	if (Array.isArray(json) || json instanceof Pagination) {
-		for (const value of json) {
-			roots.push(...findRoots(value));
-		}
-	} else if (isJsObject(json) && Object.keys(json).length > 0) {
-		if (json.uri) {
+	if (isJsObject(json) && Object.keys(json).length > 0) {
+		if (set.has(json)) {
+			// If we find the root in the set it means there is no need to continue.
+			return [];
+		} else if (json.uri) {
+			// We only want to append unique roots.
 			roots.push(json);
 		}
-		for (const value of Object.values(json)) {
+
+		const values = Array.isArray(json) || json instanceof Pagination ? json : Object.values(json);
+		for (const value of values) {
 			roots.push(...findRoots(value));
 		}
 	}

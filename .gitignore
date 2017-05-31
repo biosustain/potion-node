@@ -36,6 +36,10 @@ node_modules
 .idea/
 
 
+## VSCode
+.vscode/
+
+
 ## Direnv
 .envrc
 

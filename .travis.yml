@@ -9,6 +9,7 @@ cache:
     - node_modules
 
 addons:
+  chrome: stable
   # Node 5 requires a C++11 standard compliant compiler, so we'll use gcc.
   # See more info at https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements.
   apt:
@@ -28,6 +29,4 @@ before_install:
   - sleep 5
 
 script:
-  - npm run lint
-  - npm run test
   - npm run build

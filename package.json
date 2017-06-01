@@ -15,20 +15,23 @@
 		"name": "Roland Groza",
 		"email": "rolandjitsu@gmail.com "
 	},
-	"main": "./fetch.js",
+	"main": "./ng.umd.js",
+	"module": "./ng.es5.js",
+	"es2015": "./ng.js",
+	"typings": "./ng.d.ts",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/biosustain/potion-node"
 	},
 	"scripts": {
-		"clean": "rm -rf lib",
-		"lint": "tslint -c tslint.json -p ./tsconfig.spec.json -t stylish --type-check",
+		"clean": "rm -rf out-tsc dist/*",
+		"lint": "tslint -c tslint.json -p src/tsconfig.spec.json -t stylish --type-check",
 		"lint:fix": "npm run lint -- --fix",
 		"pretest": "npm run lint",
 		"test": "karma start karma.config.ts --browsers Chrome --single-run --log-level error",
 		"test:continuous": "karma start karma.config.ts",
 		"prebuild": "npm run test && npm run clean",
-		"build": "ngc",
+		"build": "scripts/build.sh",
 		"release:prerelease": "scripts/release.sh prerelease",
 		"release": "scripts/release.sh patch",
 		"release:preminor": "scripts/release.sh preminor",
@@ -36,8 +39,10 @@
 		"release:premajor": "scripts/release.sh premajor",
 		"release:major": "scripts/release.sh major"
 	},
-	"dependencies": {
-		"reflect-metadata": "^0.1.10"
+	"dependencies": {},
+	"peerDependencies": {
+		"reflect-metadata": "^0.1.10",
+		"tslib": "^1.7.1"
 	},
 	"devDependencies": {
 		"@angular/common": "^4.1.3",
@@ -54,9 +59,9 @@
 		"@types/jquery": "^2.0.45",
 		"@types/node": "^7.0.21",
 		"@types/reflect-metadata": "^0.0.5",
-		"@types/whatwg-fetch": "^0.0.33",
 		"angular": "^1.6.4",
 		"angular-mocks": "^1.6.4",
+		"camelcase": "^4.1.0",
 		"core-js": "^2.4.1",
 		"fetch-mock": "^5.10.1",
 		"jasmine": "^2.6.0",
@@ -68,9 +73,13 @@
 		"karma-spec-reporter": "^0.0.31",
 		"karma-typescript": "^3.0.2",
 		"karma-typescript-es6-transform": "^1.0.1",
+		"rollup": "^0.41.6",
+		"rollup-plugin-sourcemaps": "^0.4.2",
+		"rollup-plugin-uglify": "^2.0.1",
 		"rxjs": "^5.4.0",
+		"tslib": "^1.7.1",
 		"tslint": "^5.3.2",
-		"typescript": "^2.3.3",
+		"typescript": "^2.3.4",
 		"whatwg-fetch": "^2.0.3",
 		"zone.js": "^0.8.11"
 	},

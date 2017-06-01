@@ -7,8 +7,8 @@ import {
 } from '@angular/http';
 import {MockBackend} from '@angular/http/testing';
 
-import {PotionModule} from '../potion_module';
 import {POTION_PROVIDER} from '../potion';
+import {PotionModule} from '../index';
 
 
 export function provideHttpFactory(connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions): Http {

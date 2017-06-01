@@ -1,0 +1,21 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"baseUrl": "",
+		"rootDir": "./",
+		"target": "es5",
+		"lib": [
+			"es2017",
+			"dom"
+		],
+		"outDir": "../out-tsc/angularjs-es5/",
+		"types" : [
+			"angular",
+			"jquery",
+			"reflect-metadata"
+		]
+	},
+	"files": [
+		"angularjs.ts"
+	]
+}

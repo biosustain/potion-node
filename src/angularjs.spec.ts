@@ -1,8 +1,9 @@
 /* tslint:disable: no-magic-numbers max-classes-per-file */
-
 import * as angular from 'angular';
 import 'angular-mocks';
-import {Item} from './angular';
+
+import {potion} from './angularjs';
+import {Item} from './core/item';
 
 
 describe('potion/angular', () => {
@@ -285,7 +286,7 @@ class Group extends Item {
 // Configure Potion,
 // and register resources
 angular
-	.module('test', ['potion'])
+	.module('test', [potion.name])
 	.config(['potionProvider', potionProvider => {
 		potionProvider.config({prefix: ''});
 	}])

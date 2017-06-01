@@ -45,5 +45,8 @@ node_modules
 
 
 ## Dist
-/lib/
-*.ngfactory.ts
+
+## Dist
+build
+out-tsc
+dist

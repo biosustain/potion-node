@@ -5,16 +5,16 @@ import {
 	PotionOptions,
 	PotionResponse,
 	RequestOptions
-} from './core';
+} from './core/potion';
 import {setPotionPromise} from './core/metadata';
 import {ItemCache} from './core/potion';
 import {Item} from './core/item';
 
 
-export {Item, Route, readonly} from './core';
+export * from './core/index';
 
 
-const potion = angular.module('potion', [])
+export const potion = angular.module('potion', [])
 	.provider('potion', potionProvider);
 
 
@@ -24,7 +24,7 @@ function potionProvider(this: any): any {
 	// tslint:disable-next-line: no-invalid-this
 	this.config = (config: PotionOptions) => {
 		if (config) {
-			return Object.assign(options, config);
+			return {...options, ...config};
 		} else {
 			return options;
 		}
@@ -81,6 +81,3 @@ function potionProvider(this: any): any {
 	// tslint:disable-next-line: no-invalid-this
 	return this;
 }
-
-
-export {potion};

@@ -122,9 +122,9 @@ export abstract class PotionBase {
 
 	/**
 	 * Register a resource.
-	 * @param {String} uri - Path on which the resource is registered.
-	 * @param {Item} resource
-	 * @param {ItemOptions} options - Set the property options for any instance of the resource (setting a property to readonly for instance).
+	 * @param uri - Path on which the resource is registered.
+	 * @param resource
+	 * @param options - Set the property options for any instance of the resource (setting a property to readonly for instance).
 	 */
 	register(uri: string, resource: typeof Item, options?: ItemOptions): typeof Item {
 		decorateCtorWithPotionInstance(resource, this);
@@ -140,8 +140,8 @@ export abstract class PotionBase {
 
 	/**
 	 * Register a resource.
-	 * @param {String} uri - Path on which the resource is registered.
-	 * @param {ItemOptions} options - Set the property options for any instance of the resource (setting a property to readonly for instance).
+	 * @param uri - Path on which the resource is registered.
+	 * @param options - Set the property options for any instance of the resource (setting a property to readonly for instance).
 	 *
 	 * @example
 	 * @potion.registerAs('/user')
@@ -156,9 +156,9 @@ export abstract class PotionBase {
 
 	/**
 	 * Make a HTTP request.
-	 * @param {string} uri
-	 * @param {RequestOptions} options
-	 * @returns {PotionResponse} An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
+	 * @param uri
+	 * @param options
+	 * @returns An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 

@@ -23,13 +23,8 @@ import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 
-import {
-	Item,
-	ItemOptions,
-	PotionBase,
-	PotionOptions,
-	RequestOptions as PotionRequestOptions
-} from '../core';
+import {Item, ItemOptions} from '../core/item';
+import {PotionBase, PotionOptions, RequestOptions as PotionRequestOptions} from '../core/potion';
 
 import {isObjectEmpty, merge} from '../core/utils';
 

@@ -1,38 +1,23 @@
 {
-	"angularCompilerOptions": {
-		"skipTemplateCodegen": true,
-		"strictMetadataEmit": true
-	},
 	"compilerOptions": {
-		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"module": "commonjs",
-		"declaration": true,
+		"downlevelIteration": true,
+		"module": "es2015",
 		"moduleResolution": "node",
+		"target": "es5",
+		"importHelpers": true,
+		"declaration": true,
 		"noUnusedParameters": true,
 		"noUnusedLocals": true,
-		"inlineSourceMap": true,
-		"inlineSources": true,
 		"strict": true,
-		"target": "es2015",
+		"sourceMap": true,
+		"inlineSources": true,
+		"typeRoots": [
+			"node_modules/@types"
+		],
 		"lib": [
 			"es2017",
 			"dom"
-		],
-		"outDir": "./lib",
-		"types" : [
-			"angular",
-			"jquery",
-			"node",
-			"reflect-metadata"
 		]
-	},
-	"include": [
-		"src/**/*.ts"
-	],
-	"exclude": [
-		"src/**/*.spec.ts",
-		"node_modules",
-		"lib"
-	]
+	}
 }

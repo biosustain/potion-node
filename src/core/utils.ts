@@ -25,7 +25,7 @@ export function toCamelCase(str: string): string {
  * Object type guard
  * Docs: https://www.typescriptlang.org/docs/handbook/advanced-types.html
  */
-export function isJsObject(value: any): value is {[key: string]; any} {
+export function isJsObject(value: any): value is {[key: string]: any} {
 	return typeof value === 'object' && value !== null;
 }
 /**

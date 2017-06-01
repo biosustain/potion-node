@@ -49,3 +49,14 @@ export class PotionModule {
 		potion.registerFromProvider(resources || []);
 	}
 }
+
+
+export {
+	POTION_RESOURCES,
+	PotionResources,
+	POTION_CONFIG,
+	PotionConfig,
+	POTION_HTTP,
+	PotionHttp,
+	Potion
+} from './potion';

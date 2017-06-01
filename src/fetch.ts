@@ -3,10 +3,10 @@ import {
 	PotionOptions,
 	PotionResponse,
 	RequestOptions
-} from './core';
+} from './core/potion';
 
 
-export {readonly, Item, Route} from './core';
+export * from './core/index';
 
 
 export class Potion extends PotionBase {

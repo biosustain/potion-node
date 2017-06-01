@@ -11,7 +11,8 @@ import 'rxjs/add/observable/of';
 import {RequestMethod, Response, ResponseOptions} from '@angular/http';
 
 import {PotionTestingModule} from './testing/potion_testing_module';
-import {Item, Route} from '../core';
+import {Item} from '../core/item';
+import {Route} from '../core/route';
 import {
 	Potion,
 	POTION_CONFIG,

@@ -1,0 +1,34 @@
+{
+	"extends": "../tsconfig.json",
+	"angularCompilerOptions": {
+		"annotateForClosureCompiler": true,
+		"genDir": "../out-tsc/lib-gen-dir/",
+		"flatModuleOutFile": "potion.js",
+		"flatModuleId": "potion",
+		"strictMetadataEmit": true,
+		"skipTemplateCodegen": true
+	},
+	"compilerOptions": {
+		"noImplicitAny": false,
+		"baseUrl": "",
+		"rootDir": "./",
+		"target": "es5",
+		"lib": [
+			"es2017",
+			"dom"
+		],
+		"types" : [
+			"angular",
+			"angular-mocks",
+			"fetch-mock",
+			"jasmine",
+			"jquery",
+			"node",
+			"reflect-metadata"
+		]
+	},
+	"include": [
+		"../config/*.ts",
+		"**/*.ts"
+	]
+}

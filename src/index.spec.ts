@@ -21,7 +21,7 @@ import {
 	POTION_RESOURCES,
 	PotionModule,
 	Route
-} from './ng';
+} from './index';
 
 
 export function provideHttpFactory(connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions): Http {

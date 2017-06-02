@@ -22,6 +22,6 @@
 		]
 	},
 	"files": [
-		"./ng.ts"
+		"./index.ts"
 	]
 }

@@ -13,14 +13,13 @@ import {MockBackend, MockConnection} from '@angular/http/testing';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 
-
+import {Item} from '../core/item';
+import {Route} from '../core/route';
 import {
-	Item,
 	Potion,
 	POTION_PROVIDER,
 	POTION_RESOURCES,
-	PotionModule,
-	Route
+	PotionModule
 } from './index';
 
 

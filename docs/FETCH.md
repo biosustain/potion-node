@@ -8,13 +8,13 @@ and it can be used as described in [API](API.md).
 -------------------------
 Make sure an instance of `Potion` is created and use that to register resources:
 ```ts
-import {Potion} from 'potion';
+import {Potion} from 'potion-client/fetch';
 const potion = new Potion({prefix: '/api'});
 ```
 
 Now the API endpoints can be registered either using the `@potion.registerAs()` class decorator:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 // An instance of Potion is available either globally or imported from somewhere in your app
 @potion.registerAs('/foo', {
     readonly: ['name']
@@ -26,7 +26,7 @@ class Foo extends Item {
 
 Or by using the `potion.register()` method:
 ```ts
-import {Item, readonly} from 'potion';
+import {Item, readonly} from 'potion-client/fetch';
 class Foo extends Item {
     @readonly
     name: string;

@@ -19,7 +19,7 @@ platformBrowserDynamic()
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {HttpModule} from '@angular/http';
-import {POTION_RESOURCES, PotionModule} from 'potion-client/@angular';
+import {POTION_RESOURCES, PotionModule} from 'potion-client';
 
 import {AppComponent} from './app.component';
 
@@ -46,7 +46,7 @@ export class AppModule {}
 
 
 // ./app.resources.ts
-import {PotionResources} from 'potion-client/@angular';
+import {PotionResources} from 'potion-client';
 import {Foo, Bar} from './foobar';
 
 export const resources: PotionResources = {
@@ -81,7 +81,7 @@ export class AppComponent {
 
 
 // ./foobar.ts
-import {Item} from 'potion/@angular';
+import {Item} from 'potion-client';
 
 export class Foo extends Item {
     name: string;
@@ -93,7 +93,7 @@ export class Bar extends Item {}
 You can still register new resources at a later point by using the `Potion` instance (though I advise against it):
 ```ts
 import {Component} from '@angular/core';
-import {Potion, Item} from 'potion/@angular';
+import {Potion, Item} from 'potion-client';
 
 export class Person extends Item {}
 
@@ -116,7 +116,7 @@ If you wish to override either one of the config values or provide your own HTTP
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {HttpModule} from '@angular/http';
-import {POTION_HTTP, POTION_CONFIG, PotionHttp} from 'potion/@angular';
+import {POTION_HTTP, POTION_CONFIG, PotionHttp} from 'potion-client';
 import {resources} from './app.resources';
 
 // Custom Http

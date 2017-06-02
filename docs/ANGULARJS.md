@@ -7,7 +7,7 @@ This package can be used with [AngularJS](https://angularjs.org) version `v1.6` 
 -------------------------
 ```ts
 import angular from 'angular';
-import {Item, Route, potion} from 'potion/angular';
+import {Item, Route, potion} from 'potion-client/angularjs';
 
 angular.module('myApp', [potion.name])
     .factory('Foo', ['potion', (potion) => {
@@ -29,7 +29,7 @@ angular.module('myApp', [potion.name])
 -------------------
 ```ts
 import angular from 'angular';
-import {potion} from 'potion/angular';
+import {potion} from 'potion-client/angularjs';
 
 angular.module('myApp', [potion.name])
     .controller('MyAppController', ['Foo', (Foo) => {
@@ -42,7 +42,7 @@ angular.module('myApp', [potion.name])
 ----------------------
 ```ts
 import angular from 'angular';
-import {potion} from 'potion/angular';
+import {potion} from 'potion-client/angularjs';
 
 angular.module('myApp', [potion.name])
     .config(['potionProvider', (potionProvider) => {

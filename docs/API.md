@@ -17,7 +17,7 @@ No matter how you use this package (with Angular, Fetch, etc.) you can configure
 
 The `{host}` can be useful if you're hosting the API at a different host than where the app is run:
 ```ts
-import {Potion} from 'potion';
+import {Potion} from 'potion-client/fetch';
 const potion = new Potion({
     host: 'http://domain.com'
 });
@@ -25,7 +25,7 @@ const potion = new Potion({
 
 Whereas the `{prefix}` is useful if all API routes are under the same root path:
 ```ts
-import {Potion} from 'potion';
+import {Potion} from 'potion-client/fetch';
 const potion = new Potion({
     prefix: '/api'
 });
@@ -33,7 +33,7 @@ const potion = new Potion({
 
 The `{cache}` defaults to in-memory caching, but you can easily change that by implementing the `ItemCache`:
 ```ts
-import {Potion, ItemCache} from 'potion';
+import {Potion, ItemCache} from 'potion-client/fetch';
 
 class CustomCache<T> implements ItemCache<T> {
     get(key: string): T { ... }
@@ -51,14 +51,14 @@ const potion = new Potion({
 An `Item` is an abstract class that is not meant to be used as standalone.
 It's meant to be extended by resources so that the resources are able to use the `Item`'s API:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 ```
 
 If you'd like to set some of the properties to read only (any requests to the backend will omit those properties),
 you can do it either directly on the resource using property decorators:
 ```ts
-import {Item, readonly} from 'potion';
+import {Item, readonly} from 'potion-client/fetch';
 
 class Foo extends Item {
     @readonly
@@ -68,7 +68,7 @@ class Foo extends Item {
 
 Or when the resource is registered:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 
 @potion.registerAs('/foo', {
     readonly: ['name']
@@ -83,7 +83,7 @@ Every resource has `.fetch()`, `.query()` and `.first()` static methods that can
 
 `.fetch()` will retrieve a resource by id:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const foo = Foo.fetch(1);
@@ -96,7 +96,7 @@ const foo = Foo.fetch(1, {cache: false});
 
 Whereas `.query()` and `.first()` will query multiple resource (the latter returning the first one):
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const foos = Foo.query();
@@ -105,7 +105,7 @@ const firstFoo = Foo.first();
 
 When querying, additional params can be provided (see [Filtering & Sorting](http://potion.readthedocs.io/en/latest/quickstart.html#filtering-sorting)):
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const query = {
@@ -119,7 +119,7 @@ const firstFoo = Foo.first(query);
 
 You can also retrieve paginated items which return a `Pagination` instance (see [Pagination](http://potion.readthedocs.io/en/latest/quickstart.html#pagination)):
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const query = {
@@ -163,7 +163,7 @@ There are also additional properties on a `Pagination` instance:
 #### Create/Update/Delete
 If you wish to create a new resource instance you can simply:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const foo = new Foo();
@@ -172,7 +172,7 @@ foo.save()
 
 If you wish to update an instance:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const foo = Foo.fetch(1);
@@ -181,7 +181,7 @@ foo.then((foo) => foo.update({name: 'Jane'}));
 
 Or you can use the `.save()` instance method which works as an upsert:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const foo = Foo.fetch(1);
@@ -193,7 +193,7 @@ foo.then((foo) => {
 
 And to delete a resource:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const foo = Foo.fetch(1);
@@ -203,7 +203,7 @@ foo.then((foo) => foo.destroy());
 #### Compare
 You can also compare two instances:
 ```ts
-import {Item} from 'potion';
+import {Item} from 'potion-client/fetch';
 class Foo extends Item {}
 
 const jane = Foo.fetch(1);
@@ -225,7 +225,7 @@ Promise.all([jane, joe])
 
 It can be used for both instance and static routes:
 ```ts
-import {Route, Item} from 'potion';
+import {Route, Item} from 'potion-client/fetch';
 
 class Foo extends Item {
     static bars = Route.GET('/bars');
@@ -235,7 +235,7 @@ class Foo extends Item {
 
 Furthermore, all `Route` methods (besides `DELETE`) accept additional params, same as the [Item](#item):
 ```ts
-import {Route, Item} from 'potion';
+import {Route, Item} from 'potion-client/fetch';
 
 class Foo extends Item {
     static bars = Route.GET('/bars');

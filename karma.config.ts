@@ -18,18 +18,7 @@ module.exports = function (config) {
 			tsconfig: './src/tsconfig.spec.json',
 			bundlerOptions: {
 				entrypoints: /karma-test-shim\.ts|\.spec\.ts$/,
-				transforms: [
-					// require('karma-typescript-es6-transform')({
-					// 	presets: ['es2015', 'stage-0'],
-					// 	extensions: ['.ts', '.js'],
-					// 	plugins: [
-					// 		["transform-runtime", {
-					// 			regenerator: true,
-					// 			polyfill: true
-					// 		}]
-					// 	]
-					// })
-				]
+				transforms: []
 			}
 		},
 		logLevel: config.LOG_INFO,

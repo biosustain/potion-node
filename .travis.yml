@@ -31,3 +31,7 @@ before_install:
 
 script:
   - npm run build
+
+notifications:
+  email:
+    on_failure: change

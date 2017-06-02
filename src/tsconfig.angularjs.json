@@ -16,6 +16,6 @@
 		]
 	},
 	"files": [
-		"angularjs.ts"
+		"./angularjs.ts"
 	]
 }

@@ -1,93 +1,66 @@
 /* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
 import {async, inject, TestBed} from '@angular/core/testing';
 
+import {
+	BaseRequestOptions,
+	ConnectionBackend,
+	Http,
+	HttpModule,
+	RequestMethod,
+	Response,
+	ResponseOptions
+} from '@angular/http';
 import {MockBackend, MockConnection} from '@angular/http/testing';
 
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
-// RxJs Statics
 import 'rxjs/add/observable/of';
 
-import {RequestMethod, Response, ResponseOptions} from '@angular/http';
-
-import {PotionTestingModule} from './testing/potion_testing_module';
 import {Item} from '../core/item';
-import {Route} from '../core/route';
 import {
 	Potion,
 	POTION_CONFIG,
 	POTION_HTTP,
-	POTION_RESOURCES
+	POTION_PROVIDER
 } from './potion';
 
 
-describe('potion/@angular', () => {
-	describe('PotionModule', () => {
-		class User extends Item {}
+export function provideHttpFactory(connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions): Http {
+	return new Http(connectionBackend, defaultOptions);
+}
 
-		beforeEach(() => {
-			TestBed.configureTestingModule({
-				imports: [PotionTestingModule],
-				providers: [
-					{
-						provide: POTION_RESOURCES,
-						useValue: {
-							'/user': User
-						},
-						multi: true
-					}
-				]
-			});
-		});
 
-		it('should provide a Potion instance', inject([Potion], (potion: Potion) => {
-			expect(potion).not.toBeUndefined();
-			expect(potion instanceof Potion).toBe(true);
-		}));
-
-		it('should register any passed resources', inject([Potion], (potion: Potion) => {
-			expect(potion).not.toBeUndefined();
-			expect(potion.resources.hasOwnProperty('/user')).toBeTruthy();
-		}));
-
-		it('should allow Potion().request() to use Http', async(inject([MockBackend], (backend: MockBackend) => {
-			const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-				new Response(
-					new ResponseOptions({
-						status: 200,
-						body: {
-							$uri: '/user/1'
-						}
-					})
-				)
-			));
-
-			User.fetch(1).then(user => {
-				subscription.unsubscribe();
-				expect(user).not.toBeUndefined();
-				expect(user.id).toEqual(1);
-			});
-		})));
-	});
-
+describe('potion/ng', () => {
 	describe('POTION_CONFIG', () => {
 		const POTION_HOST = 'https://localhost';
 		const POTION_PREFIX = '/test';
 
-		beforeEach(() => {
+		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [PotionTestingModule],
+				imports: [HttpModule],
 				providers: [
+					POTION_PROVIDER,
 					{
 						provide: POTION_CONFIG,
 						useValue: {
 							host: POTION_HOST,
 							prefix: POTION_PREFIX
 						}
-					}
+					},
+					// Angular Http
+					{
+						provide: Http,
+						useFactory: provideHttpFactory,
+						deps: [
+							MockBackend,
+							BaseRequestOptions
+						]
+					},
+					BaseRequestOptions,
+					MockBackend
 				]
 			});
-		});
+		}));
 
 		it('should configure Potion({host, prefix, cache}) properties', inject([Potion], (potion: Potion) => {
 			expect(potion.host).toEqual(POTION_HOST);
@@ -110,17 +83,29 @@ describe('potion/@angular', () => {
 			}
 		}
 
-		beforeEach(() => {
+		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [PotionTestingModule],
+				imports: [HttpModule],
 				providers: [
+					POTION_PROVIDER,
 					{
 						provide: POTION_HTTP,
 						useClass: Http
-					}
+					},
+					// Angular Http
+					{
+						provide: Http,
+						useFactory: provideHttpFactory,
+						deps: [
+							MockBackend,
+							BaseRequestOptions
+						]
+					},
+					BaseRequestOptions,
+					MockBackend
 				]
 			});
-		});
+		}));
 
 		it('should change the underlying Potion() Http engine', async(inject([Potion], (potion: Potion) => {
 			potion.fetch('/ping').then(res => {
@@ -130,11 +115,25 @@ describe('potion/@angular', () => {
 	});
 
 	describe('Potion()', () => {
-		beforeEach(() => {
+		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [PotionTestingModule]
+				imports: [HttpModule],
+				providers: [
+					POTION_PROVIDER,
+					// Angular Http
+					{
+						provide: Http,
+						useFactory: provideHttpFactory,
+						deps: [
+							MockBackend,
+							BaseRequestOptions
+						]
+					},
+					BaseRequestOptions,
+					MockBackend
+				]
 			});
-		});
+		}));
 
 		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
 			backend.verifyNoPendingRequests();
@@ -237,11 +236,25 @@ describe('potion/@angular', () => {
 	});
 
 	describe('Item()', () => {
-		beforeEach(() => {
+		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [PotionTestingModule]
+				imports: [HttpModule],
+				providers: [
+					POTION_PROVIDER,
+					// Angular Http
+					{
+						provide: Http,
+						useFactory: provideHttpFactory,
+						deps: [
+							MockBackend,
+							BaseRequestOptions
+						]
+					},
+					BaseRequestOptions,
+					MockBackend
+				]
 			});
-		});
+		}));
 
 		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
 			backend.verifyNoPendingRequests();
@@ -360,54 +373,6 @@ describe('potion/@angular', () => {
 
 						subscription.unsubscribe();
 					});
-			})));
-		});
-	});
-
-	describe('Route', () => {
-		class User extends Item {
-			static names: any = Route.GET<string[]>('/names');
-		}
-
-		beforeEach(() => {
-			TestBed.configureTestingModule({
-				imports: [PotionTestingModule],
-				providers: [
-					{
-						provide: POTION_RESOURCES,
-						useValue: {
-							'/user': User
-						},
-						multi: true
-					}
-				]
-			});
-		});
-
-		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
-			backend.verifyNoPendingRequests();
-		}));
-
-		describe('.GET()', () => {
-			it('should return valid JSON', async(inject([MockBackend], (backend: MockBackend) => {
-				const body = [
-					'John Doe',
-					'Jane Doe'
-				];
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-					new Response(
-						new ResponseOptions({
-							status: 200,
-							body
-						})
-					)
-				));
-
-				User.names().then((names: any) => {
-					expect(names instanceof Array).toBe(true);
-					expect(names).toEqual(body);
-					subscription.unsubscribe();
-				});
 			})));
 		});
 	});

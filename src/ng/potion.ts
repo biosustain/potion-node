@@ -1,5 +1,3 @@
-// tslint:disable: max-classes-per-file
-
 import {
 	Inject,
 	Injectable,
@@ -11,7 +9,6 @@ import {
 import {
 	Headers,
 	Http,
-	QueryEncoder,
 	Request,
 	RequestOptions,
 	RequestOptionsArgs,
@@ -25,14 +22,15 @@ import 'rxjs/add/operator/toPromise';
 
 import {Item, ItemOptions} from '../core/item';
 import {PotionBase, PotionOptions, RequestOptions as PotionRequestOptions} from '../core/potion';
-
 import {isObjectEmpty, merge} from '../core/utils';
+
+import {PotionQueryEncoder} from './encoder';
 
 
 /**
  * Angular 2 Potion resources interface.
  */
-export const POTION_RESOURCES = new InjectionToken<PotionResources>('POTION_RESOURCES');
+export const POTION_RESOURCES = new InjectionToken<PotionResources>('PotionResources');
 export interface PotionResources {
 	[key: string]: typeof Item | [typeof Item, ItemOptions];
 }
@@ -41,7 +39,7 @@ export interface PotionResources {
 /**
  * Provide a way to configure Potion in Angular 2.
  */
-export const POTION_CONFIG = new InjectionToken<PotionConfig>('POTION_CONFIG');
+export const POTION_CONFIG = new InjectionToken<PotionConfig>('PotionConfig');
 export interface PotionConfig extends PotionOptions {} // tslint:disable-line:no-empty-interface
 
 
@@ -49,25 +47,9 @@ export interface PotionConfig extends PotionOptions {} // tslint:disable-line:no
  * Potion can also be configured to use various Angular 2 Http implementations.
  * This is useful when there is a wrapper around the core Angular 2 Http module (mostly needed when creating interceptors).
  */
-export const POTION_HTTP = new InjectionToken<PotionHttp>('POTION_HTTP');
+export const POTION_HTTP = new InjectionToken<PotionHttp>('PotionHttp');
 export interface PotionHttp {
 	request(url: string | Request, options?: RequestOptionsArgs): Observable<Response>;
-}
-
-
-/**
- * Potion queries need special encoding (some queries have JSON objects as values for keys).
- */
-export class PotionQueryEncoder extends QueryEncoder {
-	encodeKey(key: string): string {
-		return encodeURIComponent(key);
-	}
-
-	encodeValue(value: string): string {
-		return encodeURIComponent(
-			JSON.stringify(value)
-		);
-	}
 }
 
 
@@ -78,13 +60,8 @@ export class PotionQueryEncoder extends QueryEncoder {
 export class Potion extends PotionBase {
 	private http: PotionHttp;
 
-	constructor(
-		http: Http,
-		// TODO: fix when https://github.com/angular/angular/issues/12631 is fixed
-		@Optional() @Inject(POTION_CONFIG) config: any,
-		@Optional() @Inject(POTION_HTTP) customHttp: any
-	) {
-		super(config || {});
+	constructor(http: Http, @Optional() @Inject(POTION_CONFIG) config: PotionConfig, @Optional() @Inject(POTION_HTTP) customHttp: PotionHttp) {
+		super({...config});
 		// Use custom Http class if provided,
 		// fallback to Angular Http otherwise.
 		this.http = customHttp || http;

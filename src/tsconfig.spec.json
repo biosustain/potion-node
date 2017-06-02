@@ -12,6 +12,7 @@
 		"noImplicitAny": false,
 		"baseUrl": "",
 		"rootDir": "./",
+		"module": "commonjs",
 		"target": "es5",
 		"lib": [
 			"es2017",

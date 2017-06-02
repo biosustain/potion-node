@@ -9,6 +9,7 @@ import {
 import {setPotionPromise} from './core/metadata';
 import {ItemCache} from './core/potion';
 import {Item} from './core/item';
+import {isJsObject} from './core/utils';
 
 
 export * from './core/index';
@@ -23,8 +24,9 @@ function potionProvider(this: any): any {
 
 	// tslint:disable-next-line: no-invalid-this
 	this.config = (config: PotionOptions) => {
-		if (config) {
-			return {...options, ...config};
+		if (isJsObject(config)) {
+			Object.assign(options, config);
+			return options;
 		} else {
 			return options;
 		}

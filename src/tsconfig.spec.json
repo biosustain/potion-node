@@ -4,7 +4,7 @@
 		"annotateForClosureCompiler": true,
 		"genDir": "../out-tsc/lib-gen-dir/",
 		"flatModuleOutFile": "potion.js",
-		"flatModuleId": "potion",
+		"flatModuleId": "potion-client",
 		"strictMetadataEmit": true,
 		"skipTemplateCodegen": true
 	},

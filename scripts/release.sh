@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Use a different dist folder
-NPM_DIR=./lib/
+NPM_DIR=./dist/
 
 # 1. Build artifacts
 # NOTE: This makes sure build errors are caught before incrementing and committing version

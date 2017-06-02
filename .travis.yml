@@ -1,3 +1,6 @@
+dist: trusty
+sudo: false
+
 language: node_js
 node_js:
   - "6.4"
@@ -9,19 +12,18 @@ cache:
     - node_modules
 
 addons:
-  # Node 5 requires a C++11 standard compliant compiler, so we'll use gcc.
+  chrome: stable
+  # Node 5+ requires a C++11 standard compliant compiler, so we'll use gcc.
   # See more info at https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements.
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - google-chrome
     packages:
-      - google-chrome-stable
       - g++-4.8
 
 env:
   global:
-    - CXX=g++-4.8 # This is linked to the issue above with Node 5
+    - CXX=g++-4.8 # This is linked to the issue above with Node 5+
 
 before_install:
   - export DISPLAY=:99.0

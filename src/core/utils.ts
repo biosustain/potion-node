@@ -338,3 +338,19 @@ export class MemCache<T extends Item> implements ItemCache<T> {
 		this.items.delete(key);
 	}
 }
+
+
+/**
+ * Get global object
+ * https://github.com/hemanth/es-next#global
+ */
+declare const global: any;
+export function getGlobal(): any {
+	if (typeof self !== 'undefined') {
+		return self;
+	} else if (typeof window !== 'undefined') {
+		return window;
+	} else if (typeof global !== 'undefined') {
+		return global;
+	}
+}

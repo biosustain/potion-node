@@ -7,6 +7,7 @@ import {
 	findRoots,
 	fromSchemaJSON,
 	getErrorMessage,
+	getGlobal,
 	getPotionID,
 	getPotionURI,
 	hasTypeAndId,
@@ -537,6 +538,12 @@ describe('potion/utils', () => {
 				cache.remove('ping');
 				expect(cache.has('ping')).toBeFalsy();
 			});
+		});
+	});
+
+	describe('getGlobal()', () => {
+		it('should retrieve the global object', () => {
+			expect(typeof getGlobal()).toEqual('object');
 		});
 	});
 });

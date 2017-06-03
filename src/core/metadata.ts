@@ -1,9 +1,10 @@
-import {isFunction} from './utils';
+import {getGlobal, isFunction} from './utils';
 import {PotionBase} from './potion';
 import {Item} from './item';
 
 
-const Reflect = (window as any).Reflect; // tslint:disable-line:variable-name
+const global = getGlobal();
+const Reflect = global.Reflect; // tslint:disable-line: variable-name
 
 // Make sure Reflect API is available,
 // otherwise throw an error.

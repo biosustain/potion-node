@@ -11,7 +11,7 @@ DIST_FILENAME="${DIST_DIR}/${LIB_NAME}"
 # Build ES2015
 $(npm bin)/ngc -p src/tsconfig.json
 # Rollup ES2015 FESM
-$(npm bin)/rollup -c config/rollup.config.js\
+$(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES2015_OUTPUT_DIR}/${LIB_NAME}.js"\
     -o "${DIST_FILENAME}.js"\
     --format es
@@ -22,18 +22,18 @@ rsync -a --include="*/" --include '*.d.ts' --include '*.metadata.json' --exclude
 # Build ES5
 $(npm bin)/ngc -p src/tsconfig.es5.json
 # # Rollup ES5 FESM, UMD
-$(npm bin)/rollup -c config/rollup.config.js\
+$(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.umd.min.js"\
     --format umd\
     --environment UGLIFY
 
-$(npm bin)/rollup -c config/rollup.config.js\
+$(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.umd.js"\
     --format umd
 
-$(npm bin)/rollup -c config/rollup.config.js\
+$(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.es5.js"\
     --format es

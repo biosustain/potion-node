@@ -1,4 +1,4 @@
-/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
+/* tslint:disable: max-file-line-count max-classes-per-file no-magic-numbers */
 import {async, inject, TestBed} from '@angular/core/testing';
 
 import {

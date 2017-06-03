@@ -2,7 +2,7 @@ const camelCase = require('camelcase');
 const sourcemaps = require('rollup-plugin-sourcemaps');
 const uglify = require('rollup-plugin-uglify');
 
-const name = require('../package.json').name;
+const name = require('./package.json').name;
 
 const plugins = [
     sourcemaps()

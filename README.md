@@ -76,7 +76,9 @@ For example, if you wish to publish a patch, use:
 npm run release
 ```
 
-Note that the `master` branch will publish to the `latest` tag, whereas the `next` branch will publish to the `next` tag on NPM.
+**NOTE**: Do not forget to `git push --follow-tags` when you push, otherwise tags might not be pushed (depending on your Git global config).
+
+The `master` branch will publish to the `latest` tag, whereas the `next` branch will publish to the `next` tag on NPM.
 This can be useful for making pre releases or major changes and allowing users to test the lib,
 but not break apps depending on the latest version.
 

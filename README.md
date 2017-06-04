@@ -82,8 +82,8 @@ The `master` branch will publish to the `latest` tag, whereas the `next` branch 
 This can be useful for making pre releases or major changes and allowing users to test the lib,
 but not break apps depending on the latest version.
 
-As a rule of thumb, in the `next` branch, you should **always** make a pre release,
-allowing for publish the stable version in the `master` branch:
+As a rule of thumb, you should **always** make a pre release only in the `next` branch,
+allowing for publishing the stable version from the `master` branch:
 ```bash
 # Make a patch pre release so that:
 # 1.0.0 -> 1.0.1-0

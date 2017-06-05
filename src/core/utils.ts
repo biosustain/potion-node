@@ -97,8 +97,8 @@ export function fromSchemaJSON(json: any): {[key: string]: any} {
 
 export class SelfReference {
 	constructor(readonly $uri: string) {}
-	matches(uri: any): boolean {
-		return this.$uri === uri;
+	matches(json: any): boolean {
+		return isJsObject(json) && this.$uri === json.uri;
 	}
 }
 
@@ -110,7 +110,7 @@ export class SelfReference {
 // NOTE: Keep refs. to looped things in this set instead of altering the objects themselves.
 // TODO: It's uncertain if this may need to be created every time we replace refs., we might need to do so.
 const set = new WeakSet();
-export function replaceSelfReferences(json: any, roots: Item[]): any {
+export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
 	if (typeof json !== 'object' || json === null) {
 		return json;
 	} else if (set.has(json)) {
@@ -124,7 +124,7 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 		return json.map(value => replaceSelfReferences(value, roots));
 	} else if (json instanceof SelfReference) {
 		// Find the ref in the roots.
-		return roots.find(item => json.matches(item.uri));
+		return roots.get(json.$uri);
 	} else if (Object.keys(json).length > 0) {
 		// Object.keys() will only output the keys for custom classes, whereas objects builtins will be empty (which is what we want).
 		// NOTE: Arrays will also work with Object.keys() and return the indexes.
@@ -136,13 +136,17 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 
 		for (const [key, value] of Object.entries(json)) {
 			if (value instanceof SelfReference) {
-				const ref = roots.find(item => value.matches(item.uri));
+				const ref = roots.get(value.$uri);
 				Object.assign(json, {
 					[key]: ref
 				});
 			} else if (isJsObject(value)) {
 				Object.assign(json, {
 					[key]: replaceSelfReferences(value, roots)
+				});
+			} else if (typeof value === 'string' && value === '#') {
+				Object.assign(json, {
+					[key]: roots.get('#')
 				});
 			}
 		}
@@ -155,34 +159,33 @@ export function replaceSelfReferences(json: any, roots: Item[]): any {
 /**
  * Recursively find every object with {uri} (a Potion item usually) and return a list with all.
  * @param json - A Potion JSON.
- * @return {Array<Item>}
+ * @return {Array<any>}
  */
-export function findRoots(json: any): Item[] {
-	const roots: any[] = [];
+export function findRoots(json: any, skip?: boolean): Map<string, any> {
+	const roots: Map<string, any> = new Map();
 	if (isJsObject(json) && Object.keys(json).length > 0) {
+		// NOTE: We add the root json because we might encouter '#' wich resolves to the root object.
+		if (!skip) {
+			roots.set('#', json);
+		}
 		if (set.has(json)) {
 			// If we find the root in the set it means there is no need to continue.
-			return [];
-		} else if (json.uri) {
+			return new Map();
+		} else if (json.uri && !roots.has(json.uri)) {
 			// We only want to append unique roots.
-			roots.push(json);
+			roots.set(json.uri, json);
 		}
 
 		const values = Array.isArray(json) || json instanceof Pagination ? json : Object.values(json);
 		for (const value of values) {
-			roots.push(...findRoots(value));
+			const result = findRoots(value, true);
+			for (const [uri, root] of result.entries()) {
+				roots.set(uri, root);
+			}
 		}
 	}
 
-	// Remove duplicate entries.
-	const result: any[] = [];
-	for (const root of roots) {
-		if (result.findIndex(item => root.uri === item.uri) === -1) {
-			result.push(root);
-		}
-	}
-
-	return result;
+	return roots;
 }
 
 

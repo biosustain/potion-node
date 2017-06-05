@@ -181,7 +181,9 @@ describe('potion/core', () => {
 				sibling: Person;
 			}
 
-			class Foo extends Item {}
+			class Foo extends Item {
+				static bar: any = Route.GET<any>('/bar');
+			}
 
 			beforeEach(() => {
 				class Potion extends PotionBase {
@@ -257,8 +259,9 @@ describe('potion/core', () => {
 							case '/engine/1':
 								return Promise.resolve({
 									data: {
-										car: {$ref: '#'},
-										type: 'Diesel'
+										base: {$ref: '#'},
+										type: 'Diesel',
+										$uri: '/engine/1'
 									}
 								});
 
@@ -290,6 +293,14 @@ describe('potion/core', () => {
 									data: {
 										$id: uuid,
 										$type: 'foo'
+									},
+									headers: {}
+								});
+							case '/foo/bar':
+								return Promise.resolve({
+									data: {
+										ping: true,
+										pong: {$ref: '#'}
 									},
 									headers: {}
 								});
@@ -414,11 +425,16 @@ describe('potion/core', () => {
 				});
 			});
 
-			// TODO: this may behave different at some point,
-			// but for now we need to test the lib works properly when such values are parsed.
-			it('should skip {$ref: "#"} references', done => {
+			it('should resolve {$ref: "#"} to root item', done => {
 				Engine.fetch(1).then((engine: Engine) => {
-					expect(engine.car).toEqual('#');
+					expect(engine.base).toEqual(engine);
+					done();
+				});
+			});
+
+			it('should resolve {$ref: "#"} to any root object', done => {
+				Foo.bar().then((json: any) => {
+					expect(json.pong).toEqual(json);
 					done();
 				});
 			});

@@ -153,8 +153,26 @@ describe('potion/utils', () => {
 
 			const roots = findRoots(json);
 
-			expect(roots.length).toEqual(1);
-			expect(roots[0].uri).toEqual(uri);
+			expect(roots.get(uri)).toEqual(json);
+			expect(roots.size).toEqual(2);
+		});
+
+		it('should always contain the first object', () => {
+			const json = {
+				ping: true,
+				pong: {
+					uri: '/pong/1',
+					value: 1
+				}
+			};
+
+			const roots = findRoots(json);
+			const fist = roots.values()
+				.next()
+				.value;
+
+			expect(roots.size).toEqual(2);
+			expect(fist).toEqual(json);
 		});
 
 		it('should recursively find {uri} objects', () => {
@@ -181,32 +199,36 @@ describe('potion/utils', () => {
 			];
 
 			const roots = findRoots(json);
-			const uris = roots.map(root => root.uri);
 
-			expect(roots.length).toEqual(4);
-			expect(uris[0]).toEqual(foo1Uri);
-			expect(uris[1]).toEqual(bar1Uri);
-			expect(uris[2]).toEqual(bar2Uri);
-			expect(uris[3]).toEqual(foo2Uri);
+			// NOTE: First item in roots is always the json itself.
+			expect(roots.get(foo1Uri).uri).toEqual(foo1Uri);
+			expect(roots.get(bar1Uri).uri).toEqual(bar1Uri);
+			expect(roots.get(bar2Uri).uri).toEqual(bar2Uri);
+			expect(roots.get(foo2Uri).uri).toEqual(foo2Uri);
+
+			expect(roots.size).toEqual(5);
 		});
 
 		it('should not contain duplicates', () => {
 			const uri = '/foo/1';
-			const json = [{uri}, {uri}];
+			const obj = {uri};
+			const json = [obj, obj, {uri}, {uri}];
 			const roots = findRoots(json);
 
-			expect(roots.length).toEqual(1);
-			expect(roots[0].uri).toEqual(uri);
+			// NOTE: First item in roots is always the json itself.
+			expect(roots.get(uri)).toEqual(obj);
+			expect(roots.size).toEqual(2);
 		});
 	});
 
 	describe('replaceSelfReferences()', () => {
 		it('should return the original value if it\'s null or not an object', () => {
-			expect(replaceSelfReferences(null, [])).toEqual(null);
-			expect(replaceSelfReferences('ping', [])).toEqual('ping');
-			expect(replaceSelfReferences(1, [])).toEqual(1);
-			expect(replaceSelfReferences(undefined, [])).toEqual(undefined);
-			expect(replaceSelfReferences(noop, [])).toEqual(noop);
+			const roots = new Map();
+			expect(replaceSelfReferences(null, roots)).toEqual(null);
+			expect(replaceSelfReferences('ping', roots)).toEqual('ping');
+			expect(replaceSelfReferences(1, roots)).toEqual(1);
+			expect(replaceSelfReferences(undefined, roots)).toEqual(undefined);
+			expect(replaceSelfReferences(noop, roots)).toEqual(noop);
 		});
 
 		it('should replace self references in a object', () => {
@@ -347,11 +369,11 @@ describe('potion/utils', () => {
 
 	describe('toSelfReference()', () => {
 		it('should convert a string to a SelfReference', () => {
-			const str = '/foo/1';
-			const ref = toSelfReference(str);
+			const json = {uri: '/foo/1'};
+			const ref = toSelfReference(json.uri);
 
 			expect(ref instanceof SelfReference).toBeTruthy();
-			expect(ref.matches(str)).toBeTruthy();
+			expect(ref.matches(json)).toBeTruthy();
 		});
 	});
 

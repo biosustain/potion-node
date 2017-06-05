@@ -16,6 +16,7 @@ import {
 	getPotionID,
 	getPotionURI,
 	hasTypeAndId,
+	isFunction,
 	isPotionURI,
 	MemCache,
 	parsePotionID,
@@ -127,6 +128,9 @@ export abstract class PotionBase {
 	 * @param options - Set the property options for any instance of the resource (setting a property to readonly for instance).
 	 */
 	register(uri: string, resource: typeof Item, options?: ItemOptions): typeof Item {
+		if (!isFunction(resource)) {
+			throw new TypeError(`An error occurred while trying to register a resource for ${uri}. ${resource} is not a function.`);
+		}
 		decorateCtorWithPotionInstance(resource, this);
 		decorateCtorWithPotionURI(resource, uri);
 
@@ -187,7 +191,7 @@ export abstract class PotionBase {
 
 		// Serialize request to Potion JSON.
 		const fetch = () => this.request(`${this.host}${uri}`, this.serialize(options))
-		// Deserialize the Potion JSON.
+			// Deserialize the Potion JSON.
 			.then(response => this.deserialize(response, uri, options));
 
 		if (options.method === 'GET' && !options.paginate && !options.search) {

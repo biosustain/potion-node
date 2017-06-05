@@ -1,3 +1,13 @@
+<a name="2.2.0"></a>
+# [2.2.0](https://github.com/biosustain/potion-node/compare/v2.1.1...v2.2.0) (2017-06-05)
+
+
+### Features
+
+* implement support for resolving "#" self references and close [#11](https://github.com/biosustain/potion-node/issues/11) ([311a4b0](https://github.com/biosustain/potion-node/commit/311a4b0))
+
+
+
 <a name="2.1.1"></a>
 ## [2.1.1](https://github.com/biosustain/potion-node/compare/v2.1.0...v2.1.1) (2017-06-05)
 

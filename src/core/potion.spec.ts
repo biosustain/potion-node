@@ -42,6 +42,16 @@ describe('potion/core', () => {
 				class User extends Item {}
 				expect(potion.register('/user', User).name).toEqual(User.name);
 			});
+
+			it('should throw if a function is not passed', () => {
+				let error: any;
+				try {
+					potion.register('/foo', {} as any);
+				} catch (e) {
+					error = e;
+				}
+				expect(error).toBeDefined();
+			});
 		});
 
 		describe('.registerAs()', () => {
@@ -105,6 +115,29 @@ describe('potion/core', () => {
 						done();
 					});
 
+			});
+
+			it('should fail if a request for an unregistered resource is made', done => {
+				class Potion extends PotionBase {
+					protected request(): Promise<any> {
+						return Promise.resolve({
+							headers: {},
+							data: {
+								$uri: '/bar/1',
+								$id: 1
+							}
+						});
+					}
+				}
+
+				const potion = new Potion();
+
+				potion.fetch('/bar/1')
+					// tslint:disable-next-line: no-empty
+					.then(() => {}, e => {
+						expect(e.message.includes('/bar/1')).toBeTruthy();
+						done();
+					});
 			});
 		});
 

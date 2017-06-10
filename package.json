@@ -39,11 +39,11 @@
 		"release:premajor": "scripts/release.sh premajor",
 		"release:major": "scripts/release.sh major"
 	},
-	"dependencies": {},
-	"peerDependencies": {
+	"dependencies": {
 		"reflect-metadata": "^0.1.10",
 		"tslib": "^1.7.1"
 	},
+	"peerDependencies": {},
 	"devDependencies": {
 		"@angular/common": "^4.2.1",
 		"@angular/compiler": "^4.2.1",

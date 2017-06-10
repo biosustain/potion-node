@@ -1,3 +1,8 @@
+<a name="2.2.1"></a>
+## [2.2.1](https://github.com/biosustain/potion-node/compare/v2.2.0...v2.2.1) (2017-06-10)
+
+
+
 <a name="2.2.0"></a>
 # [2.2.0](https://github.com/biosustain/potion-node/compare/v2.1.1...v2.2.0) (2017-06-05)
 

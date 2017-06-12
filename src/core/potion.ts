@@ -46,7 +46,7 @@ export interface ItemCache<T extends Item> {
 
 export interface ParsedURI {
 	resource: typeof Item;
-	id: string | number;
+	id: string | number | null;
 	uri: string;
 }
 
@@ -74,7 +74,7 @@ export interface FetchExtras {
 	origin?: string[];
 }
 
-export type FetchOptions = FetchExtras & RequestOptions;
+export type FetchOptions = RequestOptions & FetchExtras;
 
 
 export interface PotionResponse {
@@ -223,7 +223,7 @@ export abstract class PotionBase {
 
 	}
 
-	private serialize(options: FetchOptions): RequestOptions {
+	private serialize(options: FetchOptions): FetchOptions {
 		const {prefix} = this;
 		const {search} = options;
 
@@ -345,12 +345,9 @@ export abstract class PotionBase {
 			return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown Potion resource.`));
 		} else {
 			const {resourceURI, resource} = entry;
-			const params = {resource, uri};
-			const id = parsePotionID($id);
+			const params = {resource, uri, id: parsePotionID($id)};
 
-			if (id !== null) {
-				Object.assign(params, {id});
-			} else {
+			if (params.id === null) {
 				Object.assign(params, {
 					id: getPotionID(uri, resourceURI)
 				});

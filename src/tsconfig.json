@@ -12,10 +12,6 @@
 		"baseUrl": "",
 		"rootDir": "./",
 		"target": "es2015",
-		"lib": [
-			"es2017",
-			"dom"
-		],
 		"outDir": "../out-tsc/ng-es2015/",
 		"types" : [
 			"reflect-metadata"

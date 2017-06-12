@@ -293,8 +293,6 @@ export abstract class PotionBase {
 				return Promise.resolve(fromSchemaJSON(json));
 			} else if (Object.keys(json).length === 1) {
 				if (typeof json.$ref === 'string') {
-					// Hack to not try to resolve self references.
-					// TODO: Implement resolving self-references
 					if (json.$ref === '#') {
 						return Promise.resolve(json.$ref);
 					}

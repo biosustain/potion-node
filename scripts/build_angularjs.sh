@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Exit on first occurence of an error
+set -e
+
+
 COMPILATION_DIR="./out-tsc"
 LIB_NAME="angularjs"
 ES5_OUTFILE="${COMPILATION_DIR}/angularjs-es5/${LIB_NAME}.js"

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Exit on first occurence of an error
+set -e
+
+
 COMPILATION_DIR="./out-tsc"
 LIB_NAME="fetch"
 ES5_OUTFILE="${COMPILATION_DIR}/fetch-es5/${LIB_NAME}.js"

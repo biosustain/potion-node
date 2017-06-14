@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Exit on first occurence of an error
+set -e
+
+
 COMPILATION_DIR="./out-tsc"
 LIB_NAME="ng"
 ES5_OUTFILE="${COMPILATION_DIR}/ng-es5/${LIB_NAME}.js"

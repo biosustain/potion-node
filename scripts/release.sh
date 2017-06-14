@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# IMPORTANT: Exit on first occurrence of an error, otherwise the commands will continue to run (versioning, tagging and publishing).
+set -e
+
 
 # Use a different dist folder
 NPM_DIR=./dist/

@@ -11,6 +11,7 @@
 		"noUnusedLocals": true,
 		"strict": true,
 		"sourceMap": true,
+		// TODO: Remove skipLibCheck when Angular gets fixed
 		"skipLibCheck": true,
 		"inlineSources": true,
 		"typeRoots": [

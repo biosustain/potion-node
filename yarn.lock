@@ -1792,9 +1792,9 @@ karma-spec-reporter@^0.0.31:
   dependencies:
     colors "^1.1.2"
 
-karma-typescript@monounity/karma-typescript#next:
+karma-typescript@^3.0.4:
   version "3.0.4"
-  resolved "https://codeload.github.com/monounity/karma-typescript/tar.gz/01f7a0657e64ed169d5f508ff688261025afc076"
+  resolved "https://registry.yarnpkg.com/karma-typescript/-/karma-typescript-3.0.4.tgz#9cdeeeddd1671693440c34ec62aba2d6ff9e4b05"
   dependencies:
     acorn "^4.0.4"
     amdefine "1.0.0"
@@ -3030,14 +3030,14 @@ text-extensions@^1.0.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/text-extensions/-/text-extensions-1.5.0.tgz#d1cb2d14b5d0bc45bfdca8a08a473f68c7eb0cbc"
 
-through2@2.0.1:
+through2@2.0.1, through2@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.1.tgz#384e75314d49f32de12eebb8136b8eb6b5d59da9"
   dependencies:
     readable-stream "~2.0.0"
     xtend "~4.0.0"
 
-through2@^2.0.0, through2@^2.0.2:
+through2@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.3.tgz#0004569b37c7c74ba39c43f3ced78d1ad94140be"
   dependencies:

@@ -1,3 +1,18 @@
+<a name="2.3.0"></a>
+# [2.3.0](https://github.com/biosustain/potion-node/compare/v2.2.1...v2.3.0) (2017-06-14)
+
+
+### Bug Fixes
+
+* **Potion:** fix types ([cd85feb](https://github.com/biosustain/potion-node/commit/cd85feb))
+
+
+### Features
+
+* upgrade TS ([375ec30](https://github.com/biosustain/potion-node/commit/375ec30))
+
+
+
 <a name="2.2.1"></a>
 ## [2.2.1](https://github.com/biosustain/potion-node/compare/v2.2.0...v2.2.1) (2017-06-10)
 

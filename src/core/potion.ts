@@ -5,7 +5,7 @@ import {
 	potionPromise,
 	readonly
 } from './metadata';
-import {Item, ItemOptions} from './item';
+import {Item, ItemConstructor, ItemOptions} from './item';
 import {Pagination} from './pagination';
 import {
 	addPrefixToURI,
@@ -45,7 +45,7 @@ export interface ItemCache<T extends Item> {
  */
 
 export interface ParsedURI {
-	resource: typeof Item;
+	resource: ItemConstructor;
 	id: string | number | null;
 	uri: string;
 }
@@ -89,7 +89,7 @@ export interface PotionOptions {
 }
 
 export interface PotionResources {
-	[key: string]: typeof Item;
+	[key: string]: ItemConstructor;
 }
 
 
@@ -127,7 +127,7 @@ export abstract class PotionBase {
 	 * @param resource
 	 * @param options - Set the property options for any instance of the resource (setting a property to readonly for instance).
 	 */
-	register(uri: string, resource: typeof Item, options?: ItemOptions): typeof Item {
+	register(uri: string, resource: ItemConstructor, options?: ItemOptions): ItemConstructor {
 		if (!isFunction(resource)) {
 			throw new TypeError(`An error occurred while trying to register a resource for ${uri}. ${resource} is not a function.`);
 		}

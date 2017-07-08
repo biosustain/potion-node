@@ -1,5 +1,5 @@
 // tslint:disable: max-classes-per-file
-import {Item} from './item';
+import {Item, ItemConstructor} from './item';
 import {Pagination} from './pagination';
 import {ItemCache, PotionResources} from './potion';
 
@@ -246,7 +246,7 @@ export function getPotionID(uri: string, resourceURI: string): PotionID {
 /**
  * Find a Potion resource based on URI
  */
-export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: typeof Item} | undefined {
+export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: ItemConstructor} | undefined {
 	const entry = Object.entries(resources)
 		.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
 	if (entry) {

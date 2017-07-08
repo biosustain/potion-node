@@ -1,4 +1,11 @@
-export {ItemOptions, Item} from './item';
+export {
+	Item,
+	ItemConstructor,
+	ItemInitArgs,
+	ItemOptions,
+	ItemFetchOptions,
+	ItemQueryOptions
+} from './item';
 export {readonly} from './metadata';
 export {Pagination} from './pagination';
 export {

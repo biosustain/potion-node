@@ -1,12 +1,27 @@
 import {isReadonly, potionInstance, potionURI} from './metadata';
 import {QueryOptions, RequestOptions} from './potion';
 import {Pagination} from './pagination';
+import {isJsObject} from './utils';
 
 
 export interface ItemOptions {
 	'readonly'?: string[];
 }
 
+export type ItemFetchOptions = Pick<RequestOptions, 'cache'>;
+export type ItemQueryOptions = Pick<RequestOptions, 'cache' | 'paginate'>;
+
+
+export interface ItemConstructor {
+	new<T extends Item>(properties?: ItemInitArgs): T;
+	fetch<T extends Item>(id: number | string, options?: ItemFetchOptions): Promise<T>;
+	query<T extends Item>(queryOptions?: QueryOptions | null, options?: ItemQueryOptions): Promise<T[] | Pagination<T>>;
+	first<T extends Item>(queryOptions?: QueryOptions): Promise<T>;
+}
+
+export interface ItemInitArgs {
+	[key: string]: any;
+}
 
 /**
  * Base resource class for API resources.
@@ -39,9 +54,10 @@ export abstract class Item {
 	/**
 	 * Get a resource by id.
 	 * @param {Number|String} id
-	 * @param {boolean} {cache} - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
+	 * @param {ItemFetchOptions} options
+	 * @param {boolean} [options.cache=true] - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
 	 */
-	static fetch<T extends Item>(id: number | string, {cache = true}: RequestOptions = {}): Promise<T> {
+	static fetch<T extends Item>(id: number | string, {cache = true}: ItemFetchOptions = {}): Promise<T> {
 		const uri: string = potionURI(this);
 		return potionInstance(this).fetch(`${uri}/${id}`, {
 			method: 'GET',
@@ -51,12 +67,13 @@ export abstract class Item {
 
 	/**
 	 * Query resources.
-	 * @param {QueryOptions|null} queryOptions - Can be used to manipulate the pagination with {page: number, perPage: number},
+	 * @param {QueryOptions} [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
 	 * but it can also be used to further filter the results with {sort: any, where: any}.
-	 * @param {boolean} {paginate} - Setting {paginate: true} will result in the return value to be a Pagination object.
-	 * @param {boolean} {cache} - Cache the HTTP request.
+	 * @param {ItemFetchOptions} options
+	 * @param {boolean} [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
+	 * @param {boolean} [options.cache=true] - Cache the HTTP request.
 	 */
-	static query<T extends Item>(queryOptions?: QueryOptions | null, {paginate = false, cache = true}: RequestOptions = {}): Promise<T[] | Pagination<T>> {
+	static query<T extends Item>(queryOptions?: QueryOptions | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<T[] | Pagination<T>> {
 		const uri: string = potionURI(this);
 		return potionInstance(this).fetch(uri, {
 			method: 'GET',
@@ -68,6 +85,8 @@ export abstract class Item {
 
 	/**
 	 * Get the first item.
+	 * @param {QueryOptions} [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
+	 * but it can also be used to further filter the results with {sort: any, where: any}.
 	 */
 	static first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
 		return this.query(queryOptions)
@@ -84,8 +103,10 @@ export abstract class Item {
 	 * Create an instance of the class that extended the Item.
 	 * @param {Object} properties - An object with any properties that will be added and accessible on the resource.
 	 */
-	constructor(properties: any = {}) {
-		Object.assign(this, properties);
+	constructor(properties?: ItemInitArgs) {
+		if (isJsObject(properties)) {
+			Object.assign(this, properties);
+		}
 	}
 
 	get uri(): string {

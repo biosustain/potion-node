@@ -1,3 +1,13 @@
+<a name="2.5.0"></a>
+# [2.5.0](https://github.com/biosustain/potion-node/compare/v2.4.0...v2.5.0) (2017-07-17)
+
+
+### Features
+
+* upgrade deps and fix tslint/TS errors ([579589b](https://github.com/biosustain/potion-node/commit/579589b))
+
+
+
 <a name="2.4.0"></a>
 # [2.4.0](https://github.com/biosustain/potion-node/compare/v2.3.0...v2.4.0) (2017-07-08)
 

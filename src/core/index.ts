@@ -1,6 +1,5 @@
 export {
 	Item,
-	ItemConstructor,
 	ItemInitArgs,
 	ItemOptions,
 	ItemFetchOptions,

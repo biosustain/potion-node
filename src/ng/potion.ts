@@ -20,7 +20,7 @@ import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 
-import {ItemConstructor, ItemOptions} from '../core/item';
+import {Item, ItemOptions} from '../core/item';
 import {PotionBase, PotionOptions, RequestOptions as PotionRequestOptions} from '../core/potion';
 import {isObjectEmpty, merge} from '../core/utils';
 
@@ -32,7 +32,7 @@ import {PotionQueryEncoder} from './encoder';
  */
 export const POTION_RESOURCES = new InjectionToken<PotionResources>('PotionResources');
 export interface PotionResources {
-	[key: string]: ItemConstructor | [ItemConstructor, ItemOptions];
+	[key: string]: typeof Item | [typeof Item, ItemOptions];
 }
 
 

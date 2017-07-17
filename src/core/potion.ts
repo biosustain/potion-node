@@ -5,7 +5,7 @@ import {
 	potionPromise,
 	readonly
 } from './metadata';
-import {Item, ItemConstructor, ItemOptions} from './item';
+import {Item, ItemOptions} from './item';
 import {Pagination} from './pagination';
 import {
 	addPrefixToURI,
@@ -45,7 +45,7 @@ export interface ItemCache<T extends Item> {
  */
 
 export interface ParsedURI {
-	resource: ItemConstructor;
+	resource: typeof Item;
 	id: string | number | null;
 	uri: string;
 }
@@ -89,7 +89,7 @@ export interface PotionOptions {
 }
 
 export interface PotionResources {
-	[key: string]: ItemConstructor;
+	[key: string]: typeof Item;
 }
 
 
@@ -127,7 +127,7 @@ export abstract class PotionBase {
 	 * @param resource
 	 * @param options - Set the property options for any instance of the resource (setting a property to readonly for instance).
 	 */
-	register(uri: string, resource: ItemConstructor, options?: ItemOptions): ItemConstructor {
+	register(uri: string, resource: typeof Item, options?: ItemOptions): typeof Item {
 		if (!isFunction(resource)) {
 			throw new TypeError(`An error occurred while trying to register a resource for ${uri}. ${resource} is not a function.`);
 		}
@@ -183,7 +183,8 @@ export abstract class PotionBase {
 	}
 
 	private resolve(uri: string, options: FetchOptions): Promise<any> {
-		const {Promise, prefix} = this;
+		const prefix = this.prefix;
+		const Promise = this.Promise;
 
 		const cacheKey = removePrefixFromURI(uri, prefix);
 		// Add the API prefix if not present
@@ -224,7 +225,7 @@ export abstract class PotionBase {
 	}
 
 	private serialize(options: FetchOptions): FetchOptions {
-		const {prefix} = this;
+		const prefix = this.prefix;
 		const {search} = options;
 
 		return {
@@ -254,7 +255,7 @@ export abstract class PotionBase {
 	}
 
 	private fromPotionJSON(json: any, origin: string[]): Promise<any> {
-		const {Promise} = this;
+		const Promise = this.Promise;
 
 		if (typeof json === 'object' && json !== null) {
 			if (Array.isArray(json)) {
@@ -320,14 +321,15 @@ export abstract class PotionBase {
 		}
 	}
 	private parsePotionJSONProperties(json: any, origin: string[]): any {
-		const {Promise} = this;
+		const Promise = this.Promise;
 		const entries = Object.entries(json);
 		const values = entries.map(([, value]) => this.fromPotionJSON(value, origin));
 		const keys = entries.map(([key]) => toCamelCase(key));
 
 		return Promise.all(values)
 			.then(values => values.map((value, index) => [keys[index], value])
-				.reduce((a, [key, value]) => Object.assign(a, {
+				.reduce((a, [key, value]) => ({
+					...a,
 					[key]: value
 				}), {}));
 	}
@@ -335,7 +337,7 @@ export abstract class PotionBase {
 	// Try to parse a Potion URI and find the associated resource for it,
 	// otherwise return a rejected promise.
 	private parseURI({$ref, $uri, $type, $id}: {[key: string]: any}): Promise<ParsedURI> {
-		const {Promise} = this;
+		const Promise = this.Promise;
 		const uri = removePrefixFromURI(getPotionURI({$ref, $uri, $type, $id}), this.prefix);
 		const entry = findPotionResource(uri, this.resources);
 

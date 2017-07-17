@@ -11,14 +11,6 @@ export interface ItemOptions {
 export type ItemFetchOptions = Pick<RequestOptions, 'cache'>;
 export type ItemQueryOptions = Pick<RequestOptions, 'cache' | 'paginate'>;
 
-
-export interface ItemConstructor {
-	new<T extends Item>(properties?: ItemInitArgs): T;
-	fetch<T extends Item>(id: number | string, options?: ItemFetchOptions): Promise<T>;
-	query<T extends Item>(queryOptions?: QueryOptions | null, options?: ItemQueryOptions): Promise<T[] | Pagination<T>>;
-	first<T extends Item>(queryOptions?: QueryOptions): Promise<T>;
-}
-
 export interface ItemInitArgs {
 	[key: string]: any;
 }
@@ -175,7 +167,7 @@ export abstract class Item {
 	 * Destroy the current item.
 	 */
 	destroy(): Promise<void> {
-		const {uri} = this;
+		const uri = this.uri;
 		const potion = potionInstance(this.constructor as typeof Item);
 		const cache = potion.cache;
 		return potion.fetch(uri, {method: 'DELETE'})

@@ -1,5 +1,5 @@
 // tslint:disable: max-classes-per-file
-import {Item, ItemConstructor} from './item';
+import {Item} from './item';
 import {Pagination} from './pagination';
 import {ItemCache, PotionResources} from './potion';
 
@@ -58,7 +58,10 @@ export function omap(obj: {[key: string]: any}, keyMapFunction: KeyMapFunction, 
 	if (isJsObject(obj) && !Array.isArray(obj)) {
 		return Object.entries(obj)
 			.map(([key, value]) => [isFunction(keyMapFunction) ? keyMapFunction(key) : key, isFunction(valueMapFunction) ? valueMapFunction(value) : value])
-			.reduce((a: {}, [key, value]) => Object.assign(a, {[key]: value}), {});
+			.reduce((a: {}, [key, value]) => ({
+				...a,
+				[key]: value
+			}), {});
 	}
 	return obj;
 }
@@ -89,7 +92,10 @@ export function fromSchemaJSON(json: any): {[key: string]: any} {
 	} else if (isJsObject(json)) {
 		return Object.entries<any>(json)
 			.map(([key, value]) => [toCamelCase(key), typeof value === 'object' ? fromSchemaJSON(value) : value])
-			.reduce((a, [key, value]) => Object.assign(a, {[key]: value}), {});
+			.reduce((a, [key, value]) => ({
+				...a,
+				[key]: value
+			}), {});
 	}
 	return json;
 }
@@ -246,7 +252,7 @@ export function getPotionID(uri: string, resourceURI: string): PotionID {
 /**
  * Find a Potion resource based on URI
  */
-export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: ItemConstructor} | undefined {
+export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: typeof Item} | undefined {
 	const entry = Object.entries(resources)
 		.find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
 	if (entry) {

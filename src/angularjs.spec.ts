@@ -8,11 +8,11 @@ import {Item} from './core/item';
 
 describe('potion/angular', () => {
 	describe('potionProvider', () => {
-		let $cacheFactory;
-		let $q;
-		let $http;
+		let $cacheFactory: angular.ICacheFactoryService;
+		let $q: angular.IQService;
+		let $http: angular.IHttpService;
 
-		let provider;
+		let provider: any;
 
 		beforeEach(angular.mock.module('test', ['potionProvider', potionProvider => {
 			provider = potionProvider;
@@ -42,9 +42,9 @@ describe('potion/angular', () => {
 
 	describe('Potion()', () => {
 		describe('.fetch()', () => {
-			let $httpBackend;
-			let $q;
-			let potion;
+			let $httpBackend: angular.IHttpBackendService;
+			let $q: angular.IQService;
+			let potion: any;
 
 			beforeEach(angular.mock.module('test'));
 
@@ -80,16 +80,16 @@ describe('potion/angular', () => {
 				expect(response).toHaveBeenCalled();
 			});
 
-			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
+			it('should pass anything set on {body} option as the {body} property of the request in JSON format', () => {
 				let body = '';
 				const response = jasmine.createSpy('response');
-				$httpBackend.expect('POST', '/ping').respond((...args) => {
+				$httpBackend.expect('POST', '/ping').respond((...args: any[]) => {
 					body = args[2];
 					response();
 					return [200, {}];
 				});
 
-				potion.fetch('/ping', {method: 'POST', data: {pong: true}});
+				potion.fetch('/ping', {method: 'POST', body: {pong: true}});
 
 				$httpBackend.flush();
 
@@ -98,22 +98,22 @@ describe('potion/angular', () => {
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});
 
-			it('should pass on the query params from the {search} option', () => {
-				let search = null;
+			it('should pass on the query params from the {params} option', () => {
+				let params = null;
 				const response = jasmine.createSpy('response');
-				$httpBackend.expect('GET', '/ping?pong=true').respond((...args) => {
-					search = args[4];
+				$httpBackend.expect('GET', '/ping?pong=true').respond((...args: any[]) => {
+					params = args[4];
 					response();
 					return [200, {}];
 				});
 
-				potion.fetch('/ping', {method: 'GET', search: {pong: true}});
+				potion.fetch('/ping', {method: 'GET', params: {pong: true}});
 
 				$httpBackend.flush();
 
 				expect(response).toHaveBeenCalled();
-				expect(search).not.toBeNull();
-				expect<any>(search).toEqual({pong: 'true'});
+				expect(params).not.toBeNull();
+				expect<any>(params).toEqual({pong: 'true'});
 			});
 
 			it('should return a Promise', () => {
@@ -126,7 +126,7 @@ describe('potion/angular', () => {
 				$httpBackend.expect('GET', '/ping').respond(200, {pong: true});
 
 				const spy = jasmine.createSpy('potion.fetch()');
-				potion.fetch('/ping').then(data => {
+				potion.fetch('/ping').then((data: any) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
 					spy();
@@ -140,9 +140,9 @@ describe('potion/angular', () => {
 
 	describe('Item()', () => {
 		describe('.fetch()', () => {
-			let $cacheFactory;
-			let $httpBackend;
-			let User; /* tslint:disable-line: variable-name */
+			let $cacheFactory: angular.ICacheFactoryService;
+			let $httpBackend: angular.IHttpBackendService;
+			let User: any; /* tslint:disable-line: variable-name */
 
 			beforeEach(angular.mock.module('test'));
 
@@ -196,9 +196,9 @@ describe('potion/angular', () => {
 	});
 
 	describe('Item.query()', () => {
-		let $httpBackend;
-		let User; /* tslint:disable-line: variable-name */
-		let Group; /* tslint:disable-line: variable-name */
+		let $httpBackend: angular.IHttpBackendService;
+		let User: any; /* tslint:disable-line: variable-name */
+		let Group: any; /* tslint:disable-line: variable-name */
 
 		beforeEach(angular.mock.module('test'));
 
@@ -287,8 +287,8 @@ class Group extends Item {
 // and register resources
 angular
 	.module('test', [potion.name])
-	.config(['potionProvider', potionProvider => {
+	.config(['potionProvider', (potionProvider: any) => {
 		potionProvider.config({prefix: ''});
 	}])
-	.factory('User', ['potion', potion => potion.register('/user', User)])
-	.factory('Group', ['potion', potion => potion.register('/group', Group)]);
+	.factory('User', ['potion', (potion: any) => potion.register('/user', User)])
+	.factory('Group', ['potion', (potion: any) => potion.register('/group', Group)]);

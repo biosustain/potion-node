@@ -56,7 +56,7 @@ export class Pagination<T extends Item> implements Iterable<T> {
 		this.uri = uri;
 
 		// tslint:disable-next-line: no-magic-numbers
-		const {page = 1, perPage = 25}: any = {...this.options.search};
+		const {page = 1, perPage = 25}: any = {...this.options.params};
 		this.$page = page;
 		this.$perPage = perPage;
 		this.$total = parseInt(count, 10);
@@ -76,7 +76,7 @@ export class Pagination<T extends Item> implements Iterable<T> {
 
 	changePageTo(page: number): Promise<T | T[] | Pagination<T> | any> {
 		const {pagination} = this.options;
-		(this.options.search as any).page = page;
+		(this.options.params as any).page = page;
 		this.$page = page;
 		return this.potion.fetch(this.uri, this.options, {
 			pagination

@@ -7,28 +7,25 @@ import {
 	SkipSelf
 } from '@angular/core';
 import {
-	Headers,
-	Http,
-	Request,
-	RequestOptions,
-	RequestOptionsArgs,
-	Response,
-	URLSearchParams
-} from '@angular/http';
+	HttpClient,
+	HttpHeaders,
+	HttpRequest,
+	HttpResponse
+} from '@angular/common/http';
 
-import {Observable} from 'rxjs/Observable';
+// TODO: Let's not polute the global rxjs, so we should import the operator fns and apply properly
+import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 
 import {Item, ItemOptions} from '../core/item';
-import {PotionBase, PotionOptions, RequestOptions as PotionRequestOptions} from '../core/potion';
-import {isObjectEmpty, merge} from '../core/utils';
-
-import {PotionQueryEncoder} from './encoder';
+import {PotionBase, PotionOptions, RequestOptions} from '../core/potion';
+import {isJsObject, isObjectEmpty, merge, omap} from '../core/utils';
 
 
 /**
- * Angular 2 Potion resources interface.
+ * Token for providing the Potion resources to be registered
+ * NOTE: This is a multi provider.
  */
 export const POTION_RESOURCES = new InjectionToken<PotionResources>('PotionResources');
 export interface PotionResources {
@@ -37,34 +34,20 @@ export interface PotionResources {
 
 
 /**
- * Provide a way to configure Potion in Angular 2.
+ * Token for configuring Potion
  */
 export const POTION_CONFIG = new InjectionToken<PotionConfig>('PotionConfig');
 export interface PotionConfig extends PotionOptions {} // tslint:disable-line:no-empty-interface
 
 
 /**
- * Potion can also be configured to use various Angular 2 Http implementations.
- * This is useful when there is a wrapper around the core Angular 2 Http module (mostly needed when creating interceptors).
- */
-export const POTION_HTTP = new InjectionToken<PotionHttp>('PotionHttp');
-export interface PotionHttp {
-	request(url: string | Request, options?: RequestOptionsArgs): Observable<Response>;
-}
-
-
-/**
- * Angular 2 Potion provider.
+ * Potion provider for Angular
+ * NOTE: This does not need to be injected anywhere in the app
  */
 @Injectable()
 export class Potion extends PotionBase {
-	private http: PotionHttp;
-
-	constructor(http: Http, @Optional() @Inject(POTION_CONFIG) config: PotionConfig, @Optional() @Inject(POTION_HTTP) customHttp: PotionHttp) {
+	constructor(private http: HttpClient, @Optional() @Inject(POTION_CONFIG) config: PotionConfig) {
 		super({...config});
-		// Use custom Http class if provided,
-		// fallback to Angular Http otherwise.
-		this.http = customHttp || http;
 	}
 
 	registerFromProvider(resources: PotionResources[]): void {
@@ -87,71 +70,46 @@ export class Potion extends PotionBase {
 		}
 	}
 
-	protected request(uri: string, options?: PotionRequestOptions): Promise<any> {
-		const {search, data, method = 'GET'}: PotionRequestOptions = {...options};
+	protected request(uri: string, options?: RequestOptions): Promise<any> {
+		const {params, body, method = 'GET'}: RequestOptions = {...options};
 
-		let requestOptions = new RequestOptions({
-			method: method as string,
-			url: uri
+		// Create a HttpRequest
+		let request = new HttpRequest(method as any, uri, {
+			// Potion expects all requests to have content type set to 'application/json'.
+			headers: new HttpHeaders({
+				'Content-Type': 'application/json'
+			}),
+			responseType: 'json'
 		});
 
-		// We need to convert the {body} to proper JSON when making POST requests.
-		if (data) {
-			const headers = new Headers();
-			// Potion also expects all requests to have content type set to 'application/json'.
-			headers.set('Content-Type', 'application/json; charset=utf-8');
-			requestOptions = requestOptions.merge({
-				body: JSON.stringify(data),
-				headers
+		if (body) {
+			// We need to convert the {body} to proper JSON when making POST/PUT/PATCH requests.
+			request = request.clone({
+				body: JSON.stringify(body)
 			});
 		}
 
-		// Convert {search} to URLSearchParams.
-		if (search) {
-			const params = new URLSearchParams('', new PotionQueryEncoder());
-
-			for (const [key, value] of Object.entries(search)) {
-				// We need to `encodeURIComponent()` when we have complex search queries.
-				// E.g. `search: {where: {foo: 1, bar: 2}}`, when URLSearchParams will be sent with the request,
-				// it will end up as `[object Object]`, thus, we need to encode the value.
-				params.append(key, value);
-			}
-
-			requestOptions = requestOptions.merge({
-				search: params
+		// Convert {params} to HttpParams.
+		if (isJsObject(params)) {
+			request = request.clone({
+				setParams: omap(params, key => key, value => JSON.stringify(value))
 			});
 		}
 
-		return this.http.request(uri, requestOptions)
-			.map((response: any) => {
-				let headers: {[key: string]: any} = {};
-				let data;
+		return this.http.request(request)
+			.filter(event => event instanceof HttpResponse)
+			.map((response: HttpResponse<any>) => {
+				const body = response.body;
 
-				// If `response` is a Response object,
-				// we might also have a Headers instance which we need to convert into an object.
-				// NOTE: response can also be null.
-				if (response instanceof Response) {
-					if (response.headers instanceof Headers) {
-						for (const key of response.headers.keys()) {
-							// Angular 2 does not yet lowercase headers.
-							// Make sure we get the first string value of the header instead of the array of values.
-							headers[key.toLowerCase()] = response.headers.get(key);
-						}
-					} else {
-						// NOTE: headers must be an object,
-						// thus the fallback.
-						headers = response.headers || {};
-					}
-					// We cannot parse as JSON when there is a response with empty text (e.g. 204 NO CONTENT),
-					// therefore, we set the data to null to avoid exceptions being thrown.
-					data = response.text().length > 0 ? response.json() : null;
-				} else {
-					data = response;
+				// Set headers
+				const headers: {[key: string]: any} = {};
+				for (const key of response.headers.keys()) {
+					headers[key] = response.headers.get(key);
 				}
 
 				return {
 					headers,
-					data
+					body
 				};
 			})
 			.toPromise();
@@ -159,19 +117,18 @@ export class Potion extends PotionBase {
 }
 
 
-export function POTION_PROVIDER_FACTORY(parentFactory: Potion, http: Http, config: PotionConfig, customHttp: PotionHttp): Potion {
-	return parentFactory || new Potion(http, config, customHttp);
+export function POTION_PROVIDER_FACTORY(parentFactory: Potion, http: HttpClient, config: PotionConfig): Potion {
+	return parentFactory || new Potion(http, config);
 }
 
 export const POTION_PROVIDER: Provider = {
-	// If there is already a Potion available, use that.
+	// If there is already a Potion service available, use that.
 	// Otherwise, provide a new one.
 	provide: Potion,
 	useFactory: POTION_PROVIDER_FACTORY,
 	deps: [
 		[new Optional(), new SkipSelf(), Potion],
-		Http,
-		[new Optional(), new Inject(POTION_CONFIG)],
-		[new Optional(), new Inject(POTION_HTTP)]
+		HttpClient,
+		[new Optional(), new Inject(POTION_CONFIG)]
 	]
 };

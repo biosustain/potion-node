@@ -15,9 +15,9 @@ export function route<T>(path: string, {method}: RequestOptions = {}): RouteType
 
 		const options: RequestOptions = {method, paginate, cache};
 		if (method === 'GET') {
-			options.search = params;
+			options.params = params;
 		} else if ((['POST', 'PUT', 'PATCH'] as any).includes(method)) {
-			options.data = params;
+			options.body = params;
 		}
 
 		return potionInstance(isCtor ? this : this.constructor)

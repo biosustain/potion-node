@@ -7,9 +7,9 @@ import {Pagination} from './pagination';
 
 describe('potion/core', () => {
 	describe('Item.fetch()', () => {
-		let potion;
-		let cache;
-		let memcache = {};
+		let potion: any;
+		let cache: any;
+		let memcache: {[key: string]: any} = {};
 
 		class User extends Item {}
 
@@ -19,7 +19,7 @@ describe('potion/core', () => {
 					switch (uri) {
 						case '/user/1':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/user/1',
 									created_at: {
 										$date: 1451060269000
@@ -130,19 +130,19 @@ describe('potion/core', () => {
 						], options);
 						case '/user/1':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/user/1'
 								}
 							});
 						case '/user/2':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/user/2'
 								}
 							});
 						case '/user/3':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/user/3'
 								}
 							});
@@ -154,7 +154,7 @@ describe('potion/core', () => {
 							], options);
 						case '/person/1':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/person/1',
 									groups: [
 										{$ref: '/group/1'},
@@ -164,7 +164,7 @@ describe('potion/core', () => {
 							});
 						case '/person/2':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/person/2',
 									groups: [
 										{$ref: '/group/1'},
@@ -180,7 +180,7 @@ describe('potion/core', () => {
 							], options);
 						case '/group/1':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/group/1',
 									members: [
 										{$ref: '/person/1'},
@@ -190,7 +190,7 @@ describe('potion/core', () => {
 							});
 						case '/group/2':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/group/2',
 									members: [
 										{$ref: '/person/1'},
@@ -199,45 +199,45 @@ describe('potion/core', () => {
 								}
 							});
 
-						// Circular dependency mock data
+						// Circular dependency mock body
 						case '/m1':
 							return buildQueryResponse([{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}], options);
 						case '/m1/1':
-							return Promise.resolve({data: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}});
+							return Promise.resolve({body: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}});
 						case '/m1/2':
 							// Simulate latency
 							return new Promise(resolve => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}});
+									resolve({body: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}});
 								}, 250);
 							});
 						case '/m1/3':
-							return Promise.resolve({data: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}});
+							return Promise.resolve({body: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}});
 						case '/m2/1':
-							return Promise.resolve({data: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}});
+							return Promise.resolve({body: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}});
 						case '/m2/2':
 							// Simulate latency
 							return new Promise(resolve => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}});
+									resolve({body: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}});
 								}, 250);
 							});
 						case '/m2/3':
-							return Promise.resolve({data: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
+							return Promise.resolve({body: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}});
 						case '/m3/1':
 							// Simulate latency
 							return new Promise(resolve => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}});
+									resolve({body: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}});
 								}, 250);
 							});
 						case '/m3/2':
-							return Promise.resolve({data: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
+							return Promise.resolve({body: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}});
 						case '/m4/1':
 							// Simulate latency
 							return new Promise(resolve => {
 								setTimeout(() => {
-									resolve({data: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}});
+									resolve({body: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}});
 								}, 250);
 							});
 
@@ -278,18 +278,18 @@ describe('potion/core', () => {
 			potion.register('/m3', M3);
 			potion.register('/m4', M4);
 
-			function buildQueryResponse(data: any, options: any): Promise<any> {
+			function buildQueryResponse(body: any, options: any): Promise<any> {
 				/* tslint:disable: variable-name */
-				const {page, per_page} = options.search;
+				const {page, per_page} = options.params;
 				/* tslint:enable: variable-name */
 
-				const response = {data};
+				const response = {body};
 
 				if (page && per_page) {
 					Object.assign(response, {
-						data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
+						body: toPages(response.body, per_page)[page - 1], // If pagination params are sent, return the appropriate page
 						headers: {
-							'x-total-count': response.data.length
+							'x-total-count': response.body.length
 						}
 					});
 				}
@@ -390,14 +390,14 @@ describe('potion/core', () => {
 					switch (uri) {
 						case '/user':
 							/* tslint:disable: variable-name */
-							const {page, per_page}: any = options.search || {page: 1, per_page: 25};
+							const {page, per_page}: any = options.params || {page: 1, per_page: 25};
 							/* tslint:enable: variable-name */
 
-							const response = {data: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
+							const response = {body: [{$ref: '/user/1'}, {$ref: '/user/2'}]};
 
 							if (page && per_page) {
 								Object.assign(response, {
-									data: toPages(response.data, per_page)[page - 1], // If pagination params are sent, return the appropriate page
+									body: toPages(response.body, per_page)[page - 1], // If pagination params are sent, return the appropriate page
 									headers: {
 										'x-total-count': 2
 									}
@@ -407,13 +407,13 @@ describe('potion/core', () => {
 							return Promise.resolve(response);
 						case '/user/1':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/user/1'
 								}
 							});
 						case '/user/2':
 							return Promise.resolve({
-								data: {
+								body: {
 									$uri: '/user/2'
 								}
 							});
@@ -480,10 +480,10 @@ describe('potion/core', () => {
 						switch (uri) {
 							case '/user/1':
 								if (options.method === 'PATCH') {
-									Object.assign(JOHN, {}, options.data);
+									Object.assign(JOHN, {}, options.body);
 								}
 
-								return Promise.resolve({data: JOHN});
+								return Promise.resolve({body: JOHN});
 							default:
 								break;
 						}
@@ -528,7 +528,7 @@ describe('potion/core', () => {
 						switch (options.method) {
 							case 'GET':
 								if (john) {
-									return Promise.resolve({data: john});
+									return Promise.resolve({body: john});
 								}
 								return Promise.reject({});
 							case 'DELETE':
@@ -572,7 +572,7 @@ describe('potion/core', () => {
 			}
 
 			beforeEach(() => {
-				let john = null;
+				let john: any = null;
 
 				class Potion extends PotionBase {
 					protected request(_: string, options?: RequestOptions): Promise<any> {
@@ -580,13 +580,13 @@ describe('potion/core', () => {
 
 						switch (options.method) {
 							case 'POST':
-								john = {...options.data, $uri: '/user/4'};
+								john = {...options.body, $uri: '/user/4'};
 								return Promise.resolve(john);
 							case 'PATCH':
-								Object.assign(john, options.data, {$uri: '/user/4'});
+								Object.assign(john, options.body, {$uri: '/user/4'});
 								return Promise.resolve(john);
 							case 'GET':
-								return Promise.resolve({data: john});
+								return Promise.resolve({body: john});
 							default:
 								break;
 						}
@@ -682,15 +682,15 @@ describe('potion/core', () => {
 						switch (uri) {
 							case '/user/1':
 								return Promise.resolve({
-									data: {$uri: '/user/1'}
+									body: {$uri: '/user/1'}
 								});
 							case '/user/2':
 								return Promise.resolve({
-									data: {$uri: '/user/2'}
+									body: {$uri: '/user/2'}
 								});
 							case '/engine/1':
 								return Promise.resolve({
-									data: {$uri: '/engine/1'}
+									body: {$uri: '/engine/1'}
 								});
 							default:
 								break;

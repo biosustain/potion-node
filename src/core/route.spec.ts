@@ -24,20 +24,20 @@ describe('potion/core', () => {
 			];
 
 			class Potion extends PotionBase {
-				protected request(uri: string, {method, data}: any): Promise<any> {
+				protected request(uri: string, {method, body}: any): Promise<any> {
 					switch (uri) {
 						case '/user/1':
-							return Promise.resolve({data: {$uri: '/user/1'}});
+							return Promise.resolve({body: {$uri: '/user/1'}});
 						case '/user/names':
-							if ((method === 'POST' || method === 'PATCH') && Array.isArray(data)) {
-								names.push(...data);
+							if ((method === 'POST' || method === 'PATCH') && Array.isArray(body)) {
+								names.push(...body);
 							} else if (method === 'PUT') {
-								names.push(data);
+								names.push(body);
 							} else if (method === 'DELETE') {
-								names.splice(names.indexOf(data), 1);
+								names.splice(names.indexOf(body), 1);
 							}
 							return Promise.resolve({
-								data: names,
+								body: names,
 								headers: {}
 							});
 						default:

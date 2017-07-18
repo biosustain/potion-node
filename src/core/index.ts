@@ -15,7 +15,7 @@ export {
 	PotionBase,
 	PotionOptions,
 	PotionResponse,
-	QueryOptions,
+	QueryParams,
 	RequestOptions,
 	URLSearchParams
 } from './potion';

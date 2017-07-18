@@ -20,7 +20,7 @@ export class Potion extends PotionBase {
 	// let {method, data, cache} = Object.assign({method: 'GET', cache: true}, options);
 	// tslint:disable-next-line: prefer-function-over-method
 	protected request(uri: string, options?: RequestOptions): Promise<PotionResponse> {
-		const {method = 'GET', search, data, cache = true}: RequestOptions = {...options};
+		const {method = 'GET', params, body, cache = true}: RequestOptions = {...options};
 		const headers: Headers = new Headers();
 		const init: any = {
 			method,
@@ -30,20 +30,20 @@ export class Potion extends PotionBase {
 			credentials: 'include'
 		};
 
-		if (data) {
+		if (body) {
 			// POST/PUT/PATCH needs headers and JSON body,
 			// see https://github.com/github/fetch#post-json for more info.
 			headers.set('Accept', 'application/json');
 			headers.set('Content-Type', 'application/json');
-			init.body = JSON.stringify(data);
+			init.body = JSON.stringify(body);
 		}
 
 		Object.assign(init, {headers});
 
 		// TODO: when URL will be supported we will switch to it
-		if (search) {
+		if (params) {
 			let count = 1;
-			const entries = Object.entries(search);
+			const entries = Object.entries(params);
 			const size = entries.length;
 			for (const [key, value] of entries) {
 				if (count === 1) {
@@ -67,7 +67,7 @@ export class Potion extends PotionBase {
 				}
 
 				return response.json()
-					.then(json => ({headers, data: json}), error => error) as Promise<PotionResponse>;
+					.then(json => ({headers, body: json}), error => error) as Promise<PotionResponse>;
 			} else {
 				const error: any = new Error(response.statusText);
 				Object.assign(error, {response});

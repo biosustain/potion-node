@@ -4,7 +4,7 @@ import {
 	NgModule,
 	Optional
 } from '@angular/core';
-import {HttpModule} from '@angular/http';
+import {HttpClientModule} from '@angular/common/http';
 
 import {
 	Potion,
@@ -44,13 +44,16 @@ import {
  * export class AppModule {}
  */
 @NgModule({
-	imports: [HttpModule],
+	imports: [HttpClientModule],
 	providers: [
 		POTION_PROVIDER
 	]
 })
 export class PotionModule {
-	constructor(@Inject(forwardRef(() => Potion)) potion: Potion, @Optional() @Inject(POTION_RESOURCES) resources: PotionResources[]) {
+	constructor(
+		@Inject(forwardRef(() => Potion)) potion: Potion,
+		@Optional() @Inject(POTION_RESOURCES) resources: PotionResources[]
+	) {
 		potion.registerFromProvider(resources || []);
 	}
 }

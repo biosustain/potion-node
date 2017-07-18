@@ -1,17 +1,7 @@
-/* tslint:disable:max-file-line-count max-classes-per-file no-magic-numbers */
+/* tslint:disable: max-classes-per-file no-magic-numbers */
 import {async, inject, TestBed} from '@angular/core/testing';
 
-import {
-	BaseRequestOptions,
-	ConnectionBackend,
-	Http,
-	Response,
-	ResponseOptions
-} from '@angular/http';
-import {MockBackend, MockConnection} from '@angular/http/testing';
-
-import {Observable} from 'rxjs/Observable';
-import {Subscription} from 'rxjs/Subscription';
+import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 
 import {Item} from '../core/item';
 import {Route} from '../core/route';
@@ -23,18 +13,17 @@ import {
 } from './index';
 
 
-export function provideHttpFactory(connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions): Http {
-	return new Http(connectionBackend, defaultOptions);
-}
-
-
 describe('potion/ng', () => {
 	describe('PotionModule', () => {
 		class User extends Item {}
 
 		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [PotionModule],
+				imports: [
+					// Angular Http mock factories are here
+					HttpClientTestingModule,
+					PotionModule
+				],
 				providers: [
 					{
 						provide: POTION_RESOURCES,
@@ -42,20 +31,13 @@ describe('potion/ng', () => {
 							'/user': User
 						},
 						multi: true
-					},
-					// Angular Http
-					{
-						provide: Http,
-						useFactory: provideHttpFactory,
-						deps: [
-							MockBackend,
-							BaseRequestOptions
-						]
-					},
-					BaseRequestOptions,
-					MockBackend
+					}
 				]
 			});
+		}));
+
+		afterEach(() => inject([HttpTestingController], (controller: HttpTestingController) => {
+			controller.verify();
 		}));
 
 		it('should provide a Potion instance', inject([Potion], (potion: Potion) => {
@@ -68,24 +50,20 @@ describe('potion/ng', () => {
 			expect(potion.resources.hasOwnProperty('/user')).toBeTruthy();
 		}));
 
-		it('should allow Potion().request() to use Http', async(inject([MockBackend], (backend: MockBackend) => {
-			const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-				new Response(
-					new ResponseOptions({
-						status: 200,
-						body: {
-							$uri: '/user/1'
-						}
-					})
-				)
-			));
+		it('should allow Potion().request() to use Http', done => {
+			const controller: HttpTestingController = TestBed.get(HttpTestingController);
 
 			User.fetch(1).then(user => {
-				subscription.unsubscribe();
 				expect(user).not.toBeUndefined();
 				expect(user.id).toEqual(1);
+				done();
 			});
-		})));
+
+			controller.expectOne('/user/1')
+				.flush({
+					$uri: '/user/1'
+				});
+		});
 	});
 
 	describe('Route', () => {
@@ -95,7 +73,11 @@ describe('potion/ng', () => {
 
 		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [PotionModule],
+				imports: [
+					// Angular Http mock factories are here
+					HttpClientTestingModule,
+					PotionModule
+				],
 				providers: [
 					POTION_PROVIDER,
 					{
@@ -104,47 +86,34 @@ describe('potion/ng', () => {
 							'/user': User
 						},
 						multi: true
-					},
-					// Angular Http
-					{
-						provide: Http,
-						useFactory: provideHttpFactory,
-						deps: [
-							MockBackend,
-							BaseRequestOptions
-						]
-					},
-					BaseRequestOptions,
-					MockBackend
+					}
 				]
 			});
 		}));
 
-		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
-			backend.verifyNoPendingRequests();
+		afterEach(() => inject([HttpTestingController], (controller: HttpTestingController) => {
+			controller.verify();
 		}));
 
+		// TODO: We need to thoroughly test all route methods and check their integrity (request method, headers, etc.)
 		describe('.GET()', () => {
-			it('should return valid JSON', async(inject([MockBackend], (backend: MockBackend) => {
+			it('should return valid JSON', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+
 				const body = [
 					'John Doe',
 					'Jane Doe'
 				];
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-					new Response(
-						new ResponseOptions({
-							status: 200,
-							body
-						})
-					)
-				));
 
 				User.names().then((names: any) => {
 					expect(names instanceof Array).toBe(true);
 					expect(names).toEqual(body);
-					subscription.unsubscribe();
+					done();
 				});
-			})));
+
+				controller.expectOne('/user/names')
+					.flush(body);
+			});
 		});
 	});
 });

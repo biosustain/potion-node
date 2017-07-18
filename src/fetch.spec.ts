@@ -12,7 +12,7 @@ describe('potion/fetch', () => {
 
 	describe('Potion()', () => {
 		describe('.request()', () => {
-			let potion;
+			let potion: any;
 
 			beforeEach(() => {
 				potion = new Potion({prefix: 'http://localhost'});
@@ -36,16 +36,16 @@ describe('potion/fetch', () => {
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
 			});
 
-			it('should pass anything set on {data} option as the {body} property of the request in JSON format', () => {
+			it('should pass anything set on {body} option as the {body} property of the request in JSON format', () => {
 				let body = '';
 				let headers: Headers = new Headers();
-				(fetchMock as any).post('http://localhost/ping', (_, opts: any) => {
+				(fetchMock as any).post('http://localhost/ping', (_: any, opts: any) => {
 					headers = opts.headers;
 					body = opts.body;
 					return 200;
 				});
 
-				potion.fetch('http://localhost/ping', {method: 'POST', data: {pong: true}});
+				potion.fetch('http://localhost/ping', {method: 'POST', body: {pong: true}});
 
 				expect(fetchMock.called('http://localhost/ping')).toBe(true);
 
@@ -57,9 +57,9 @@ describe('potion/fetch', () => {
 				expect(JSON.parse(body)).toEqual({pong: true});
 			});
 
-			it('should pass on the query params from the {search} option', () => {
+			it('should pass on the query params from the {params} option', () => {
 				(fetchMock as any).get('http://localhost/ping?pong=true&count=1', 200);
-				potion.fetch('http://localhost/ping', {method: 'GET', search: {pong: true, count: 1}});
+				potion.fetch('http://localhost/ping', {method: 'GET', params: {pong: true, count: 1}});
 				expect(fetchMock.called('http://localhost/ping?pong=true&count=1')).toBe(true);
 			});
 
@@ -70,7 +70,7 @@ describe('potion/fetch', () => {
 
 			it('should return a Promise with data', done => {
 				(fetchMock as any).get('http://localhost/ping', {body: {pong: true}});
-				potion.fetch('http://localhost/ping').then(data => {
+				potion.fetch('http://localhost/ping').then((data: any) => {
 					expect(data).not.toBeUndefined();
 					expect(data).toEqual({pong: true});
 					done();

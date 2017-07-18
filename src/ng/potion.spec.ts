@@ -1,33 +1,13 @@
-/* tslint:disable: max-file-line-count max-classes-per-file no-magic-numbers */
+/* tslint:disable: max-classes-per-file no-magic-numbers */
 import {async, inject, TestBed} from '@angular/core/testing';
-
-import {
-	BaseRequestOptions,
-	ConnectionBackend,
-	Http,
-	HttpModule,
-	RequestMethod,
-	Response,
-	ResponseOptions
-} from '@angular/http';
-import {MockBackend, MockConnection} from '@angular/http/testing';
-
-import {Observable} from 'rxjs/Observable';
-import {Subscription} from 'rxjs/Subscription';
-import 'rxjs/add/observable/of';
+import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 
 import {Item} from '../core/item';
 import {
 	Potion,
 	POTION_CONFIG,
-	POTION_HTTP,
 	POTION_PROVIDER
 } from './potion';
-
-
-export function provideHttpFactory(connectionBackend: ConnectionBackend, defaultOptions: BaseRequestOptions): Http {
-	return new Http(connectionBackend, defaultOptions);
-}
 
 
 describe('potion/ng', () => {
@@ -37,7 +17,10 @@ describe('potion/ng', () => {
 
 		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [HttpModule],
+				imports: [
+					// Angular Http mock factories are here
+					HttpClientTestingModule
+				],
 				providers: [
 					POTION_PROVIDER,
 					{
@@ -46,18 +29,7 @@ describe('potion/ng', () => {
 							host: POTION_HOST,
 							prefix: POTION_PREFIX
 						}
-					},
-					// Angular Http
-					{
-						provide: Http,
-						useFactory: provideHttpFactory,
-						deps: [
-							MockBackend,
-							BaseRequestOptions
-						]
-					},
-					BaseRequestOptions,
-					MockBackend
+					}
 				]
 			});
 		}));
@@ -68,75 +40,21 @@ describe('potion/ng', () => {
 		}));
 	});
 
-	describe('POTION_HTTP', () => {
-		const body =  {
-			pong: true
-		};
-		class Http {
-			request(): Observable<any> {
-				return Observable.of(new Response(
-					new ResponseOptions({
-						status: 200,
-						body
-					})
-				));
-			}
-		}
-
-		beforeEach(async(() => {
-			TestBed.configureTestingModule({
-				imports: [HttpModule],
-				providers: [
-					POTION_PROVIDER,
-					{
-						provide: POTION_HTTP,
-						useClass: Http
-					},
-					// Angular Http
-					{
-						provide: Http,
-						useFactory: provideHttpFactory,
-						deps: [
-							MockBackend,
-							BaseRequestOptions
-						]
-					},
-					BaseRequestOptions,
-					MockBackend
-				]
-			});
-		}));
-
-		it('should change the underlying Potion() Http engine', async(inject([Potion], (potion: Potion) => {
-			potion.fetch('/ping').then(res => {
-				expect(res).toEqual(body);
-			});
-		})));
-	});
-
 	describe('Potion()', () => {
 		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [HttpModule],
+				imports: [
+					// Angular Http mock factories are here
+					HttpClientTestingModule
+				],
 				providers: [
-					POTION_PROVIDER,
-					// Angular Http
-					{
-						provide: Http,
-						useFactory: provideHttpFactory,
-						deps: [
-							MockBackend,
-							BaseRequestOptions
-						]
-					},
-					BaseRequestOptions,
-					MockBackend
+					POTION_PROVIDER
 				]
 			});
 		}));
 
-		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
-			backend.verifyNoPendingRequests();
+		afterEach(() => inject([HttpTestingController], (controller: HttpTestingController) => {
+			controller.verify();
 		}));
 
 		describe('.request()', () => {
@@ -144,150 +62,153 @@ describe('potion/ng', () => {
 				expect(potion.fetch('/ping') instanceof Promise).toBe(true);
 			}));
 
-			it('should make a XHR request', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-					new Response(
-						new ResponseOptions({status: 200})
-					)
-				));
-				potion.fetch('/ping').then(() => {
-					subscription.unsubscribe();
-				});
-			})));
+			it('should make a XHR request', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
 
-			it('should return a Promise with data', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-					new Response(
-						new ResponseOptions({
-							status: 200,
-							body: {
-								pong: true
-							}
-						})
-					)
-				));
-				potion.fetch('/ping').then(data => {
-					expect(data).not.toBeUndefined();
-					expect(data).toEqual({pong: true});
-					subscription.unsubscribe();
-				});
-			})));
+				potion.fetch('/ping')
+					.then(() => {
+						done();
+					});
 
-			it('should use the appropriate request method set by the {method} option', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let method: RequestMethod | null = null;
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
-					method = connection.request.method;
-					connection.mockRespond(new Response(
-						new ResponseOptions({status: 200})
-					));
-				});
+				controller.expectOne('/ping')
+					.flush({});
+			});
 
-				potion.fetch('/ping', {method: 'PATCH'}).then(() => {
-					expect(method).toEqual(RequestMethod.Patch);
-					subscription.unsubscribe();
-				});
-			})));
+			it('should return a Promise with data', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
 
-			it('should pass anything set on {data} option as the {body} property of the request in JSON format', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let body = '';
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
-					body = connection.request.text();
-					connection.mockRespond(new Response(
-						new ResponseOptions({status: 200})
-					));
-				});
+				potion.fetch('/ping')
+					.then(data => {
+						expect(data).not.toBeUndefined();
+						expect(data).toEqual({pong: true});
+						done();
+					});
 
-				potion.fetch('/ping', {method: 'GET', data: {pong: true}}).then(() => {
-					expect(body.length).not.toBe(0);
-					expect(JSON.parse(body)).toEqual({pong: true});
-					subscription.unsubscribe();
-				});
-			})));
+				controller.expectOne('/ping')
+					.flush({
+						pong: true
+					});
+			});
 
-			it('should pass on the query params from the {search} option', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				let url: string | null = null;
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
-					url = connection.request.url;
-					connection.mockRespond(new Response(
-						new ResponseOptions({status: 200})
-					));
-				});
+			it('should use the appropriate request method set by the {method} option', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
 
-				potion.fetch('/ping', {method: 'POST', search: {pong: true}}).then(() => {
-					expect(url).not.toBeNull();
-					expect(url).toEqual('/ping?pong=true');
-					subscription.unsubscribe();
-				});
-			})));
+				potion.fetch('/ping', {method: 'PATCH'})
+					.then(() => {
+						done();
+					});
 
-			it('should not fail when requests respond empty body', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => {
-					connection.mockRespond(new Response(
-						new ResponseOptions({status: 204, body: ''})
-					));
-				});
+				const testReq = controller.expectOne('/ping');
+				expect(testReq.request.method).toEqual('PATCH');
+				testReq.flush({});
+			});
 
-				potion.fetch('/ping', {method: 'DELETE'}).then(response => {
-					expect(response).toBeNull();
-					subscription.unsubscribe();
-				});
-			})));
+			it('should pass anything set on {body} option as the {body} property of the request in JSON format', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
+
+				potion.fetch('/ping', {
+						method: 'GET',
+						body: {pong: true}
+					})
+					.then(() => {
+						done();
+					});
+
+				const testReq = controller.expectOne('/ping');
+				expect(JSON.parse(testReq.request.body)).toEqual({pong: true});
+				testReq.flush({});
+			});
+
+			it('should pass on the query params from the {params} option', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
+
+				potion.fetch('/ping', {
+						method: 'POST',
+						params: {pong: true}
+					})
+					.then(() => {
+						done();
+					});
+
+				const testReq = controller.expectOne('/ping?pong=true');
+				const params = testReq.request.params;
+				expect(params.has('pong')).toBeTruthy();
+				expect(params.get('pong')).toBeTruthy();
+				expect(testReq.request.url).toEqual('/ping');
+
+				testReq.flush({});
+			});
+
+			it('should not fail when requests respond empty body', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
+
+				potion.fetch('/ping', {method: 'DELETE'})
+					.then(response => {
+						expect(response).toBeNull();
+						done();
+					});
+
+				controller.expectOne('/ping')
+					.flush('', {
+						status: 204,
+						statusText: ''
+					});
+			});
 		});
 	});
 
 	describe('Item()', () => {
 		beforeEach(async(() => {
 			TestBed.configureTestingModule({
-				imports: [HttpModule],
+				imports: [
+					// Angular Http mock factories are here
+					HttpClientTestingModule
+				],
 				providers: [
-					POTION_PROVIDER,
-					// Angular Http
-					{
-						provide: Http,
-						useFactory: provideHttpFactory,
-						deps: [
-							MockBackend,
-							BaseRequestOptions
-						]
-					},
-					BaseRequestOptions,
-					MockBackend
+					POTION_PROVIDER
 				]
 			});
 		}));
 
-		afterEach(() => inject([MockBackend], (backend: MockBackend) => {
-			backend.verifyNoPendingRequests();
+		afterEach(() => inject([HttpTestingController], (controller: HttpTestingController) => {
+			controller.verify();
 		}));
 
 		describe('.fetch()', () => {
-			it('should use a memory cache by default to store and retrieve items', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
+			it('should use a memory cache by default to store and retrieve items', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
+
 				@potion.registerAs('/user')
 				class User extends Item {}
-
-				const subscription: Subscription = (backend.connections as Observable<any>).subscribe((connection: MockConnection) => connection.mockRespond(
-					new Response(
-						new ResponseOptions({
-							status: 200,
-							body: {
-								$uri: '/user/1'
-							}
-						})
-					)
-				));
 
 				User.fetch(1).then(() => {
 					expect(potion.cache.get('/user/1')).not.toBeUndefined();
 					User.fetch(1).then((user: User) => {
 						expect(user).not.toBeUndefined();
-						subscription.unsubscribe();
+						done();
 					});
 				});
-			})));
+
+				controller.expectOne('/user/1')
+					.flush({
+						$uri: '/user/1'
+					});
+			});
 		});
 
 		describe('.query()', () => {
-			it('should work with circular references', async(inject([MockBackend, Potion], (backend: MockBackend, potion: Potion) => {
+			it('should work with circular references', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
+
+
 				// Circular references mock classes
 				@potion.registerAs('/m1')
 				class M1 extends Item {
@@ -308,72 +229,40 @@ describe('potion/ng', () => {
 					m3s: M3[];
 				}
 
-				const subscription: Subscription = backend.connections.subscribe((connection: MockConnection) => {
-					const {request} = connection;
-					const {url} = request;
-					let response;
 
-					switch (url) {
-						// Circular dependency mock data
-						case '/m1':
-							response = new Response(new ResponseOptions({status: 200, body: [{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}]}));
-							break;
-						case '/m1/1':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m1/1', m2: {$ref: '/m2/1'}}}));
-							break;
-						case '/m1/2':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m1/2', m2: {$ref: '/m2/1'}}}));
-							break;
-						case '/m1/3':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m1/3', m2: {$ref: '/m2/2'}}}));
-							break;
-						case '/m2/1':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}}));
-							break;
-						case '/m2/2':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}}));
-							break;
-						case '/m2/3':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}}));
-							break;
-						case '/m3/1':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}}));
-							break;
-						case '/m3/2':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}}));
-							break;
-						case '/m4/1':
-							response = new Response(new ResponseOptions({status: 200, body: {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}}));
-							break;
+				M1.query().then((m1s: M1[]) => {
+					expect(m1s.length).toEqual(3);
+					m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
 
-						default:
-							break;
-					}
+					const m4s = m1s.map(({m2}) => m2)
+						.map(({m3}) => m3)
+						.map(({m4}) => m4);
 
-					if (['/m1/2', '/m2/2', '/m3/1', '/m4/1'].indexOf(url) !== -1) {
-						// Simulate latency
-						setTimeout(() => {
-							connection.mockRespond(response);
-						}, 250);
-					} else {
-						connection.mockRespond(response);
-					}
+					m4s.forEach(m4 => expect(m4 instanceof M4).toBeTruthy());
+
+					done();
 				});
 
-				M1.query()
-					.then((m1s: M1[]) => {
-						expect(m1s.length).toEqual(3);
-						m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
 
-						const m4s = m1s.map(({m2}) => m2)
-							.map(({m3}) => m3)
-							.map(({m4}) => m4);
-
-						m4s.forEach(m4 => expect(m4 instanceof M4).toBeTruthy());
-
-						subscription.unsubscribe();
+				for (const [url, body] of new Map<string, any>([
+					['/m1', [{$ref: '/m1/1'}, {$ref: '/m1/2'}, {$ref: '/m1/3'}]],
+					['/m1/1', {$uri: '/m1/1', m2: {$ref: '/m2/1'}}],
+					['/m1/2', {$uri: '/m1/2', m2: {$ref: '/m2/1'}}],
+					['/m1/3', {$uri: '/m1/3', m2: {$ref: '/m2/2'}}],
+					['/m2/1', {$uri: '/m2/1', m1s: [{$ref: '/m1/1'}, {$ref: '/m1/2'}], m3: {$ref: '/m3/1'}}],
+					['/m2/2', {$uri: '/m2/2', m1s: [{$ref: '/m1/3'}], m3: {$ref: '/m3/1'}}],
+					['/m3/1', {$uri: '/m3/1', m2s: [{$ref: '/m2/1'}, {$ref: '/m2/2'}], m4: {$ref: '/m4/1'}}],
+					['/m4/1', {$uri: '/m4/1', m3s: [{$ref: '/m3/1'}, {$ref: '/m3/2'}]}],
+					['/m3/2', {$uri: '/m3/2', m2s: [{$ref: '/m2/3'}], m4: {$ref: '/m4/1'}}],
+					['/m2/3', {$uri: '/m2/3', m1s: [], m3: {$ref: '/m3/2'}}]
+				]).entries()) {
+					// Pusing to the next frame will ensure we don't expect something before we ask for it
+					requestAnimationFrame(() => {
+						controller.expectOne(url)
+							.flush(body);
 					});
-			})));
+				}
+			});
 		});
 	});
 });

@@ -7,7 +7,7 @@ import {Route} from './route';
 
 describe('potion/core', () => {
 	describe('Potion()', () => {
-		let potion;
+		let potion: any;
 
 		beforeEach(() => {
 			class Potion extends PotionBase {
@@ -68,14 +68,14 @@ describe('potion/core', () => {
 		});
 
 		describe('.fetch()', () => {
-			it('should correctly serialize {data, search} to Potion JSON params when making a request', done => {
-				let search: any;
+			it('should correctly serialize {body, params} to Potion JSON params when making a request', done => {
+				let params: any;
 				let data: any;
 
 				class Potion extends PotionBase {
 					protected request(_: string, options: RequestOptions): Promise<any> {
-						data = options.data;
-						search = options.search;
+						data = options.body;
+						params = options.params;
 
 						return Promise.resolve({});
 					}
@@ -95,18 +95,18 @@ describe('potion/core', () => {
 				potion
 					.fetch('/user', {
 						method: 'POST',
-						data: {
+						body: {
 							foo,
 							firstName: 'John',
 							lastName: 'Doe',
 							birthDate: today,
 							features: [{eyeColor: 'blue'}]
 						},
-						search: {isAdmin: false}
+						params: {isAdmin: false}
 					})
 					.then(() => {
 						expect(Object.keys(data)).toEqual(['foo', 'first_name', 'last_name', 'birth_date', 'features']);
-						expect(Object.keys(search)).toEqual(['is_admin']);
+						expect(Object.keys(params)).toEqual(['is_admin']);
 
 						expect(data.birth_date).toEqual({$date: today.getTime()});
 						expect(data.features).toEqual([{eye_color: 'blue'}]);
@@ -122,7 +122,7 @@ describe('potion/core', () => {
 					protected request(): Promise<any> {
 						return Promise.resolve({
 							headers: {},
-							data: {
+							body: {
 								$uri: '/bar/1',
 								$id: 1
 							}
@@ -142,8 +142,8 @@ describe('potion/core', () => {
 		});
 
 		describe('.fetch()', () => {
-			let cache;
-			let memcache = {};
+			let cache: any;
+			let memcache: {[key: string]: any} = {};
 
 			const uuid = '00cc8d4b-9682-4655-ad78-1fa4b03e757d';
 			const schema = {
@@ -190,10 +190,10 @@ describe('potion/core', () => {
 					protected request(uri: string): Promise<any> {
 						switch (uri) {
 							case '/user/schema':
-								return Promise.resolve({data: schema});
+								return Promise.resolve({body: schema});
 							case '/user/1':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/user/1',
 										created_at: {
 											$date: 1451060269000
@@ -202,7 +202,7 @@ describe('potion/core', () => {
 								});
 							case '/user/2':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/user/2',
 										parent: {$ref: '/user/3'},
 										created_at: {
@@ -213,7 +213,7 @@ describe('potion/core', () => {
 							case '/user/3':
 								return new Promise(resolve => {
 									setTimeout(() => resolve({
-										data: {
+										body: {
 											$uri: '/user/3',
 											created_at: {
 												$date: 1451060269000
@@ -223,7 +223,7 @@ describe('potion/core', () => {
 								});
 							case `/user/${uuid}`:
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: `/user/${uuid}`,
 										created_at: {
 											$date: 1451060269000
@@ -233,7 +233,7 @@ describe('potion/core', () => {
 
 							case '/car/1':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/car/1',
 										user: {$ref: '/user/1'}
 									},
@@ -241,7 +241,7 @@ describe('potion/core', () => {
 								});
 							case '/car/2':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/car/2',
 										user: {$ref: '/user/2'}
 									},
@@ -249,7 +249,7 @@ describe('potion/core', () => {
 								});
 							case '/car/3':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/car/3',
 										user: {$ref: '/user/2'}
 									},
@@ -258,7 +258,7 @@ describe('potion/core', () => {
 
 							case '/engine/1':
 								return Promise.resolve({
-									data: {
+									body: {
 										base: {$ref: '#'},
 										type: 'Diesel',
 										$uri: '/engine/1'
@@ -267,14 +267,14 @@ describe('potion/core', () => {
 
 							case '/person/1':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/person/1',
 										sibling: {$ref: '/person/2'}
 									}
 								});
 							case '/person/2':
 								return Promise.resolve({
-									data: {
+									body: {
 										$uri: '/person/2',
 										sibling: {$ref: '/person/1'}
 									}
@@ -282,7 +282,7 @@ describe('potion/core', () => {
 
 							case '/foo/1':
 								return Promise.resolve({
-									data: {
+									body: {
 										$id: 1,
 										$type: 'foo'
 									},
@@ -290,7 +290,7 @@ describe('potion/core', () => {
 								});
 							case `/foo/${uuid}`:
 								return Promise.resolve({
-									data: {
+									body: {
 										$id: uuid,
 										$type: 'foo'
 									},
@@ -298,7 +298,7 @@ describe('potion/core', () => {
 								});
 							case '/foo/bar':
 								return Promise.resolve({
-									data: {
+									body: {
 										ping: true,
 										pong: {$ref: '#'}
 									},

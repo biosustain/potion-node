@@ -1,5 +1,5 @@
 import {isReadonly, potionInstance, potionURI} from './metadata';
-import {QueryOptions, RequestOptions} from './potion';
+import {QueryParams, RequestOptions} from './potion';
 import {Pagination} from './pagination';
 import {isJsObject} from './utils';
 
@@ -59,17 +59,17 @@ export abstract class Item {
 
 	/**
 	 * Query resources.
-	 * @param {QueryOptions} [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
+	 * @param {QueryParams} [queryParams] - Can be used to manipulate the pagination with {page: number, perPage: number},
 	 * but it can also be used to further filter the results with {sort: any, where: any}.
 	 * @param {ItemFetchOptions} options
 	 * @param {boolean} [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
 	 * @param {boolean} [options.cache=true] - Cache the HTTP request.
 	 */
-	static query<T extends Item>(queryOptions?: QueryOptions | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<T[] | Pagination<T>> {
+	static query<T extends Item>(queryParams?: QueryParams | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<T[] | Pagination<T>> {
 		const uri: string = potionURI(this);
 		return potionInstance(this).fetch(uri, {
 			method: 'GET',
-			search: queryOptions,
+			params: queryParams,
 			paginate,
 			cache
 		});
@@ -77,10 +77,10 @@ export abstract class Item {
 
 	/**
 	 * Get the first item.
-	 * @param {QueryOptions} [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
+	 * @param {QueryParams} [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
 	 * but it can also be used to further filter the results with {sort: any, where: any}.
 	 */
-	static first<T extends Item>(queryOptions?: QueryOptions): Promise<T> {
+	static first<T extends Item>(queryOptions?: QueryParams): Promise<T> {
 		return this.query(queryOptions)
 			.then(first);
 		function first(items: T[]): T {
@@ -145,7 +145,7 @@ export abstract class Item {
 		return potionInstance(ctor)
 			.fetch(potionURI(ctor), {
 			method: 'POST',
-			data: this.toJSON(),
+			body: this.toJSON(),
 			cache: true
 		});
 	}
@@ -159,7 +159,7 @@ export abstract class Item {
 			.fetch(this.uri, {
 			cache: true,
 			method: 'PATCH',
-			data
+			body: data
 		});
 	}
 

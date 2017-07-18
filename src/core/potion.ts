@@ -56,13 +56,13 @@ export interface URLSearchParams {
 }
 
 export interface RequestOptions {
-	method?: string;
-	search?: URLSearchParams | QueryOptions | null;
-	data?: any;
+	method?: 'OPTIONS' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'GET' | 'DELETE' | 'JSONP';
+	params?: URLSearchParams | QueryParams | null;
+	body?: any;
 	cache?: boolean;
 	paginate?: boolean;
 }
-export interface QueryOptions {
+export interface QueryParams {
 	page?: number;
 	perPage?: number;
 	where?: any;
@@ -78,8 +78,8 @@ export type FetchOptions = RequestOptions & FetchExtras;
 
 
 export interface PotionResponse {
-	data: any;
 	headers: any;
+	body: any;
 }
 
 export interface PotionOptions {
@@ -162,7 +162,7 @@ export abstract class PotionBase {
 	 * Make a HTTP request.
 	 * @param uri
 	 * @param options
-	 * @returns An object with {data, headers} where {data} can be anything and {headers} is an object with the response headers from the HTTP request.
+	 * @returns An object with {body, headers} where {body} can be anything and {headers} is an object with the response headers from the HTTP request.
 	 */
 	protected abstract request(uri: string, options?: RequestOptions): Promise<PotionResponse>;
 
@@ -195,7 +195,7 @@ export abstract class PotionBase {
 			// Deserialize the Potion JSON.
 			.then(response => this.deserialize(response, uri, options));
 
-		if (options.method === 'GET' && !options.paginate && !options.search) {
+		if (options.method === 'GET' && !options.paginate && !options.params) {
 			// If a GET request was made and {cache: true} return the item from cache (if it exists).
 			// NOTE: Queries are not cached.
 			if  (options.cache && this.cache.has(cacheKey)) {
@@ -226,18 +226,18 @@ export abstract class PotionBase {
 
 	private serialize(options: FetchOptions): FetchOptions {
 		const prefix = this.prefix;
-		const {search} = options;
+		const {params} = options;
 
 		return {
 			...options,
 			...{
-				search: toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...search} : search, prefix),
-				data: toPotionJSON(options.data, prefix)
+				params: toPotionJSON(options.paginate ? {page: 1, perPage: 25, ...params} : params, prefix),
+				body: toPotionJSON(options.body, prefix)
 			}
 		};
 	}
-	private deserialize({data, headers}: PotionResponse, uri: string, options: FetchOptions): Promise<PotionResponse> {
-		return this.fromPotionJSON(data, options.origin as string[])
+	private deserialize({headers, body}: PotionResponse, uri: string, options: FetchOptions): Promise<PotionResponse> {
+		return this.fromPotionJSON(body, options.origin as string[])
 			.then(json => {
 				// If {paginate} is enabled, return or update Pagination.
 				if (options.paginate) {
@@ -345,15 +345,15 @@ export abstract class PotionBase {
 			return Promise.reject(new Error(`URI '${uri}' is an uninterpretable or unknown Potion resource.`));
 		} else {
 			const {resourceURI, resource} = entry;
-			const params = {resource, uri, id: parsePotionID($id)};
+			const obj = {resource, uri, id: parsePotionID($id)};
 
-			if (params.id === null) {
-				Object.assign(params, {
+			if (obj.id === null) {
+				Object.assign(obj, {
 					id: getPotionID(uri, resourceURI)
 				});
 			}
 
-			return Promise.resolve(params);
+			return Promise.resolve(obj);
 		}
 	}
 }

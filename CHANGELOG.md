@@ -1,3 +1,13 @@
+<a name="3.0.0"></a>
+# [3.0.0](https://github.com/biosustain/potion-node/compare/v2.5.0...v3.0.0) (2017-07-18)
+
+
+### Features
+
+* migrate Angular impl. to new HttpClient ([7f1a7bb](https://github.com/biosustain/potion-node/commit/7f1a7bb))
+
+
+
 <a name="2.5.0"></a>
 # [2.5.0](https://github.com/biosustain/potion-node/compare/v2.4.0...v2.5.0) (2017-07-17)
 

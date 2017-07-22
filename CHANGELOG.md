@@ -1,3 +1,13 @@
+<a name="3.0.1"></a>
+## [3.0.1](https://github.com/biosustain/potion-node/compare/v3.0.0...v3.0.1) (2017-07-22)
+
+
+### Bug Fixes
+
+* fix Angular 4 body and params serialization ([b7111fc](https://github.com/biosustain/potion-node/commit/b7111fc))
+
+
+
 <a name="3.0.0"></a>
 # [3.0.0](https://github.com/biosustain/potion-node/compare/v2.5.0...v3.0.0) (2017-07-18)
 

@@ -9,6 +9,7 @@ import {
 import {
 	HttpClient,
 	HttpHeaders,
+	HttpParams,
 	HttpRequest,
 	HttpResponse
 } from '@angular/common/http';
@@ -20,7 +21,7 @@ import 'rxjs/add/operator/toPromise';
 
 import {Item, ItemOptions} from '../core/item';
 import {PotionBase, PotionOptions, RequestOptions} from '../core/potion';
-import {isJsObject, isObjectEmpty, merge, omap} from '../core/utils';
+import {isJsObject, isObjectEmpty, merge} from '../core/utils';
 
 
 /**
@@ -73,28 +74,27 @@ export class Potion extends PotionBase {
 	protected request(uri: string, options?: RequestOptions): Promise<any> {
 		const {params, body, method = 'GET'}: RequestOptions = {...options};
 
-		// Create a HttpRequest
-		let request = new HttpRequest(method as any, uri, {
+		const init: any = {
 			// Potion expects all requests to have content type set to 'application/json'.
 			headers: new HttpHeaders({
-				'Content-Type': 'application/json'
+				'content-type': 'application/json'
 			}),
 			responseType: 'json'
-		});
-
-		if (body) {
-			// We need to convert the {body} to proper JSON when making POST/PUT/PATCH requests.
-			request = request.clone({
-				body: JSON.stringify(body)
-			});
-		}
+		};
 
 		// Convert {params} to HttpParams.
 		if (isJsObject(params)) {
-			request = request.clone({
-				setParams: omap(params, key => key, value => JSON.stringify(value))
+			let httpParams = new HttpParams();
+			for (const [key, value] of Object.entries(params)) {
+				// HttpParams, like all http client classes, are immutable, hence the assignment
+				httpParams = httpParams.append(key, JSON.stringify(value));
+			}
+			Object.assign(init, {
+				params: httpParams
 			});
 		}
+
+		const request = method === 'POST' || method === 'PUT' || method === 'PATCH' ? new HttpRequest(method as any, uri, toJson(body), init) : new HttpRequest(method as any, uri, init);
 
 		return this.http.request(request)
 			.filter(event => event instanceof HttpResponse)
@@ -132,3 +132,12 @@ export const POTION_PROVIDER: Provider = {
 		[new Optional(), new Inject(POTION_CONFIG)]
 	]
 };
+
+
+function toJson(value: any): any {
+	try {
+		return JSON.stringify(value);
+	} catch (e) {
+		return;
+	}
+}

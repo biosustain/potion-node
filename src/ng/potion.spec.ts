@@ -106,12 +106,27 @@ describe('potion/ng', () => {
 				testReq.flush({});
 			});
 
+			it('should set \'application/json\' content type when making POST, PUT or PATCH', done => {
+				const controller: HttpTestingController = TestBed.get(HttpTestingController);
+				const potion: Potion = TestBed.get(Potion);
+
+				potion.fetch('/ping', {method: 'POST'})
+					.then(() => {
+						done();
+					});
+
+				const testReq = controller.expectOne('/ping');
+				const headers = testReq.request.headers;
+				expect(headers.get('content-type')).toEqual('application/json');
+				testReq.flush({});
+			});
+
 			it('should pass anything set on {body} option as the {body} property of the request in JSON format', done => {
 				const controller: HttpTestingController = TestBed.get(HttpTestingController);
 				const potion: Potion = TestBed.get(Potion);
 
 				potion.fetch('/ping', {
-						method: 'GET',
+						method: 'PUT',
 						body: {pong: true}
 					})
 					.then(() => {
@@ -128,14 +143,14 @@ describe('potion/ng', () => {
 				const potion: Potion = TestBed.get(Potion);
 
 				potion.fetch('/ping', {
-						method: 'POST',
+						method: 'GET',
 						params: {pong: true}
 					})
 					.then(() => {
 						done();
 					});
 
-				const testReq = controller.expectOne('/ping?pong=true');
+				const [testReq] = controller.match(req => req.url.includes('/ping'));
 				const params = testReq.request.params;
 				expect(params.has('pong')).toBeTruthy();
 				expect(params.get('pong')).toBeTruthy();

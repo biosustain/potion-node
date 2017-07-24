@@ -117,7 +117,7 @@ export class SelfReference {
 // TODO: It's uncertain if this may need to be created every time we replace refs., we might need to do so.
 const set = new WeakSet();
 export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
-	if (typeof json !== 'object' || json === null) {
+	if (typeof json !== 'object' || json === null || json.hasOwnProperty('$schema')) {
 		return json;
 	} else if (set.has(json)) {
 		// If the object we're about to walk through is a ref. we already parsed, just skip it and return it.
@@ -174,7 +174,7 @@ export function findRoots(json: any, skip?: boolean): Map<string, any> {
 		if (!skip) {
 			roots.set('#', json);
 		}
-		if (set.has(json)) {
+		if (set.has(json) || json.hasOwnProperty('$schema')) {
 			// If we find the root in the set it means there is no need to continue.
 			return new Map();
 		} else if (json.uri && !roots.has(json.uri)) {

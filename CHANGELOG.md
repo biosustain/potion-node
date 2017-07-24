@@ -1,3 +1,13 @@
+<a name="3.0.2"></a>
+## [3.0.2](https://github.com/biosustain/potion-node/compare/v3.0.1...v3.0.2) (2017-07-24)
+
+
+### Bug Fixes
+
+* do not try to find roots and resolve references in schemas ([4ae9c07](https://github.com/biosustain/potion-node/commit/4ae9c07))
+
+
+
 <a name="3.0.1"></a>
 ## [3.0.1](https://github.com/biosustain/potion-node/compare/v3.0.0...v3.0.1) (2017-07-22)
 

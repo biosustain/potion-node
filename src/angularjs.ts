@@ -1,13 +1,13 @@
 // tslint:disable: max-classes-per-file
 import * as angular from 'angular';
 import {
+	ItemCache,
 	PotionBase,
 	PotionOptions,
 	PotionResponse,
 	RequestOptions
 } from './core/potion';
 import {setPotionPromise} from './core/metadata';
-import {ItemCache} from './core/potion';
 import {Item} from './core/item';
 import {isJsObject} from './core/utils';
 

@@ -1,3 +1,13 @@
+<a name="3.1.0"></a>
+# [3.1.0](https://github.com/biosustain/potion-node/compare/v3.0.2...v3.1.0) (2017-09-13)
+
+
+### Features
+
+* upgrade deps ([b5bf1e5](https://github.com/biosustain/potion-node/commit/b5bf1e5))
+
+
+
 <a name="3.0.2"></a>
 ## [3.0.2](https://github.com/biosustain/potion-node/compare/v3.0.1...v3.0.2) (2017-07-24)
 

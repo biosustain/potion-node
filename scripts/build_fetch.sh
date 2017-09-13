@@ -18,7 +18,7 @@ $(npm bin)/tsc -p src/tsconfig.fetch.json --outDir ${ES2015_OUTPUT_DIR} --target
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES2015_OUTPUT_DIR}/${LIB_NAME}.js"\
     -o "${DIST_FILENAME}.js"\
-    --format es
+    --output.format es
 
 # Copy type definition file to dist
 cp "${ES2015_OUTPUT_DIR}/${LIB_NAME}.d.ts" ${DIST_DIR}
@@ -29,15 +29,15 @@ $(npm bin)/tsc -p src/tsconfig.fetch.json
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.umd.min.js"\
-    --format umd\
+    --output.format umd\
     --environment UGLIFY
 
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.umd.js"\
-    --format umd
+    --output.format umd
 
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.es5.js"\
-    --format es
+    --output.format es

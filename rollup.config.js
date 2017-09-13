@@ -16,10 +16,10 @@ if (process.env.UGLIFY) {
 
 export default {
 	plugins,
-	moduleName: camelCase(name.replace('@', '')
+	name: camelCase(name.replace('@', '')
 		.replace('/', '.')
 		.replace('-', '.')),
-	sourceMap: true,
+	sourcemap: true,
 
 	// ATTENTION:
 	// Add any dependency or peer dependency the library uses to `globals` and `external`.

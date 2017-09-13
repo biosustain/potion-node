@@ -18,7 +18,7 @@ $(npm bin)/ngc -p src/tsconfig.json
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES2015_OUTPUT_DIR}/${LIB_NAME}.js"\
     -o "${DIST_FILENAME}.js"\
-    --format es
+    --output.format es
 
 # Copy type definition files to dist
 rsync -a --include="*/" --include '*.d.ts' --include '*.metadata.json' --exclude '*' ${ES2015_OUTPUT_DIR}/ ${DIST_DIR}
@@ -29,15 +29,15 @@ $(npm bin)/ngc -p src/tsconfig.es5.json
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.umd.min.js"\
-    --format umd\
+    --output.format umd\
     --environment UGLIFY
 
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.umd.js"\
-    --format umd
+    --output.format umd
 
 $(npm bin)/rollup -c ./rollup.config.js\
     -i "${ES5_OUTFILE}"\
     -o "${DIST_FILENAME}.es5.js"\
-    --format es
+    --output.format es

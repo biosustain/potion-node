@@ -1,16 +1,16 @@
 import {
-	forwardRef,
-	Inject,
-	NgModule,
-	Optional
+    forwardRef,
+    Inject,
+    NgModule,
+    Optional
 } from '@angular/core';
 import {HttpClientModule} from '@angular/common/http';
 
 import {
-	Potion,
-	POTION_PROVIDER,
-	POTION_RESOURCES,
-	PotionResources
+    Potion,
+    POTION_PROVIDER,
+    POTION_RESOURCES,
+    PotionResources
 } from './potion';
 
 
@@ -44,18 +44,18 @@ import {
  * export class AppModule {}
  */
 @NgModule({
-	imports: [HttpClientModule],
-	providers: [
-		POTION_PROVIDER
-	]
+    imports: [HttpClientModule],
+    providers: [
+        POTION_PROVIDER
+    ]
 })
 export class PotionModule {
-	constructor(
-		@Inject(forwardRef(() => Potion)) potion: Potion,
-		@Optional() @Inject(POTION_RESOURCES) resources: PotionResources[]
-	) {
-		potion.registerFromProvider(resources || []);
-	}
+    constructor(
+        @Inject(forwardRef(() => Potion)) potion: Potion,
+        @Optional() @Inject(POTION_RESOURCES) resources: PotionResources[]
+    ) {
+        potion.registerFromProvider(resources || []);
+    }
 }
 
 

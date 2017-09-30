@@ -3,4 +3,4 @@ import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angul
 
 const platform = platformBrowserDynamicTesting();
 getTestBed()
-	.initTestEnvironment(BrowserDynamicTestingModule, platform);
+    .initTestEnvironment(BrowserDynamicTestingModule, platform);

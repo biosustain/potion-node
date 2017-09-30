@@ -1,34 +1,38 @@
 {
-	"extends": ["tslint:latest"],
-	"rules" : {
-		"arrow-parens": {"options": ["ban-single-arg-parens"]},
-		"no-consecutive-blank-lines": {"options": 2},
-		"no-submodule-imports": {"options": ["@angular", "rxjs"]},
-		"indent": {"options": ["tabs"]},
-		"interface-name": false,
-		"no-shadowed-variable": false,
-		"max-line-length": {"options": [240]},
-		"member-access": {"options": ["no-public"]},
-		"object-literal-sort-keys": false,
-		"ordered-imports": {
-			"options": {
-				"import-sources-order": "any",
-				"named-imports-order": "case-insensitive"
-			}
-		},
-		"prefer-function-over-method": {"options": ["allow-public"]},
-		"prefer-method-signature": true,
-		"trailing-comma": {
-			"options": {
-				"multiline": "never",
-				"singleline": "never"
-			}
-		},
-		"quotemark": {
-			"options": [
-				"avoid-escape",
-				"single"
-			]
-		}
-	}
+    "extends": ["tslint:latest"],
+    "rules": {
+        "arrow-parens": {"options": ["ban-single-arg-parens"]},
+        "no-consecutive-blank-lines": {"options": 2},
+        "no-submodule-imports": {
+            "options": [
+                "@angular",
+                "rxjs"
+            ]
+        },
+        "interface-name": false,
+        "no-shadowed-variable": false,
+        "max-line-length": {"options": [240]},
+        "member-access": {"options": ["no-public"]},
+        "object-literal-sort-keys": false,
+        "ordered-imports": {
+            "options": {
+                "import-sources-order": "any",
+                "named-imports-order": "case-insensitive"
+            }
+        },
+        "prefer-function-over-method": {"options": ["allow-public"]},
+        "prefer-method-signature": true,
+        "trailing-comma": {
+            "options": {
+                "multiline": "never",
+                "singleline": "never"
+            }
+        },
+        "quotemark": {
+            "options": [
+                "avoid-escape",
+                "single"
+            ]
+        }
+    }
 }

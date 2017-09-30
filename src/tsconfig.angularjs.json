@@ -1,17 +1,17 @@
 {
-	"extends": "../tsconfig.json",
-	"compilerOptions": {
-		"baseUrl": "",
-		"rootDir": "./",
-		"target": "es5",
-		"outDir": "../out-tsc/angularjs-es5/",
-		"types" : [
-			"angular",
-			"jquery",
-			"reflect-metadata"
-		]
-	},
-	"files": [
-		"./angularjs.ts"
-	]
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": "",
+        "rootDir": "./",
+        "target": "es5",
+        "outDir": "../out-tsc/angularjs-es5/",
+        "types": [
+            "angular",
+            "jquery",
+            "reflect-metadata"
+        ]
+    },
+    "files": [
+        "./angularjs.ts"
+    ]
 }

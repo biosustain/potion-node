@@ -1,3 +1,18 @@
+<a name="3.2.0"></a>
+# [3.2.0](https://github.com/biosustain/potion-node/compare/v3.1.1...v3.2.0) (2017-09-30)
+
+
+### Bug Fixes
+
+* fix bundle name ([3560010](https://github.com/biosustain/potion-node/commit/3560010))
+
+
+### Features
+
+* upgrade deps ([a7d0d39](https://github.com/biosustain/potion-node/commit/a7d0d39))
+
+
+
 <a name="3.1.1"></a>
 ## [3.1.1](https://github.com/biosustain/potion-node/compare/v3.1.0...v3.1.1) (2017-09-13)
 

@@ -16,9 +16,10 @@ if (process.env.UGLIFY) {
 
 export default {
 	plugins,
-	name: camelCase(name.replace('@', '')
-		.replace('/', '.')
-		.replace('-', '.')),
+	name: name.replace('@', '')
+		.split('/')
+		.map(str => camelCase(str))
+		.join('.'),
 	sourcemap: true,
 
 	// ATTENTION:

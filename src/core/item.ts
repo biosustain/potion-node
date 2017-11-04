@@ -1,6 +1,5 @@
 import {isReadonly, potionInstance, potionURI} from './metadata';
 import {QueryParams, RequestOptions} from './potion';
-import {Pagination} from './pagination';
 import {isJsObject} from './utils';
 
 
@@ -65,7 +64,7 @@ export abstract class Item {
      * @param {boolean} [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
      * @param {boolean} [options.cache=true] - Cache the HTTP request.
      */
-    static query<T extends Item>(queryParams?: QueryParams | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<T[] | Pagination<T>> {
+    static query<T extends Item, R = T[]>(queryParams?: QueryParams | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<R> {
         const uri: string = potionURI(this);
         return potionInstance(this).fetch(uri, {
             method: 'GET',
@@ -82,10 +81,7 @@ export abstract class Item {
      */
     static first<T extends Item>(queryOptions?: QueryParams): Promise<T> {
         return this.query(queryOptions)
-            .then(first);
-        function first(items: T[]): T {
-            return items[0];
-        }
+            .then(items => items[0]) as Promise<T>;
     }
 
     private $uri: string;

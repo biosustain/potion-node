@@ -299,7 +299,7 @@ describe('potion/core', () => {
         });
 
         it('should return a Pagination object if {paginated: true}', done => {
-            User.query({}, {paginate: true}).then((users: Pagination<User>) => {
+            User.query<User, Pagination<User>>({}, {paginate: true}).then((users: Pagination<User>) => {
                 expect(users instanceof Pagination).toBe(true);
                 expect(users.length).toEqual(3);
                 expect(users.page).toEqual(1);
@@ -311,7 +311,7 @@ describe('potion/core', () => {
         });
 
         it('should contain instances of an Item if {paginated: true}', done => {
-            User.query({}, {paginate: true}).then((users: Pagination<User>) => {
+            User.query<User, Pagination<User>>({}, {paginate: true}).then((users: Pagination<User>) => {
                 for (const user of users) {
                     expect(user instanceof (User as any)).toBe(true);
                 }
@@ -320,7 +320,7 @@ describe('potion/core', () => {
         });
 
         it('should return the right page if if {paginated: true} and called with pagination params ({page, perPage})', done => {
-            User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
+            User.query<User, Pagination<User>>({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
                 expect(users.length).toEqual(1);
                 expect(users.page).toEqual(2);
                 expect(users.perPage).toEqual(2);
@@ -332,7 +332,7 @@ describe('potion/core', () => {
         });
 
         it('should update query if {paginated: true} and {page} is set on the pagination object', done => {
-            User.query({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
+            User.query<User, Pagination<User>>({page: 2, perPage: 2}, {paginate: true}).then((users: Pagination<User>) => {
                 expect(users.page).toEqual(2);
                 users.changePageTo(1).then(() => {
                     expect(users.page).toEqual(1);
@@ -344,7 +344,7 @@ describe('potion/core', () => {
         });
 
         it('should work with circular references when using pagination', done => {
-            Person.query(undefined, {paginate: true}).then((people: Person[]) => {
+            Person.query<Person>(undefined, {paginate: true}).then((people: Person[]) => {
                 expect(people.length).toEqual(2);
                 for (const person of people) {
                     expect(person.groups.length).toEqual(2);
@@ -361,7 +361,7 @@ describe('potion/core', () => {
         });
 
         it('should work with circular references', done => {
-            M1.query({})
+            M1.query<M1>({})
                 .then((m1s: M1[]) => {
                     expect(m1s.length).toEqual(3);
                     m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
@@ -497,11 +497,11 @@ describe('potion/core', () => {
             });
 
             it('should update the Item', done => {
-                User.fetch(1).then((user: User) => {
+                User.fetch<User>(1).then((user: User) => {
                     expect(user.name).toEqual('John Doe');
                     const name = 'John Foo Doe';
                     user.update({name}).then(() => {
-                        User.fetch(1).then((user: User) => {
+                        User.fetch<User>(1).then((user: User) => {
                             expect(user.name).toEqual(name);
                             done();
                         });
@@ -550,7 +550,7 @@ describe('potion/core', () => {
                 const success = jasmine.createSpy('success');
                 const error = jasmine.createSpy('error');
 
-                User.fetch(3).then((user: User) => {
+                User.fetch<User>(3).then((user: User) => {
                     user.destroy().then(() => {
                         User.fetch(3).then(success, error);
                         setTimeout(
@@ -604,7 +604,7 @@ describe('potion/core', () => {
                 const user = new User({name});
 
                 user.save().then(() => {
-                    User.fetch(4).then((user: User) => {
+                    User.fetch<User>(4).then((user: User) => {
                         expect(user.id).toEqual(4);
                         expect(user.name).toEqual(name);
                         done();
@@ -617,12 +617,12 @@ describe('potion/core', () => {
                 const user = new User({name});
 
                 user.save()
-                    .then(() => User.fetch(4))
+                    .then(() => User.fetch<User>(4))
                     .then((user: User) => {
                         expect(user.name).toEqual(name);
                         user.name = 'John Doe';
                         user.save()
-                            .then(() => User.fetch(4))
+                            .then(() => User.fetch<User>(4))
                             .then((user: User) => {
                                 expect(user.id).toEqual(4);
                                 expect(user.name).toEqual('John Doe');
@@ -723,13 +723,10 @@ describe('potion/core', () => {
 
 
 function toPages(items: any[], perPage: number): any[][] {
-    let i;
-    let j;
     const pages: any[][] = [];
-
-    for (i = 0, j = items.length; i < j; i += perPage) {
+    let i;
+    for (i = 0; i < items.length; i += perPage) {
         pages.push(items.slice(i, i + perPage));
     }
-
     return pages;
 }

@@ -349,7 +349,7 @@ describe('potion/core', () => {
             });
 
             it('should correctly deserialize Potion server response', done => {
-                User.fetch(1)
+                User.fetch<User>(1)
                     .then((user: User) => {
                         expect(user.id).toEqual(1);
                         expect(user.createdAt instanceof Date).toBeTruthy();
@@ -365,7 +365,7 @@ describe('potion/core', () => {
             });
 
             it('should automatically resolve references', done => {
-                Car.fetch(1).then((car: Car) => {
+                Car.fetch<Car>(1).then((car: Car) => {
                     expect(car.user instanceof (User as any)).toBe(true);
                     expect(car.user.id).toEqual(1);
                     done();
@@ -374,14 +374,14 @@ describe('potion/core', () => {
 
             it('should not resolve before references are populated', done => {
                 Promise.all([
-                    User.fetch(2).then((user: User) => {
+                    User.fetch<User>(2).then((user: User) => {
                         expect(cache.get('/user/2')).not.toBeUndefined();
                         expect(user instanceof (User as any)).toBe(true);
                         expect(user.id).toEqual(2);
                         expect(user.createdAt instanceof Date).toBe(true);
                         expect(user.parent instanceof (User as any)).toBe(true);
                     }),
-                    Car.fetch(2).then((car: Car) => {
+                    Car.fetch<Car>(2).then((car: Car) => {
                         expect(cache.get('/car/2')).not.toBeUndefined();
                         expect(cache.get('/user/2')).not.toBeUndefined();
                         expect(car.user).not.toBeUndefined();
@@ -396,7 +396,7 @@ describe('potion/core', () => {
             });
 
             it('should work with circular references', done => {
-                Person.fetch(1).then((person: Person) => {
+                Person.fetch<Person>(1).then((person: Person) => {
                     expect(person.sibling instanceof Person).toBeTruthy();
                     expect(person.sibling.sibling instanceof Person).toBeTruthy();
                     done();
@@ -426,7 +426,7 @@ describe('potion/core', () => {
             });
 
             it('should resolve {$ref: "#"} to root item', done => {
-                Engine.fetch(1).then((engine: Engine) => {
+                Engine.fetch<Engine>(1).then((engine: Engine) => {
                     expect(engine.base).toEqual(engine);
                     done();
                 });
@@ -449,7 +449,7 @@ describe('potion/core', () => {
             });
 
             it('should work with {$uri} as string', done => {
-                User.fetch(uuid)
+                User.fetch<User>(uuid)
                     .then((user: User) => {
                         expect(user.id).toEqual(uuid);
                         expect(user.createdAt instanceof Date).toBeTruthy();

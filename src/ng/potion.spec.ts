@@ -239,7 +239,7 @@ describe('potion/ng', () => {
                 }
 
 
-                M1.query().then((m1s: M1[]) => {
+                M1.query<M1>().then((m1s: M1[]) => {
                     expect(m1s.length).toEqual(3);
                     m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
 

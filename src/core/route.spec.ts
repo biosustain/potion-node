@@ -54,7 +54,7 @@ describe('potion/core', () => {
         });
 
         it('should allow for usage as instance property', done => {
-            User.fetch(1).then((user: User) => {
+            User.fetch<User>(1).then((user: User) => {
                 expect(isFunction(user.attributes)).toBe(true);
                 done();
             });

@@ -1,9 +1,9 @@
 /* tslint:disable:max-file-line-count */
 import {
-    decorateCtorWithPotionInstance,
-    decorateCtorWithPotionURI,
-    potionPromise,
-    readonly
+    getPotionPromiseCtor,
+    readonly,
+    setPotionInstance,
+    setPotionURI
 } from './metadata';
 import {Item, ItemOptions} from './item';
 import {Pagination} from './pagination';
@@ -112,7 +112,7 @@ export abstract class PotionBase {
     host: string;
     readonly prefix: string;
 
-    private readonly Promise: typeof Promise = potionPromise(this); // NOTE: This is needed only to provide support for AngularJS.
+    private readonly Promise: typeof Promise = getPotionPromiseCtor(this); // NOTE: This is needed only to provide support for AngularJS.
     private requests: Map<string, any> = new Map();
 
     constructor({host = '', prefix = '', cache}: PotionOptions = {}) {
@@ -131,8 +131,8 @@ export abstract class PotionBase {
         if (!isFunction(resource)) {
             throw new TypeError(`An error occurred while trying to register a resource for ${uri}. ${resource} is not a function.`);
         }
-        decorateCtorWithPotionInstance(resource, this);
-        decorateCtorWithPotionURI(resource, uri);
+        setPotionInstance(resource, this);
+        setPotionURI(resource, uri);
 
         if (options && Array.isArray(options.readonly)) {
             options.readonly.forEach(property => readonly(resource, property));

@@ -44,9 +44,9 @@ export abstract class Item {
 
     /**
      * Get a resource by id.
-     * @param {Number|String} id
-     * @param {ItemFetchOptions} options
-     * @param {boolean} [options.cache=true] - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
+     * @param id
+     * @param options
+     * @param [options.cache=true] - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
      */
     static fetch<T extends Item>(id: number | string, {cache = true}: ItemFetchOptions = {}): Promise<T> {
         const uri: string = potionURI(this);
@@ -58,11 +58,11 @@ export abstract class Item {
 
     /**
      * Query resources.
-     * @param {QueryParams} [queryParams] - Can be used to manipulate the pagination with {page: number, perPage: number},
+     * @param [queryParams] - Can be used to manipulate the pagination with {page: number, perPage: number},
      * but it can also be used to further filter the results with {sort: any, where: any}.
-     * @param {ItemFetchOptions} options
-     * @param {boolean} [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
-     * @param {boolean} [options.cache=true] - Cache the HTTP request.
+     * @param options
+     * @param [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
+     * @param [options.cache=true] - Cache the HTTP request.
      */
     static query<T extends Item, R = T[]>(queryParams?: QueryParams | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<R> {
         const uri: string = potionURI(this);
@@ -76,12 +76,15 @@ export abstract class Item {
 
     /**
      * Get the first item.
-     * @param {QueryParams} [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
+     * @param [queryOptions] - Can be used to manipulate the pagination with {page: number, perPage: number},
      * but it can also be used to further filter the results with {sort: any, where: any}.
      */
     static first<T extends Item>(queryOptions?: QueryParams): Promise<T> {
         return this.query(queryOptions)
-            .then(items => items[0]) as Promise<T>;
+            .then(first) as Promise<T>;
+        function first(items: any[]): any {
+            return items[0];
+        }
     }
 
     private $uri: string;
@@ -89,7 +92,7 @@ export abstract class Item {
 
     /**
      * Create an instance of the class that extended the Item.
-     * @param {Object} properties - An object with any properties that will be added and accessible on the resource.
+     * @param properties - An object with any properties that will be added and accessible on the resource.
      */
     constructor(properties?: ItemInitArgs) {
         if (isJsObject(properties)) {
@@ -106,7 +109,7 @@ export abstract class Item {
 
     /**
      * Compare current resource with another object.
-     * @param {Object} resource
+     * @param resource
      */
     equals(resource: any): boolean {
         if (resource instanceof Item) {
@@ -148,7 +151,7 @@ export abstract class Item {
 
     /**
      * Update the resource.
-     * @param {Object} data - An object with any properties to update.
+     * @param data - An object with any properties to update.
      */
     update(data: any = {}): Promise<this> {
         return potionInstance(this.constructor as typeof Item)

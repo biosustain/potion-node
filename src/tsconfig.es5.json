@@ -1,6 +1,8 @@
 {
     "extends": "../tsconfig.json",
     "angularCompilerOptions": {
+        "annotationsAs": "decorators",
+        "generateCodeForLibraries": true,
         "annotateForClosureCompiler": true,
         "genDir": "../out-tsc/lib-gen-dir/",
         "flatModuleOutFile": "ng.js",

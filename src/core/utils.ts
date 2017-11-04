@@ -49,10 +49,9 @@ export type ValueMapFunction = (value: any) => any;
 /**
  * Object.map()
  * NOTE: This is NOT a recursive fn.
- * @param {Object} obj
- * @param {Function} keyMapFunction - Transform operation to apply on the key.
- * @param {Function} [valueMapFunction] - Transform operation to apply on the value.
- * @returns {Object}
+ * @param obj
+ * @param keyMapFunction - Transform operation to apply on the key.
+ * @param [valueMapFunction] - Transform operation to apply on the value.
  */
 export function omap(obj: {[key: string]: any}, keyMapFunction: KeyMapFunction, valueMapFunction?: ValueMapFunction): {[key: string]: any} {
     if (isJsObject(obj) && !Array.isArray(obj)) {
@@ -111,7 +110,7 @@ export class SelfReference {
 /**
  * Walk through Potion JSON and replace SelfReference objects from the roots (roots are just a lost of Potion item references).
  * @param json - Any value to walk through.
- * @param {Array<Item>} roots - A list of Potion items found in the passed JSON.
+ * @param roots - A list of Potion items found in the passed JSON.
  */
 // NOTE: Keep refs. to looped things in this set instead of altering the objects themselves.
 // TODO: It's uncertain if this may need to be created every time we replace refs., we might need to do so.
@@ -165,7 +164,6 @@ export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
 /**
  * Recursively find every object with {uri} (a Potion item usually) and return a list with all.
  * @param json - A Potion JSON.
- * @return {Array<any>}
  */
 export function findRoots(json: any, skip?: boolean): Map<string, any> {
     const roots: Map<string, any> = new Map();

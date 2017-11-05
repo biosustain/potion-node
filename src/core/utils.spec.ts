@@ -1,5 +1,4 @@
 // tslint:disable: max-classes-per-file no-empty
-
 import {Item} from './item';
 import {
     addPrefixToURI,
@@ -15,12 +14,14 @@ import {
     isJsObject,
     isObjectEmpty,
     isPotionURI,
+    isString,
+    LazyPromiseRef,
     MemCache,
     merge,
     omap,
     parsePotionID,
     removePrefixFromURI,
-    replaceSelfReferences,
+    replaceReferences,
     SelfReference,
     toCamelCase,
     toPotionJSON,
@@ -80,6 +81,21 @@ describe('potion/core', () => {
                 expect(isFunction(new Date())).toBeFalsy();
                 expect(isFunction(() => {})).toBeTruthy();
                 expect(isFunction(noop)).toBeTruthy();
+            });
+        });
+
+        describe('isString()', () => {
+            it('should check if a value is a string', () => {
+                expect(isString(true)).toBeFalsy();
+                expect(isString('')).toBe(true);
+                expect(isString(1)).toBeFalsy();
+                expect(isString(null)).toBeFalsy();
+                expect(isString(undefined)).toBeFalsy();
+                expect(isString([])).toBeFalsy();
+                expect(isString({})).toBeFalsy();
+                expect(isString(new Date())).toBeFalsy();
+                expect(isString(() => {})).toBe(false);
+                expect(isString(noop)).toBe(false);
             });
         });
 
@@ -222,14 +238,14 @@ describe('potion/core', () => {
             });
         });
 
-        describe('replaceSelfReferences()', () => {
+        describe('replaceReferences()', () => {
             it('should return the original value if it\'s null or not an object', () => {
                 const roots = new Map();
-                expect(replaceSelfReferences(null, roots)).toEqual(null);
-                expect(replaceSelfReferences('ping', roots)).toEqual('ping');
-                expect(replaceSelfReferences(1, roots)).toEqual(1);
-                expect(replaceSelfReferences(undefined, roots)).toEqual(undefined);
-                expect(replaceSelfReferences(noop, roots)).toEqual(noop);
+                expect(replaceReferences(null, roots)).toEqual(null);
+                expect(replaceReferences('ping', roots)).toEqual('ping');
+                expect(replaceReferences(1, roots)).toEqual(1);
+                expect(replaceReferences(undefined, roots)).toEqual(undefined);
+                expect(replaceReferences(noop, roots)).toEqual(noop);
             });
 
             it('should replace self references in a object', () => {
@@ -240,8 +256,50 @@ describe('potion/core', () => {
                     pong: false,
                     self: new SelfReference(uri)
                 };
-                replaceSelfReferences(json, findRoots(json));
+                replaceReferences(json, findRoots(json));
                 expect(json.self as any).toEqual(json);
+            });
+
+            it('should replace lazy promise references in a object', async () => {
+                const lazyPromiseGetterSpy = jasmine.createSpy('call lazy promise getter');
+                const uri = '/ping/1';
+                const json = {
+                    uri,
+                    ping: new LazyPromiseRef(() => {
+                        lazyPromiseGetterSpy();
+                        return Promise.resolve('pong');
+                    })
+                };
+                expect(lazyPromiseGetterSpy).not.toHaveBeenCalled();
+                replaceReferences(json, findRoots(json));
+                const ping = json.ping;
+                expect(lazyPromiseGetterSpy).toHaveBeenCalled();
+                expect(ping instanceof Promise).toBeTruthy();
+                const res = await ping;
+                expect(res).toEqual('pong' as any);
+            });
+
+            it('should replace and cache lazy promise references in a object', async () => {
+                const lazyPromiseGetterSpy = jasmine.createSpy('call lazy promise getter');
+                const uri = '/ping/1';
+                const json = {
+                    uri,
+                    ping: new LazyPromiseRef(() => {
+                        lazyPromiseGetterSpy();
+                        return Promise.resolve('pong');
+                    })
+                };
+                expect(lazyPromiseGetterSpy).not.toHaveBeenCalled();
+                replaceReferences(json, findRoots(json));
+                const ping1 = json.ping;
+                const ping2 = json.ping;
+                expect(lazyPromiseGetterSpy).toHaveBeenCalledTimes(1);
+                expect(ping1 instanceof Promise).toBeTruthy();
+                expect(ping2 instanceof Promise).toBeTruthy();
+                const res1 = await ping1;
+                const res2 = await ping2;
+                expect(res1).toEqual('pong' as any);
+                expect(res2).toEqual('pong' as any);
             });
 
             it('should recursively replace self references in a object', () => {
@@ -261,7 +319,7 @@ describe('potion/core', () => {
                 };
 
                 // Replace all refs
-                replaceSelfReferences(json, findRoots(json));
+                replaceReferences(json, findRoots(json));
 
                 const bar = json.bars[0];
                 const fooRef: any = bar.foo;
@@ -271,6 +329,46 @@ describe('potion/core', () => {
                 expect(Array.isArray(fooRef.bars)).toBeTruthy();
                 expect(siblingRef.uri).toEqual(bar2Uri);
                 expect(siblingRef.sibling.uri).toEqual(bar.uri);
+            });
+
+            it('should recursively replace lazy promise references in a object', async () => {
+                const lazyPromiseGetterSpy = jasmine.createSpy('call lazy promise getter');
+                const fooUri = '/foo/1';
+                const bar1Uri = '/bar/1';
+                const bar2Uri = '/bar/2';
+                const json = {
+                    uri: fooUri,
+                    bars: [{
+                        uri: bar1Uri,
+                        foo: new SelfReference(fooUri),
+                        sibling: {
+                            uri: bar2Uri,
+                            ping: new LazyPromiseRef(() => {
+                                lazyPromiseGetterSpy();
+                                return Promise.resolve('pong');
+                            })
+                        }
+                    }]
+                };
+
+                expect(lazyPromiseGetterSpy).not.toHaveBeenCalled();
+
+                // Replace all refs
+                replaceReferences(json, findRoots(json));
+
+                const bar = json.bars[0];
+                const fooRef: any = bar.foo;
+                const siblingRef: any = bar.sibling;
+
+                expect(fooRef.uri).toEqual(json.uri);
+                expect(Array.isArray(fooRef.bars)).toBeTruthy();
+                expect(siblingRef.uri).toEqual(bar2Uri);
+
+                const ping = siblingRef.ping;
+                expect(lazyPromiseGetterSpy).toHaveBeenCalled();
+                expect(ping instanceof Promise).toBeTruthy();
+                const res = await ping;
+                expect(res).toEqual('pong' as any);
             });
 
             it('should recursively replace self references in an array', () => {
@@ -298,7 +396,7 @@ describe('potion/core', () => {
                 ];
 
                 // Replace all refs
-                replaceSelfReferences(json, findRoots(json));
+                replaceReferences(json, findRoots(json));
 
                 const foo1 = json[0];
                 const foo2: any = json[1];
@@ -312,6 +410,49 @@ describe('potion/core', () => {
                 expect(foo1BarSiblingRef.uri).toEqual(bar2Uri);
                 expect(foo1BarSiblingRef.sibling.uri).toEqual(foo1Bar.uri);
                 expect(foo2SiblingRef.uri).toEqual(foo1.uri);
+            });
+
+            it('should recursively replace lazy promise references in an array', async () => {
+                const lazyPromiseGetterSpy = jasmine.createSpy('call lazy promise getter');
+                const foo1Uri = '/foo/1';
+                const foo2Uri = '/foo/2';
+                const bar1Uri = '/bar/1';
+                const json = [
+                    {
+                        uri: foo1Uri,
+                        bars: [{
+                            uri: bar1Uri,
+                            foo: new SelfReference(foo1Uri),
+                            ping: new LazyPromiseRef(() => {
+                                lazyPromiseGetterSpy();
+                                return Promise.resolve('pong');
+                            })
+                        }]
+                    },
+                    {
+                        uri: foo2Uri,
+                        bars: []
+                    }
+                ];
+
+                expect(lazyPromiseGetterSpy).not.toHaveBeenCalled();
+                // Replace all refs
+                replaceReferences(json, findRoots(json));
+
+                const foo1 = json[0];
+                const foo1Bar = foo1.bars[0];
+                const foo1Ref: any = foo1Bar.foo;
+
+                expect(foo1Ref.uri).toEqual(foo1.uri);
+                expect(Array.isArray(foo1Ref.bars)).toBeTruthy();
+
+                const ping = foo1Bar.ping;
+
+                expect(lazyPromiseGetterSpy).toHaveBeenCalled();
+                expect(ping instanceof Promise).toBeTruthy();
+
+                const res = await ping;
+                expect(res).toEqual('pong' as any);
             });
 
             it('should work with cross references', () => {
@@ -351,7 +492,7 @@ describe('potion/core', () => {
                 ];
 
                 // Replace all refs
-                replaceSelfReferences(people, findRoots(people));
+                replaceReferences(people, findRoots(people));
 
                 for (const person of people) {
                     expect(person.groups.length).toEqual(2);
@@ -453,13 +594,14 @@ describe('potion/core', () => {
         describe('findPotionResource()', () => {
             it('should return a Potion resource if found, otherwise undefined', () => {
                 const resources = {'/foo': Foo};
-
-                expect(findPotionResource('/foo', resources)).toBeUndefined();
-                expect(findPotionResource('/bar', resources)).toBeUndefined();
-                expect(findPotionResource('/foo/1', resources)).toEqual({
+                const res = {
                     resourceURI: '/foo',
                     resource: Foo
-                });
+                };
+
+                expect(findPotionResource('/foo', resources)).toEqual(res);
+                expect(findPotionResource('/bar', resources)).toBeUndefined();
+                expect(findPotionResource('/foo/1', resources)).toEqual(res);
             });
         });
 

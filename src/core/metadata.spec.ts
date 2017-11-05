@@ -1,8 +1,10 @@
 // tslint:disable: max-classes-per-file no-empty
 import {
+    async,
     getPotionInstance,
     getPotionPromiseCtor,
     getPotionURI,
+    isAsync,
     isReadonly,
     readonly,
     setPotionInstance,
@@ -75,6 +77,43 @@ describe('potion/core', () => {
                 const potionWithCustomPromise = new Potion2();
                 setPotionPromiseCtor(Potion2, promise);
                 expect(getPotionPromiseCtor(potionWithCustomPromise)).toEqual(promise);
+            });
+        });
+
+        describe('@async/isAsync()', () => {
+            it('should get/set the readonly metadata on an item property', () => {
+                class Foo extends Item {
+                    @async
+                    bar: Promise<string>;
+
+                    ipsum: boolean;
+                }
+                const foo = new Foo();
+                const ctor = foo.constructor as typeof Item;
+
+                expect(isAsync(ctor, 'bar')).toBeTruthy();
+                expect(isAsync(ctor, '/bar/1')).toBeTruthy();
+                expect(isAsync(ctor, 'ipsum')).toBeFalsy();
+            });
+        });
+
+        describe('@async/@readonly', () => {
+            it('should get/set the readonly and async metadata on an item property', () => {
+                class Foo extends Item {
+                    @readonly
+                    @async
+                    bar: Promise<string>;
+
+                    ipsum: boolean;
+                }
+                const foo = new Foo();
+                const ctor = foo.constructor as typeof Item;
+
+                expect(isAsync(ctor, 'bar')).toBeTruthy();
+                expect(isAsync(ctor, '/bar/1')).toBeTruthy();
+                expect(isAsync(ctor, 'ipsum')).toBeFalsy();
+                expect(isReadonly<Foo>(foo, 'bar')).toBeTruthy();
+                expect(isReadonly<Foo>(foo, 'ipsum')).toBeFalsy();
             });
         });
     });

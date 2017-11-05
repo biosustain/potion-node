@@ -1,10 +1,16 @@
-import {getPotionInstance, getPotionURI, isReadonly} from './metadata';
+import {
+    getPotionInstance,
+    getPotionURI,
+    isAsync,
+    isReadonly
+} from './metadata';
 import {QueryParams, RequestOptions} from './potion';
 import {isJsObject} from './utils';
 
 
 export interface ItemOptions {
     'readonly'?: string[];
+    async?: string[];
 }
 
 export type ItemFetchOptions = Pick<RequestOptions, 'cache'>;
@@ -127,7 +133,7 @@ export abstract class Item {
      */
     toJSON(): any {
         return Object.entries(this)
-            .filter(([key]) => !key.startsWith('$') && !isReadonly<this>(this, key))
+            .filter(([key]) => !key.startsWith('$') && !isReadonly<this>(this, key) && !isAsync(this.constructor as typeof Item, key))
             .reduce((acc, [key, value]) => ({
                 ...acc,
                 [key]: value
@@ -148,7 +154,7 @@ export abstract class Item {
                 const uri = getPotionURI(ctor);
                 await potion.fetch(uri, {
                     method: 'POST',
-                    body: this.toJSON(),
+                    body: json,
                     cache: true
                 });
             }

@@ -1,6 +1,6 @@
-/* tslint:disable: max-classes-per-file prefer-function-over-method */
-
+// tslint:disable: max-classes-per-file prefer-function-over-method no-empty
 import {ItemCache, PotionBase, RequestOptions} from './potion';
+import {async, isAsync, isReadonly} from './metadata';
 import {Item} from './item';
 import {Route} from './route';
 
@@ -8,28 +8,47 @@ import {Route} from './route';
 describe('potion/core', () => {
     describe('potion.ts', () => {
         describe('Potion()', () => {
-            let potion: any;
-
-            beforeEach(() => {
+            it('should have {host, prefix, cache} configurable properties', () => {
                 class Potion extends PotionBase {
-                    protected request(): Promise<any> {
-                        return Promise.resolve({});
-                    }
+                    protected request(): any {}
                 }
 
-                potion = new Potion({host: 'http://localhost:8080', prefix: '/api'});
-            });
+                const cache = new MockCache();
+                const potion = new Potion({
+                    cache,
+                    host: 'http://localhost:8080',
+                    prefix: '/api'
+                });
 
-            afterEach(() => {
-                potion = null;
-            });
-
-            it('should have {host, prefix, cache} configurable properties', () => {
                 expect(potion.host).toEqual('http://localhost:8080');
                 expect(potion.prefix).toEqual('/api');
+                expect(potion.cache).toEqual(cache);
             });
 
             describe('.register()', () => {
+                let potion: PotionBase;
+                let cache: MockCache;
+
+                beforeEach(() => {
+                    class Potion extends PotionBase {
+                        protected request(): Promise<any> {
+                            return Promise.resolve({});
+                        }
+                    }
+
+                    cache = new MockCache();
+                    potion = new Potion({
+                        cache,
+                        host: 'http://localhost:8080',
+                        prefix: '/api'
+                    });
+                });
+
+                afterEach(() => {
+                    potion = null as any;
+                    cache.clear();
+                });
+
                 it('should add new resources', () => {
                     class User extends Item {}
 
@@ -37,6 +56,25 @@ describe('potion/core', () => {
 
                     expect(Object.keys(potion.resources).length).toEqual(1);
                     expect(potion.resources['/user']).not.toBeUndefined();
+                });
+
+                it('should add new resources with config', () => {
+                    class User extends Item {
+                        foo: any;
+                        bar: string;
+                    }
+
+                    potion.register('/user', User, {
+                        readonly: ['foo'],
+                        async: ['bar']
+                    });
+
+                    const foo = new User();
+
+                    expect(Object.keys(potion.resources).length).toEqual(1);
+                    expect(potion.resources['/user']).not.toBeUndefined();
+                    expect(isAsync(User, 'bar')).toBe(true);
+                    expect(isReadonly(foo, 'foo')).toBe(true);
                 });
 
                 it('should return the added resource', () => {
@@ -56,6 +94,22 @@ describe('potion/core', () => {
             });
 
             describe('.registerAs()', () => {
+                let potion: PotionBase;
+
+                beforeEach(() => {
+                    class Potion extends PotionBase {
+                        protected request(): Promise<any> {
+                            return Promise.resolve({});
+                        }
+                    }
+
+                    potion = new Potion();
+                });
+
+                afterEach(() => {
+                    potion = null as any;
+                });
+
                 it('should add new resources', () => {
                     @potion.registerAs('/user')
                     class User extends Item {}
@@ -65,6 +119,45 @@ describe('potion/core', () => {
 
                     expect(resource).not.toBeUndefined();
                     expect(resource === User).toBeTruthy();
+                });
+            });
+
+            describe('.resource()', () => {
+                let potion: PotionBase;
+
+                beforeEach(() => {
+                    class Potion extends PotionBase {
+                        protected request(): Promise<any> {
+                            return Promise.resolve({});
+                        }
+                    }
+
+                    potion = new Potion();
+                });
+
+                afterEach(() => {
+                    potion = null as any;
+                });
+
+                it('should retrieve a registered resource by resource uri', () => {
+                    @potion.registerAs('/user')
+                    class User extends Item {}
+                    const res = potion.resource('/user');
+                    expect(res).toEqual(User);
+                });
+
+                it('should retrieve a registered resource by item uri', () => {
+                    @potion.registerAs('/user')
+                    class User extends Item {}
+                    const res = potion.resource('/user/1');
+                    expect(res).toEqual(User);
+                });
+
+                it('should return undefined otherwise', () => {
+                    @potion.registerAs('/user')
+                    class User extends Item {}
+                    const res = potion.resource('/foo/1');
+                    expect(res).not.toEqual(User);
                 });
             });
 
@@ -137,9 +230,7 @@ describe('potion/core', () => {
             });
 
             describe('.fetch()', () => {
-                let cache: any;
-                let memcache: {[key: string]: any} = {};
-
+                let cache: MockCache;
                 const uuid = '00cc8d4b-9682-4655-ad78-1fa4b03e757d';
                 const schema = {
                     $schema: 'http://json-schema.org/draft-04/hyper-schema#',
@@ -307,25 +398,6 @@ describe('potion/core', () => {
                         }
                     }
 
-                    class MockCache implements ItemCache<Item> {
-                        has(key: string): boolean {
-                            return memcache[key] !== undefined;
-                        }
-                        get(key: string): Promise<Item> {
-                            return Promise.resolve(memcache[key]);
-                        }
-                        put(key: string, item: Promise<Item>): Promise<Item> {
-                            memcache[key] = item;
-                            return Promise.resolve(item);
-                        }
-                        remove(key: string): void {
-                            delete memcache[key];
-                        }
-                        clear(): void {
-                            memcache = {};
-                        }
-                    }
-
                     cache = new MockCache();
                     const potion = new Potion({cache});
 
@@ -334,9 +406,6 @@ describe('potion/core', () => {
                     potion.register('/engine', Engine);
                     potion.register('/person', Person);
                     potion.register('/foo', Foo);
-
-                    spyOn(potion, 'fetch').and.callThrough();
-                    spyOn(cache, 'get').and.callThrough();
                 });
 
                 afterEach(() => {
@@ -424,6 +493,173 @@ describe('potion/core', () => {
                     expect(user.createdAt instanceof Date).toBeTruthy();
                 });
             });
+
+            describe('Async Properties', () => {
+                let potion: PotionBase;
+                let potionFetchSpy: jasmine.Spy;
+
+                class User extends Item {
+                    @async
+                    siblings: Promise<User[]>;
+                }
+                class Car extends Item {
+                    @async
+                    user: Promise<User>;
+                }
+
+                beforeEach(() => {
+                    potionFetchSpy = jasmine.createSpy('request');
+
+                    class Potion extends PotionBase {
+                        protected request(uri: string): Promise<any> {
+                            potionFetchSpy(uri);
+                            switch (uri) {
+                                case '/user/1':
+                                    return Promise.resolve({
+                                        body: {
+                                            $uri: '/user/1',
+                                            siblings: [
+                                                {$ref: '/user/2'},
+                                                {$ref: '/user/3'}
+                                            ]
+                                        }
+                                    });
+                                case '/user/2':
+                                    return Promise.resolve({
+                                        body: {
+                                            $uri: '/user/2',
+                                            siblings: [
+                                                {$ref: '/user/1'},
+                                                {$ref: '/user/3'}
+                                            ]
+                                        }
+                                    });
+                                case '/user/3':
+                                    return Promise.resolve({
+                                        body: {
+                                            $uri: '/user/3',
+                                            siblings: [
+                                                {$ref: '/user/1'},
+                                                {$ref: '/user/2'}
+                                            ]
+                                        }
+                                    });
+                                case '/car/1':
+                                    return Promise.resolve({
+                                        body: {
+                                            $uri: '/car/1',
+                                            user: {$ref: '/user/1'}
+                                        },
+                                        headers: {}
+                                    });
+                                default:
+                                    break;
+                            }
+                            return Promise.resolve({});
+                        }
+                    }
+
+                    potion = new Potion({});
+
+                    potion.register('/user', User);
+                    potion.register('/car', Car);
+                });
+
+                it('should not automatically resolve references for properties that are marked as @async', async () => {
+                    const car = await Car.fetch<Car>(1);
+                    expect(car instanceof Car).toBeTruthy();
+                    expect(car.id).toEqual(1);
+                    expect(potionFetchSpy).toHaveBeenCalledTimes(1);
+                });
+
+                it('should resolve references only when the property is accessed', async () => {
+                    const car = await Car.fetch<Car>(1);
+                    expect(potionFetchSpy).toHaveBeenCalledTimes(1);
+
+                    const user1Promise = car.user;
+                    expect(user1Promise instanceof Promise).toBeTruthy();
+
+                    // User 1
+                    const user1 = await user1Promise;
+                    expect(user1 instanceof User).toBeTruthy();
+                    expect(user1.id).toEqual(1);
+
+                    expect(potionFetchSpy).toHaveBeenCalledTimes(2);
+
+                    // User 1 siblings
+                    const user1SiblingsPromise = user1.siblings;
+                    expect(user1SiblingsPromise instanceof Promise).toBeTruthy();
+                    const user1Siblings = await user1SiblingsPromise;
+                    expect(Array.isArray(user1Siblings)).toBeTruthy();
+                    expect(user1Siblings.every(sibling => sibling instanceof User)).toBe(true);
+
+                    // User 1/2 as siblings
+                    const [user2, user3] = user1Siblings;
+                    expect(user2.id).toEqual(2);
+                    expect(user3.id).toEqual(3);
+
+                    // User 2 siblings
+                    const user2SiblingsPromise = user2.siblings;
+                    expect(user2SiblingsPromise instanceof Promise).toBeTruthy();
+                    const user2Siblings = await user2SiblingsPromise;
+                    expect(Array.isArray(user2Siblings)).toBeTruthy();
+                    expect(user2Siblings.every(sibling => sibling instanceof User)).toBe(true);
+
+                    // User 2/3 as siblings
+                    const [user1S, user3S] = user2Siblings;
+                    expect(user1S.id).toEqual(1);
+                    expect(user3S.id).toEqual(3);
+
+                    // User 3 siblings
+                    const user3SiblingsPromise = user3.siblings;
+                    expect(user3SiblingsPromise instanceof Promise).toBeTruthy();
+                    const user3Siblings = await user3SiblingsPromise;
+                    expect(Array.isArray(user3Siblings)).toBeTruthy();
+                    expect(user3Siblings.every(sibling => sibling instanceof User)).toBe(true);
+
+                    // User 1/2 as siblings
+                    const [user1SS, user2S] = user3Siblings;
+                    expect(user1SS.id).toEqual(1);
+                    expect(user2S.id).toEqual(2);
+                });
+
+                it('should cache getters', async () => {
+                    const car = await Car.fetch<Car>(1);
+                    expect(potionFetchSpy).toHaveBeenCalledTimes(1);
+
+                    const usersPromise = Promise.all([car.user, car.user, car.user]);
+
+                    const users = await usersPromise;
+                    for (const user of users) {
+                        expect(user instanceof User).toBe(true);
+                        expect(user.id).toEqual(1);
+                    }
+
+                    expect(potionFetchSpy).toHaveBeenCalledTimes(2);
+                });
+            });
         });
     });
 });
+
+
+class MockCache implements ItemCache<Item> {
+    private memcache: Map<string, any> = new Map();
+
+    has(key: string): boolean {
+        return this.memcache.has(key);
+    }
+    get(key: string): Promise<Item> {
+        return Promise.resolve(this.memcache.get(key));
+    }
+    put(key: string, item: Promise<Item>): Promise<Item> {
+        this.memcache.set(key, item);
+        return Promise.resolve(item);
+    }
+    remove(key: string): void {
+        this.memcache.delete(key);
+    }
+    clear(): void {
+        this.memcache.clear();
+    }
+}

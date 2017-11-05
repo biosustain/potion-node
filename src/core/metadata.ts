@@ -1,4 +1,9 @@
-import {getGlobal, isFunction} from './utils';
+import {
+    getGlobal,
+    isFunction,
+    isJsObject,
+    isString
+} from './utils';
 import {PotionBase} from './potion';
 import {Item} from './item';
 
@@ -21,6 +26,7 @@ const potionInstanceMetadataKey = Symbol('potion:instance');
 const potionURIMetadataKey = Symbol('potion:uri');
 const potionPromiseCtorMetadataKey = Symbol('potion:promise');
 const potionReadonlyMetadataKey = Symbol('potion:readonly');
+const potionAsyncMetadataKey = Symbol('potion:async');
 
 
 /**
@@ -103,6 +109,45 @@ export function readonly(target: object, property: string): void {
     if (constructor) {
         const metadata = Reflect.getOwnMetadata(potionReadonlyMetadataKey, constructor);
         Reflect.defineMetadata(potionReadonlyMetadataKey, {
+            ...metadata,
+            [property]: true
+        }, constructor);
+    }
+}
+
+
+/**
+ * Check if a resource property is async
+ */
+export function isAsync(ctor: typeof Item, keyOrUri: string): boolean {
+    const metadata = Reflect.getOwnMetadata(potionAsyncMetadataKey, ctor);
+    if (isJsObject(metadata) && isString(keyOrUri)) {
+        const key = Object.keys(metadata)
+            .find(key => key === keyOrUri || keyOrUri.includes(key));
+        if (key) {
+            return metadata[key];
+        }
+    }
+    return false;
+}
+
+/**
+ * Mark a resource property as async.
+ * @example
+ * class User extends Item {
+ *     @async
+ *     age: Promise<Foo>;
+ * }
+ */
+export function async(target: object, property: string): void {
+    const constructor = isFunction(target)
+        ? target
+        : isFunction(target.constructor)
+            ? target.constructor
+            : null;
+    if (constructor) {
+        const metadata = Reflect.getOwnMetadata(potionAsyncMetadataKey, constructor);
+        Reflect.defineMetadata(potionAsyncMetadataKey, {
             ...metadata,
             [property]: true
         }, constructor);

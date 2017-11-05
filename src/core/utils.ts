@@ -28,11 +28,19 @@ export function toCamelCase(str: string): string {
 export function isJsObject(value: any): value is {[key: string]: any} {
     return typeof value === 'object' && value !== null;
 }
+
 /**
  * Check if an object is empty
  */
 export function isObjectEmpty(obj: {}): boolean {
     return Object.keys(obj).length === 0;
+}
+
+/**
+ * Check if a value is a string
+ */
+export function isString(value: any): value is string {
+    return typeof value === 'string';
 }
 
 /**
@@ -73,9 +81,9 @@ export function getErrorMessage(error: any, uri?: string): string {
     const message = 'An error occurred while Potion tried to retrieve a resource';
     if (error instanceof Error) {
         return error.message;
-    } else if (typeof error === 'string') {
+    } else if (isString(error)) {
         return error;
-    } else if (typeof uri === 'string') {
+    } else if (isString(uri)) {
         return `${message} from '${uri}'.`;
     }
     return `${message}.`;
@@ -107,15 +115,19 @@ export class SelfReference {
     }
 }
 
+export class LazyPromiseRef<T> {
+    constructor(readonly getter: (replaceRefs?: boolean) => PromiseLike<T>) {}
+}
+
 /**
- * Walk through Potion JSON and replace SelfReference objects from the roots (roots are just a lost of Potion item references).
+ * Walk through Potion JSON and replace SelfReference/LazyPromiseRef objects from the roots (roots are just a lost of Potion item references).
  * @param json - Any value to walk through.
  * @param roots - A list of Potion items found in the passed JSON.
  */
 // NOTE: Keep refs. to looped things in this set instead of altering the objects themselves.
 // TODO: It's uncertain if this may need to be created every time we replace refs., we might need to do so.
 const set = new WeakSet();
-export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
+export function replaceReferences(json: any, roots: Map<string, any>): any {
     if (typeof json !== 'object' || json === null || json.hasOwnProperty('$schema')) {
         return json;
     } else if (set.has(json)) {
@@ -123,10 +135,10 @@ export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
         return json;
     } else if (json instanceof Pagination) {
         const items = json.toArray()
-            .map(value => replaceSelfReferences(value, roots));
+            .map(value => replaceReferences(value, roots));
         return json.update(items, json.total);
     } else if (Array.isArray(json)) {
-        return json.map(value => replaceSelfReferences(value, roots));
+        return json.map(value => replaceReferences(value, roots));
     } else if (json instanceof SelfReference) {
         // Find the ref in the roots.
         return roots.get(json.$uri);
@@ -145,11 +157,23 @@ export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
                 Object.assign(json, {
                     [key]: ref
                 });
+            } else if (value instanceof LazyPromiseRef) {
+                // Cache the result of the lazy promise
+                let promise: PromiseLike<any>;
+                Object.defineProperty(json, key, {
+                    get() {
+                        if (promise) {
+                            return promise;
+                        }
+                        promise = value.getter(true);
+                        return promise;
+                    }
+                });
             } else if (isJsObject(value)) {
                 Object.assign(json, {
-                    [key]: replaceSelfReferences(value, roots)
+                    [key]: replaceReferences(value, roots)
                 });
-            } else if (typeof value === 'string' && value === '#') {
+            } else if (isString(value) && value === '#') {
                 Object.assign(json, {
                     [key]: roots.get('#')
                 });
@@ -206,7 +230,7 @@ export function toSelfReference(uri: string): SelfReference {
  */
 export function toPotionJSON(json: any, prefix?: string): {[key: string]: any} {
     if (isJsObject(json)) {
-        if (json instanceof Item && typeof json.uri === 'string') {
+        if (json instanceof Item && isString(json.uri)) {
             return {$ref: `${addPrefixToURI(json.uri, prefix)}`};
         } else if (json instanceof Date) {
             return {$date: json.getTime()};
@@ -224,7 +248,7 @@ export type PotionID = string | number | null;
  * Parse a Potion ID
  */
 export function parsePotionID(id: any): PotionID {
-    if (typeof id === 'string' && id.length > 0) {
+    if (isString(id) && id.length > 0) {
         return /^\d+$/.test(id) ? parseInt(id, 10) : id;
     } else if (Number.isInteger(id)) {
         return id;
@@ -251,14 +275,16 @@ export function getPotionID(uri: string, resourceURI: string): PotionID {
  * Find a Potion resource based on URI
  */
 export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: typeof Item} | undefined {
-    const entry = Object.entries(resources)
-        .find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
-    if (entry) {
-        const [resourceURI, resource] = entry;
-        return {
-            resourceURI,
-            resource
-        };
+    if (isString(uri)) {
+        const entry = Object.entries(resources)
+            .find(([resourceURI]) => uri.indexOf(resourceURI) === 0);
+        if (entry) {
+            const [resourceURI, resource] = entry;
+            return {
+                resourceURI,
+                resource
+            };
+        }
     }
 }
 
@@ -278,12 +304,12 @@ export function isPotionURI(uri: string, resources: PotionResources): boolean {
  * Get the Potion URI from a Potion JSON object
  */
 export function hasTypeAndId({$type, $id}: {[key: string]: any}): boolean {
-    return (typeof $id === 'string' || Number.isInteger($id)) && typeof $type === 'string';
+    return (isString($id) || Number.isInteger($id)) && isString($type);
 }
 export function getPotionURI({$uri, $ref, $type, $id}: {[key: string]: any}): string {
-    if (typeof $uri === 'string') {
+    if (isString($uri)) {
         return decodeURIComponent($uri);
-    } else if (typeof $ref === 'string') {
+    } else if (isString($ref)) {
         return decodeURIComponent($ref);
     } else if (hasTypeAndId({$type, $id})) {
         return `/${$type}/${$id}`;
@@ -300,11 +326,12 @@ export function removePrefixFromURI(uri: string, str: string): string {
     }
     return uri;
 }
+
 /**
  * Add a prefix to some string (if not already there)
  */
 export function addPrefixToURI(uri: string, prefix?: string): string {
-    if (typeof prefix === 'string' && !uri.includes(prefix)) {
+    if (isString(prefix) && !uri.includes(prefix)) {
         return `${prefix}${uri}`;
     }
     return uri;

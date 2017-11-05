@@ -1,6 +1,8 @@
-/* tslint:disable:max-file-line-count */
+// tslint:disable: max-file-line-count
 import {
+    async,
     getPotionPromiseCtor,
+    isAsync,
     readonly,
     setPotionInstance,
     setPotionURI
@@ -18,10 +20,12 @@ import {
     hasTypeAndId,
     isFunction,
     isPotionURI,
+    isString,
+    LazyPromiseRef,
     MemCache,
     parsePotionID,
     removePrefixFromURI,
-    replaceSelfReferences,
+    replaceReferences,
     toCamelCase,
     toPotionJSON,
     toSelfReference
@@ -131,12 +135,26 @@ export abstract class PotionBase {
         if (!isFunction(resource)) {
             throw new TypeError(`An error occurred while trying to register a resource for ${uri}. ${resource} is not a function.`);
         }
+
+        // Set the Potion instance and URI on the resource
         setPotionInstance(resource, this);
         setPotionURI(resource, uri);
 
+        // Set readonly properties
         if (options && Array.isArray(options.readonly)) {
-            options.readonly.forEach(property => readonly(resource, property));
+            for (const property of options.readonly) {
+                readonly(resource, property);
+            }
         }
+
+        // Set async properties
+        if (options && Array.isArray(options.async)) {
+            for (const property of options.async) {
+                async(resource, property);
+            }
+        }
+
+        // Register the resource
         this.resources[uri] = resource;
 
         return resource;
@@ -159,6 +177,17 @@ export abstract class PotionBase {
     }
 
     /**
+     * Get a resource by item uri
+     * @param uri
+     */
+    resource(uri: string): typeof Item | undefined {
+        const entry = findPotionResource(uri, this.resources);
+        if (entry) {
+            return entry.resource;
+        }
+    }
+
+    /**
      * Make a HTTP request.
      * @param uri
      * @param options
@@ -177,7 +206,7 @@ export abstract class PotionBase {
         }
         return this.resolve(uri, options)
             .then(json => {
-                replaceSelfReferences(json, findRoots(json));
+                replaceReferences(json, findRoots(json));
                 return json;
             });
     }
@@ -254,13 +283,39 @@ export abstract class PotionBase {
             });
     }
 
-    private fromPotionJSON(json: any, origin: string[]): Promise<any> {
+    private fromPotionJSON(
+        json: any, origin:
+        string[],
+        {
+            rootUri,
+            key,
+            replaceRefs
+        }: {
+            rootUri?: string;
+            key?: string;
+            replaceRefs?: boolean;
+        } = {}): Promise<any> {
         const Promise = this.Promise;
 
         if (typeof json === 'object' && json !== null) {
             if (Array.isArray(json)) {
-                return Promise.all(json.map(item => this.fromPotionJSON(item, origin)));
-            } else if (typeof json.$uri === 'string' || hasTypeAndId(json)) {
+                // Try to find a matching registered resource for the root uri
+                const resource = this.resource(rootUri as any);
+                // Check if prop is lazy (it's possible the root is an array and not a resource at all)
+                const isLazy = resource && isAsync(resource, key as string);
+                const getter = (replaceRefs?: boolean) => Promise.all(json.map(item => this.fromPotionJSON(item, origin, {replaceRefs})));
+                // If this property is async,
+                // we return a lazy promise ref which will later be replaced with a getter.
+                // NOTE: When the getter is called and resolved,
+                // we will run the refs replacement fn again to ensure that any lazy promise props
+                // on the resolved item(s) are also replaced with a getter.
+                // Hence the usage of (replaceRefs?) arg on the getter.
+                if (isLazy) {
+                    return Promise.resolve(new LazyPromiseRef(getter));
+                } else {
+                    return getter(false);
+                }
+            } else if (isString(json.$uri) || hasTypeAndId(json)) {
                 // NOTE: The json may also have {$type, $id} that can be used to recognize a resource instead of {$uri}.
                 // If neither combination is provided it will throw.
                 return this.parseURI(json)
@@ -287,13 +342,14 @@ export abstract class PotionBase {
                                 });
                         }
                     });
-            } else if (typeof json.$schema === 'string') {
+            } else if (isString(json.$schema)) {
                 // If we have a schema object,
                 // we want to resolve it as it is and not try to resolve references or do any conversions.
                 // Though, we want to convert snake case to camel case.
                 return Promise.resolve(fromSchemaJSON(json));
             } else if (Object.keys(json).length === 1) {
-                if (typeof json.$ref === 'string') {
+                if (isString(json.$ref)) {
+                    // A '#' ref is a self reference (to root object)
                     if (json.$ref === '#') {
                         return Promise.resolve(json.$ref);
                     }
@@ -303,11 +359,31 @@ export abstract class PotionBase {
                             if (origin.includes(uri)) {
                                 return Promise.resolve(toSelfReference(uri));
                             }
-                            return this.resolve(uri, {
+                            // Try to find a matching registered resource for the root uri
+                            const resource = this.resource(rootUri as any);
+                            // NOTE: A property can be async if it has the @async decorator.
+                            // To find if that is true,
+                            // we check the async metadata on the resource
+                            // and try to find a key by the key that was provided through .fromPotionJSON() or byt the uri for this $ref.
+                            const isLazy = resource && isAsync(resource, key || uri);
+                            // Lazy promise getter
+                            const getter = () => this.fetch(uri, {
                                 cache: true,
-                                method: 'GET',
-                                origin
-                            });
+                                method: 'GET'
+                            }, {origin});
+                            // If this property is async,
+                            // we return a lazy promise ref which will later be replaced with a getter.
+                            if (isLazy) {
+                                return new LazyPromiseRef(getter);
+                            } else if (replaceRefs) {
+                                return getter();
+                            } else {
+                                return this.resolve(uri, {
+                                    cache: true,
+                                    method: 'GET',
+                                    origin
+                                });
+                            }
                         });
                 } else if (typeof json.$date !== 'undefined') {
                     // Parse Potion date
@@ -323,7 +399,10 @@ export abstract class PotionBase {
     private parsePotionJSONProperties(json: any, origin: string[]): any {
         const Promise = this.Promise;
         const entries = Object.entries(json);
-        const values = entries.map(([, value]) => this.fromPotionJSON(value, origin));
+        const values = entries.map(([key, value]) => this.fromPotionJSON(value, origin, {
+            key,
+            rootUri: json.$uri
+        }));
         const keys = entries.map(([key]) => toCamelCase(key));
 
         return Promise.all(values)

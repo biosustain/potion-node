@@ -1,5 +1,5 @@
 /* tslint:disable: max-file-line-count max-classes-per-file no-magic-numbers prefer-function-over-method  */
-import {readonly} from './metadata';
+import {async, readonly} from './metadata';
 import {ItemCache, PotionBase, RequestOptions} from './potion';
 import {Item} from './item';
 import {Pagination} from './pagination';
@@ -634,6 +634,9 @@ describe('potion/core', () => {
 
                     @readonly
                     age: number;
+
+                    @async
+                    ping: Promise<string>;
                 }
 
                 let user: User;
@@ -664,6 +667,11 @@ describe('potion/core', () => {
                     const {age, weight} = user.toJSON();
                     expect(age).toBeUndefined();
                     expect(weight).toBeUndefined();
+                });
+
+                it('should omit @async properties', () => {
+                    const {ping} = user.toJSON();
+                    expect(ping).toBeUndefined();
                 });
             });
 

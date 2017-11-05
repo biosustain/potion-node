@@ -1,3 +1,20 @@
+<a name="4.0.0-0"></a>
+# [4.0.0-0](https://github.com/biosustain/potion-node/compare/v3.2.1...v4.0.0-0) (2017-11-05)
+
+
+### Bug Fixes
+
+* revert to TS 2.4 and fix build errors ([dde8062](https://github.com/biosustain/potion-node/commit/dde8062))
+* try to fix ngc build errors ([fee40c8](https://github.com/biosustain/potion-node/commit/fee40c8))
+
+
+### Features
+
+* implement [@async](https://github.com/async) properties and close [#2](https://github.com/biosustain/potion-node/issues/2) ([f5fb492](https://github.com/biosustain/potion-node/commit/f5fb492))
+* upgrade to Angular 5 ([bd2efc3](https://github.com/biosustain/potion-node/commit/bd2efc3))
+
+
+
 <a name="3.2.1"></a>
 ## [3.2.1](https://github.com/biosustain/potion-node/compare/v3.2.0...v3.2.1) (2017-11-04)
 

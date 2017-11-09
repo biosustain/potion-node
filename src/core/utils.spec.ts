@@ -35,6 +35,7 @@ class Foo extends Item {
     createdAt?: Date;
     bar?: Bar;
 }
+class FooBar extends Item {}
 
 
 describe('potion/core', () => {
@@ -602,6 +603,29 @@ describe('potion/core', () => {
                 expect(findPotionResource('/foo', resources)).toEqual(res);
                 expect(findPotionResource('/bar', resources)).toBeUndefined();
                 expect(findPotionResource('/foo/1', resources)).toEqual(res);
+            });
+            it('should return a Potion resource even when the resource name is a substring of another resource name', () => {
+                const resources = {
+                    '/foo': Foo,
+                    '/foo_bar': FooBar
+                };
+
+                expect(findPotionResource('/foo_bar/1', resources)).toEqual({
+                    resourceURI: '/foo_bar',
+                    resource: FooBar
+                });
+                expect(findPotionResource('/foo/1', resources)).toEqual({
+                    resourceURI: '/foo',
+                    resource: Foo
+                });
+                expect(findPotionResource('/foo_bar', resources)).toEqual({
+                    resourceURI: '/foo_bar',
+                    resource: FooBar
+                });
+                expect(findPotionResource('/foo', resources)).toEqual({
+                    resourceURI: '/foo',
+                    resource: Foo
+                });
             });
         });
 

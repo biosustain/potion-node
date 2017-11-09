@@ -1,3 +1,13 @@
+<a name="4.0.0-1"></a>
+# [4.0.0-1](https://github.com/biosustain/potion-node/compare/v4.0.0-0...v4.0.0-1) (2017-11-09)
+
+
+### Bug Fixes
+
+* **findPotionResource():** fix resource resolution ([#35](https://github.com/biosustain/potion-node/issues/35)) ([f6f1908](https://github.com/biosustain/potion-node/commit/f6f1908))
+
+
+
 <a name="4.0.0-0"></a>
 # [4.0.0-0](https://github.com/biosustain/potion-node/compare/v3.2.1...v4.0.0-0) (2017-11-05)
 

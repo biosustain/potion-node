@@ -277,6 +277,9 @@ export function getPotionID(uri: string, resourceURI: string): PotionID {
 export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: typeof Item} | undefined {
     if (isString(uri)) {
         const entry = Object.entries(resources)
+            .sort((a, b) => {
+                return b[0].length - a[0].length;
+            })
             .find(([resourceURI]) => uri.indexOf(resourceURI) === 0);
         if (entry) {
             const [resourceURI, resource] = entry;

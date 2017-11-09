@@ -618,6 +618,14 @@ describe('potion/core', () => {
                     resourceURI: '/foo',
                     resource: Foo
                 });
+                expect(findPotionResource('/foo_bar', resources)).toEqual({
+                    resourceURI: '/foo_bar',
+                    resource: FooBar
+                });
+                expect(findPotionResource('/foo', resources)).toEqual({
+                    resourceURI: '/foo',
+                    resource: Foo
+                });
             });
         });
 

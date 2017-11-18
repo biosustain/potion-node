@@ -1,3 +1,13 @@
+<a name="4.0.0-3"></a>
+# [4.0.0-3](https://github.com/biosustain/potion-node/compare/v4.0.0-2...v4.0.0-3) (2017-11-18)
+
+
+### Features
+
+* update deps ([bcac2b3](https://github.com/biosustain/potion-node/commit/bcac2b3))
+
+
+
 <a name="4.0.0-2"></a>
 # [4.0.0-2](https://github.com/biosustain/potion-node/compare/v4.0.0-1...v4.0.0-2) (2017-11-18)
 

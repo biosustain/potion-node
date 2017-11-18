@@ -9,11 +9,11 @@
     "potion client",
     "flask"
   ],
-  "homepage": "",
+  "homepage": "http://potion.readthedocs.io",
   "license": "MIT",
   "author": {
     "name": "Roland Groza",
-    "email": "rolandjitsu@gmail.com "
+    "email": "rolandjitsu@gmail.com"
   },
   "main": "./ng.umd.js",
   "module": "./ng.es5.js",

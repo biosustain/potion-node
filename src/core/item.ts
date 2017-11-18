@@ -147,21 +147,22 @@ export abstract class Item {
         const json = this.toJSON();
         try {
             if (this.uri || this.id) {
-                await this.update(json);
+                const updatedJSON = await this.update(json);
+                return updatedJSON;
             } else {
                 const ctor = this.constructor as typeof Item;
                 const potion = getPotionInstance(ctor);
                 const uri = getPotionURI(ctor);
-                await potion.fetch(uri, {
+                const resource = await potion.fetch(uri, {
                     method: 'POST',
                     body: json,
                     cache: true
                 });
+                return resource;
             }
         } catch (err) {
             throw err;
         }
-        return this;
     }
 
     /**

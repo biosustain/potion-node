@@ -5,7 +5,7 @@ export {
     ItemFetchOptions,
     ItemQueryOptions
 } from './item';
-export {readonly} from './metadata';
+export {async, readonly} from './metadata';
 export {Pagination} from './pagination';
 export {
     ItemCache,

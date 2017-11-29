@@ -1,3 +1,13 @@
+<a name="4.0.0-5"></a>
+# [4.0.0-5](https://github.com/biosustain/potion-node/compare/v4.0.0-4...v4.0.0-5) (2017-11-29)
+
+
+### Features
+
+* **@async, @readonly:** inherit metadata from parent constructor(s) ([430e771](https://github.com/biosustain/potion-node/commit/430e771))
+
+
+
 <a name="4.0.0-4"></a>
 # [4.0.0-4](https://github.com/biosustain/potion-node/compare/v4.0.0-3...v4.0.0-4) (2017-11-29)
 

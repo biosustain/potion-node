@@ -1,3 +1,13 @@
+<a name="4.0.0-4"></a>
+# [4.0.0-4](https://github.com/biosustain/potion-node/compare/v4.0.0-3...v4.0.0-4) (2017-11-29)
+
+
+### Bug Fixes
+
+* export [@async](https://github.com/async) decorator ([ee78e0f](https://github.com/biosustain/potion-node/commit/ee78e0f))
+
+
+
 <a name="4.0.0-3"></a>
 # [4.0.0-3](https://github.com/biosustain/potion-node/compare/v4.0.0-2...v4.0.0-3) (2017-11-18)
 

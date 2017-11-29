@@ -88,8 +88,19 @@ export function setPotionPromiseCtor(target: typeof PotionBase, promiseCtor: any
  * Check if a resource property is readonly
  */
 export function isReadonly<T extends Item>(item: T, key: keyof T): boolean {
-    const metadata = Reflect.getOwnMetadata(potionReadonlyMetadataKey, item.constructor);
-    return metadata && metadata[key];
+    const ctors = getCtor(item.constructor as typeof Item);
+    const metadata = ctors.map(ctor => Reflect.getOwnMetadata(potionReadonlyMetadataKey, ctor));
+
+    for (const meta of metadata) {
+        if (isJsObject(meta)) {
+            const isReadonly = key && meta[key];
+            if (isReadonly) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -101,35 +112,49 @@ export function isReadonly<T extends Item>(item: T, key: keyof T): boolean {
  * }
  */
 export function readonly(target: object, property: string): void {
-    const constructor = isFunction(target)
-        ? target
-        : isFunction(target.constructor)
-            ? target.constructor
-            : null;
-    if (constructor) {
-        const metadata = Reflect.getOwnMetadata(potionReadonlyMetadataKey, constructor);
-        Reflect.defineMetadata(potionReadonlyMetadataKey, {
-            ...metadata,
-            [property]: true
-        }, constructor);
-    }
+    decorate(target, potionReadonlyMetadataKey, property);
 }
 
 
 /**
  * Check if a resource property is async
  */
-export function isAsync(ctor: typeof Item, keyOrUri: string): boolean {
-    const metadata = Reflect.getOwnMetadata(potionAsyncMetadataKey, ctor);
-    if (isJsObject(metadata) && isString(keyOrUri)) {
-        const key = Object.keys(metadata)
-            .find(key => key === keyOrUri || keyOrUri.includes(key));
-        if (key) {
-            return metadata[key];
+export function isAsync(cls: typeof Item, keyOrUri: string): boolean {
+    const ctors = getCtor(cls);
+    const metadata = ctors.map(ctor => Reflect.getOwnMetadata(potionAsyncMetadataKey, ctor));
+
+    // Look up the prototype chain for this property and check if it is set
+    if (isString(keyOrUri)) {
+        for (const meta of metadata) {
+            if (isJsObject(meta)) {
+                const key = Object.keys(meta)
+                    .find(key => key === keyOrUri || keyOrUri.includes(key));
+                const isAsync = key && meta[key];
+                if (isAsync) {
+                    return true;
+                }
+            }
         }
     }
+
     return false;
 }
+
+
+/**
+ * Walk the prototype chain and register all the constructors
+ * @param cls
+ */
+function getCtor(cls: typeof Item): Array<typeof Item> {
+    const ctors = [cls];
+    let ctor = Object.getPrototypeOf(cls);
+    while (ctor.prototype) {
+        ctors.push(ctor);
+        ctor = Object.getPrototypeOf(ctor);
+    }
+    return ctors;
+}
+
 
 /**
  * Mark a resource property as async.
@@ -140,14 +165,25 @@ export function isAsync(ctor: typeof Item, keyOrUri: string): boolean {
  * }
  */
 export function async(target: object, property: string): void {
+    decorate(target, potionAsyncMetadataKey, property);
+}
+
+
+/**
+ * Helper fn for decorating class properties
+ * @param target
+ * @param key
+ * @param property
+ */
+function decorate(target: object, key: symbol, property: string): void {
     const constructor = isFunction(target)
         ? target
         : isFunction(target.constructor)
             ? target.constructor
             : null;
     if (constructor) {
-        const metadata = Reflect.getOwnMetadata(potionAsyncMetadataKey, constructor);
-        Reflect.defineMetadata(potionAsyncMetadataKey, {
+        const metadata = Reflect.getOwnMetadata(key, constructor);
+        Reflect.defineMetadata(key, {
             ...metadata,
             [property]: true
         }, constructor);

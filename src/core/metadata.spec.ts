@@ -116,5 +116,46 @@ describe('potion/core', () => {
                 expect(isReadonly<Foo>(foo, 'ipsum')).toBeFalsy();
             });
         });
+
+        describe('Inheritance', () => {
+            it('child classes should inherit decorator metadata from the base class', () => {
+                class Foo extends Item {
+                    @async
+                    lorem: Promise<string>;
+
+                    @readonly
+                    ilorem: boolean;
+                }
+
+                class FooBar extends Foo {
+                    @async
+                    ipsum: Promise<string>;
+
+                    @readonly
+                    iipsum: boolean;
+                }
+
+                class ChildOfFooBar extends FooBar {
+                    @async
+                    dolor: boolean;
+
+                    @readonly
+                    idolor: boolean;
+                }
+
+                const childOfFooBar = new ChildOfFooBar();
+
+                expect(isAsync(ChildOfFooBar, 'lorem')).toBeTruthy();
+                expect(isAsync(ChildOfFooBar, '/lorem/1')).toBeTruthy();
+                expect(isAsync(ChildOfFooBar, 'ipsum')).toBeTruthy();
+                expect(isAsync(ChildOfFooBar, '/ipsum/1')).toBeTruthy();
+                expect(isAsync(ChildOfFooBar, 'dolor')).toBeTruthy();
+                expect(isAsync(ChildOfFooBar, '/dolor/1')).toBeTruthy();
+
+                expect(isReadonly<ChildOfFooBar>(childOfFooBar, 'ilorem')).toBeTruthy();
+                expect(isReadonly<ChildOfFooBar>(childOfFooBar, 'iipsum')).toBeTruthy();
+                expect(isReadonly<ChildOfFooBar>(childOfFooBar, 'idolor')).toBeTruthy();
+            });
+        });
     });
 });

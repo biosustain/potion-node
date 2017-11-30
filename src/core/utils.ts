@@ -278,7 +278,7 @@ export function findPotionResource(uri: string, resources: PotionResources): {re
     if (isString(uri)) {
         const entry = Object.entries(resources)
             .sort(([a], [b]) => b.length - a.length)
-            .find(([resourceURI]) => uri.indexOf(resourceURI) === 0);
+            .find(([resourceURI]) => uri.indexOf(resourceURI) !== -1);
         if (entry) {
             const [resourceURI, resource] = entry;
             return {

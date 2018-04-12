@@ -36,12 +36,8 @@ node_modules
 .idea/
 
 
-## Typings
-typings
-
-
-## JSPM
-jspm_packages
+## VSCode
+.vscode/
 
 
 ## Direnv
@@ -49,8 +45,8 @@ jspm_packages
 
 
 ## Dist
-dist/*
 
-
-## Temp
-tmp
+## Dist
+build
+out-tsc
+dist

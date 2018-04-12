@@ -1,0 +1,23 @@
+{
+    "extends": "../tsconfig.json",
+    "angularCompilerOptions": {
+        "annotateForClosureCompiler": true,
+        "genDir": "../out-tsc/lib-gen-dir/",
+        "flatModuleOutFile": "ng.js",
+        "flatModuleId": "potion-client",
+        "strictMetadataEmit": true,
+        "skipTemplateCodegen": true
+    },
+    "compilerOptions": {
+        "baseUrl": "",
+        "rootDir": "./",
+        "target": "es5",
+        "outDir": "../out-tsc/ng-es5/",
+        "types": [
+            "reflect-metadata"
+        ]
+    },
+    "files": [
+        "./index.ts"
+    ]
+}

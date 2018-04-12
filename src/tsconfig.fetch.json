@@ -1,0 +1,15 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": "",
+        "rootDir": "./",
+        "target": "es5",
+        "outDir": "../out-tsc/fetch-es5/",
+        "types": [
+            "reflect-metadata"
+        ]
+    },
+    "files": [
+        "./fetch.ts"
+    ]
+}

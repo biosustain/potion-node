@@ -1,58 +1,38 @@
 {
-	"rules": {
-		"align": [true,
-			"parameters",
-			"arguments",
-			"statements"
-		],
-		"class-name": true,
-		"comment-format": [true, "check-space"],
-		"forin": true,
-		"indent": [true, "tabs"],
-		"jsdoc-format": true,
-		"member-ordering": [true, "public-before-private", "static-before-instance", "variables-before-functions"],
-		"no-arg": true,
-		"no-bitwise": true,
-		"no-conditional-assignment": true,
-		"no-console": [true, "debug", "log"],
-		"no-construct": true,
-		"no-constructor-vars": true,
-		"no-debugger": true,
-		"no-duplicate-key": true,
-		"no-duplicate-variable": true,
-		"no-eval": true,
-		"no-inferrable-types": true,
-		"no-internal-module": true,
-		"no-require-imports": true,
-		"no-string-literal": true,
-		"no-switch-case-fall-through": true,
-		"no-trailing-whitespace": true,
-		"no-unreachable": true,
-		"no-unused-expression": true,
-		"no-unused-variable": true,
-		"no-var-requires": true,
-		"one-line": [true, "check-catch", "check-else", "check-open-brace", "check-whitespace"],
-		"quotemark": [true, "single"],
-		"radix": true,
-		"semicolon": true,
-		"switch-default": true,
-		"trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
-		"triple-equals": [true, "allow-null-check"],
-		"typedef-whitespace": [true, {
-			"call-signature": "nospace",
-			"index-signature": "nospace",
-			"parameter": "nospace",
-			"property-declaration": "nospace",
-			"variable-declaration": "nospace"
-		}],
-		"variable-name": [true, "check-format", "allow-leading-underscore", "ban-keywords"],
-		"whitespace": [true,
-			"check-branch",
-			"check-decl",
-			"check-operator",
-			"check-module",
-			"check-separator",
-			"check-type"
-		]
-	}
+    "extends": ["tslint:latest"],
+    "rules": {
+        "arrow-parens": {"options": ["ban-single-arg-parens"]},
+        "no-consecutive-blank-lines": {"options": 2},
+        "no-submodule-imports": {
+            "options": [
+                "@angular",
+                "rxjs"
+            ]
+        },
+        "interface-name": false,
+        "no-shadowed-variable": false,
+        "max-line-length": {"options": [240]},
+        "member-access": {"options": ["no-public"]},
+        "object-literal-sort-keys": false,
+        "ordered-imports": {
+            "options": {
+                "import-sources-order": "any",
+                "named-imports-order": "case-insensitive"
+            }
+        },
+        "prefer-function-over-method": {"options": ["allow-public"]},
+        "prefer-method-signature": true,
+        "trailing-comma": {
+            "options": {
+                "multiline": "never",
+                "singleline": "never"
+            }
+        },
+        "quotemark": {
+            "options": [
+                "avoid-escape",
+                "single"
+            ]
+        }
+    }
 }

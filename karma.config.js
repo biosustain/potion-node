@@ -1,40 +1,44 @@
+const nodeModules = 'node_modules';
+const zoneJs = `${nodeModules}/zone.js/dist`;
+
+
 module.exports = function (config) {
-	config.set({
-		frameworks: [
-			'browserify',
-			'jasmine'
-		],
-		preprocessors: {
-			'**/*.ts': ['browserify']
-		},
-		files: [
-			'node_modules/core-js/client/shim.js',
-			'node_modules/reflect-metadata/Reflect.js',
-			'node_modules/whatwg-fetch/fetch.js',
-			'node_modules/angular/angular.js',
-			'node_modules/angular-mocks/angular-mocks.js',
-			'node_modules/zone.js/dist/zone.js',
-			'src/*.spec.ts'
-		],
-		reporters: ['spec'],
-		browserify: {
-			debug: true,
-			extensions: ['.js', '.ts'],
-			transform: [
-				['babelify', {presets: ['es2015', 'stage-0'],  extensions: ['.ts', '.js']}]
-			],
-			plugin: ['tsify']
-		},
-		plugins: [
-			'karma-browserify',
-			'karma-chrome-launcher',
-			'karma-jasmine',
-			'karma-phantomjs-launcher',
-			'karma-spec-reporter'
-		],
-		logLevel: config.LOG_INFO,
-		browsers: [
-			'PhantomJS'
-		]
-	});
+    config.set({
+        frameworks: [
+            'jasmine',
+            'karma-typescript'
+        ],
+        reporters: ['spec'],
+        preprocessors: {
+            '**/*.ts': ['karma-typescript']
+        },
+        files: [
+            // ES6/ES7 shims
+            `${nodeModules}/core-js/client/shim.min.js`,
+            `${nodeModules}/reflect-metadata/Reflect.js`,
+            // Angular 4+ requirements
+            `${zoneJs}/zone.js`,
+            `${zoneJs}/long-stack-trace-zone.js`,
+            `${zoneJs}/proxy.js`,
+            `${zoneJs}/sync-test.js`,
+            `${zoneJs}/jasmine-patch.js`,
+            `${zoneJs}/async-test.js`,
+            `${zoneJs}/fake-async-test.js`,
+            // Setup Angular 4+ test env
+            {pattern: 'src/test.ts'},
+            // Specs
+            {pattern: 'src/**/*.ts'}
+        ],
+        karmaTypescriptConfig: {
+            tsconfig: './src/tsconfig.spec.json',
+            bundlerOptions: {
+                entrypoints: /test\.ts|\.spec\.ts$/,
+                transforms: []
+            }
+        },
+        logLevel: config.LOG_INFO,
+        browsers: [
+            'Chrome'
+        ]
+    });
 };

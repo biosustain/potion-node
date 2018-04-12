@@ -1,9 +1,20 @@
+dist: trusty
+sudo: false
+
 language: node_js
 node_js:
-  - "5.10"
+  - "6.9"
+  - "7.10"
+  - "8.5"
+
+cache:
+  yarn: true
+  directories:
+    - node_modules
 
 addons:
-  # Node 5 requires a C++11 standard compliant compiler, so we'll use gcc.
+  chrome: stable
+  # Node 5+ requires a C++11 standard compliant compiler, so we'll use gcc.
   # See more info at https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements.
   apt:
     sources:
@@ -13,7 +24,7 @@ addons:
 
 env:
   global:
-    - CXX=g++-4.8 # This is linked to the issue above with Node 5
+    - CXX=g++-4.8 # This is linked to the issue above with Node 5+
 
 before_install:
   - export DISPLAY=:99.0
@@ -21,11 +32,9 @@ before_install:
   # Give xvfb some time to start
   - sleep 5
 
-install:
-  - npm install --loglevel silent
-  - $(npm bin)/typings install
-
 script:
-  - npm run lint
-  - npm run test
   - npm run build
+
+notifications:
+  email:
+    on_failure: change

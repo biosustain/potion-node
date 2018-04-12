@@ -56,7 +56,7 @@ export type ValueMapFunction = (value: any) => any;
  */
 export function omap(obj: {[key: string]: any}, keyMapFunction: KeyMapFunction, valueMapFunction?: ValueMapFunction): {[key: string]: any} {
     if (isJsObject(obj) && !Array.isArray(obj)) {
-        return Object.entries(obj)
+        return entries(obj)
             .map(([key, value]) => [isFunction(keyMapFunction) ? keyMapFunction(key) : key, isFunction(valueMapFunction) ? valueMapFunction(value) : value])
             .reduce((a: {}, [key, value]) => ({
                 ...a,
@@ -100,6 +100,19 @@ export function fromSchemaJSON(json: any): {[key: string]: any} {
     return json;
 }
 
+/**
+ * Object.entries polyfill to get around weird Chrome behaviour
+ */
+export function entries(obj: any): any[] {
+    const ownProps = Object.keys(obj);
+    let i = ownProps.length;
+    const resArray = new Array(i); // preallocate the Array
+    while (i--) {
+        resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    }
+    return resArray;
+}
+
 
 export class SelfReference {
     constructor(readonly $uri: string) {}
@@ -140,7 +153,7 @@ export function replaceSelfReferences(json: any, roots: Map<string, any>): any {
             set.add(json);
         }
 
-        for (const [key, value] of Object.entries(json)) {
+        for (const [key, value] of entries(json)) {
             if (value instanceof SelfReference) {
                 const ref = roots.get(value.$uri);
                 Object.assign(json, {
@@ -253,7 +266,7 @@ export function getPotionID(uri: string, resourceURI: string): PotionID {
  * Find a Potion resource based on URI
  */
 export function findPotionResource(uri: string, resources: PotionResources): {resourceURI: string, resource: typeof Item} | undefined {
-    const entry = Object.entries(resources)
+    const entry = entries(resources)
         .find(([resourceURI]) => uri.indexOf(`${resourceURI}/`) === 0);
     if (entry) {
         const [resourceURI, resource] = entry;

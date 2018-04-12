@@ -21,7 +21,7 @@ import 'rxjs/add/operator/toPromise';
 
 import {Item, ItemOptions} from '../core/item';
 import {PotionBase, PotionOptions, RequestOptions} from '../core/potion';
-import {isJsObject, isObjectEmpty, merge} from '../core/utils';
+import {entries, isJsObject, isObjectEmpty, merge} from '../core/utils';
 
 
 /**
@@ -56,7 +56,7 @@ export class Potion extends PotionBase {
         resources = merge(...resources.filter(item => !isObjectEmpty(item)));
 
         if (!isObjectEmpty(resources)) {
-            for (const [uri, type] of Object.entries(resources)) {
+            for (const [uri, type] of entries(resources)) {
                 // NOTE: Skip registration of existing resources.
                 if (!this.resources.hasOwnProperty(uri)) {
                     // `type` can be a tuple with resource type and a configuration for the resource type
@@ -85,7 +85,7 @@ export class Potion extends PotionBase {
         // Convert {params} to HttpParams.
         if (isJsObject(params)) {
             let httpParams = new HttpParams();
-            for (const [key, value] of Object.entries(params)) {
+            for (const [key, value] of entries(params)) {
                 // HttpParams, like all http client classes, are immutable, hence the assignment
                 httpParams = httpParams.append(key, JSON.stringify(value));
             }

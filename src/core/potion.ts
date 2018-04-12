@@ -9,6 +9,7 @@ import {Item, ItemOptions} from './item';
 import {Pagination} from './pagination';
 import {
     addPrefixToURI,
+    entries,
     findPotionResource,
     findRoots,
     fromSchemaJSON,
@@ -322,9 +323,9 @@ export abstract class PotionBase {
     }
     private parsePotionJSONProperties(json: any, origin: string[]): any {
         const Promise = this.Promise;
-        const entries = Object.entries(json);
-        const values = entries.map(([, value]) => this.fromPotionJSON(value, origin));
-        const keys = entries.map(([key]) => toCamelCase(key));
+        const e = entries(json);
+        const values = e.map(([, value]) => this.fromPotionJSON(value, origin));
+        const keys = e.map(([key]) => toCamelCase(key));
 
         return Promise.all(values)
             .then(values => values.map((value, index) => [keys[index], value])

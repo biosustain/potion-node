@@ -5,6 +5,7 @@ import {
     RequestOptions
 } from './core/potion';
 
+import {entries} from './core/utils';
 
 export * from './core/index';
 
@@ -43,9 +44,9 @@ export class Potion extends PotionBase {
         // TODO: when URL will be supported we will switch to it
         if (params) {
             let count = 1;
-            const entries = Object.entries(params);
-            const size = entries.length;
-            for (const [key, value] of entries) {
+            const e = entries(params);
+            const size = e.length;
+            for (const [key, value] of e) {
                 if (count === 1) {
                     uri += '?';
                 }

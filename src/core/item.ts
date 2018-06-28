@@ -13,7 +13,7 @@ export interface ItemOptions {
     async?: string[];
 }
 
-export type ItemFetchOptions = Pick<RequestOptions, 'cache'>;
+export type ItemFetchOptions = Pick<RequestOptions, 'cache' | 'skip'>;
 export type ItemQueryOptions = Pick<RequestOptions, 'cache' | 'paginate'>;
 
 export interface ItemInitArgs {
@@ -55,12 +55,12 @@ export abstract class Item {
      * @param options
      * @param [options.cache=true] - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
      */
-    static fetch<T extends Item>(id: number | string, {cache = true}: ItemFetchOptions = {}): Promise<T> {
+    static fetch<T extends Item>(id: number | string, {cache = true, skip}: ItemFetchOptions = {}): Promise<T> {
         const uri: string = getPotionURI(this);
-        const potion = getPotionInstance(this);
-        return potion.fetch(`${uri}/${id}`, {
+        return getPotionInstance(this).fetch(`${uri}/${id}`, {
             method: 'GET',
-            cache
+            cache,
+            skip
         });
     }
 

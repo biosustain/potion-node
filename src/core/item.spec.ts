@@ -27,6 +27,20 @@ describe('potion/core', () => {
                                         }
                                     }
                                 });
+                            case '/user/2':
+                                return Promise.resolve({
+                                    body: {
+                                        $uri: '/user/2',
+                                        created_at: {
+                                            $date: 1451060269000
+                                        },
+                                        skipped: 'skip-me',
+                                        skippedObject: {
+                                            foo: 'bar'
+                                        },
+                                        realProperty: true
+                                    }
+                                });
                             default:
                                 break;
                         }
@@ -70,6 +84,14 @@ describe('potion/core', () => {
             it('should return an instance of Item', async () => {
                 const user = await User.fetch(1);
                 expect(user instanceof (User as any)).toBe(true);
+            });
+
+            it('should not load skipped fields', async () => {
+                User.fetch(2, {skip: ['skipped', 'skippedObject']}).then(user => {
+                    expect(user.skipped).toBeUndefined();
+                    expect(user.skippedObject).toBeUndefined();
+                    expect(user.realProperty).toBe(true);
+                });
             });
 
             it('should not trigger more requests for consequent requests for the same resource and if the first request is still pending', async () => {
@@ -126,7 +148,12 @@ describe('potion/core', () => {
                             case '/user/1':
                                 return Promise.resolve({
                                     body: {
-                                        $uri: '/user/1'
+                                        $uri: '/user/1',
+                                        skippped: 'skip-me',
+                                        skippedObject: {
+                                            foo: 'bar'
+                                        },
+                                        realProperty: true
                                     }
                                 });
                             case '/user/2':
@@ -315,6 +342,14 @@ describe('potion/core', () => {
                     count++;
                 }
                 expect(count).toBeGreaterThan(0);
+            });
+
+            it ('should not load skipped fields', async () => {
+                const users = await User.query({}, {skip: ['skipped', 'skippedObject']});
+                expect(users[0]).toBeDefined();
+                expect(users[0].skipped).toBeUndefined();
+                expect(users[0].skippedObject).toBeUndefined();
+                expect(users[0].realProperty).toBe(true);
             });
 
             it('should return the right page if if {paginated: true} and called with pagination params ({page, perPage})', async () => {

@@ -54,6 +54,7 @@ export abstract class Item {
      * @param id
      * @param options
      * @param [options.cache=true] - Setting it to `true` will ensure that the item will be fetched from cache if it exists and the HTTP request is cached.
+     * @param [options.skip=[]] - Defines an array of fields that should not be fetched on given object
      */
     static fetch<T extends Item>(id: number | string, {cache = true, skip}: ItemFetchOptions = {}): Promise<T> {
         const uri: string = getPotionURI(this);
@@ -71,6 +72,7 @@ export abstract class Item {
      * @param options
      * @param [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
      * @param [options.cache=true] - Cache the HTTP request.
+     * @param [options.skip=[]] - Defines an array of fields that should not be queried on given resource
      */
     static query<T extends Item, R = T[]>(queryParams?: QueryParams | null, {paginate = false, cache = true, skip}: ItemQueryOptions = {}): Promise<R> {
         const uri: string = getPotionURI(this);

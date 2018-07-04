@@ -28,23 +28,27 @@ export default {
     globals: {
         // The key here is library name, and the value is the the name of the global variable name the window object.
         // See https://github.com/rollup/rollup/wiki/JavaScript-API#globals for more.
+        // Angular
         '@angular/core': 'ng.core',
         '@angular/common/http': 'ng.common.http',
         'angular': 'angular',
-        'rxjs/add/operator/filter': 'Rx.Observable.prototype',
-        'rxjs/add/operator/map': 'Rx.Observable.prototype',
-        'rxjs/add/operator/toPromise': 'Rx.Observable.prototype',
+        // RxJs
+        'rxjs/operators/filter': 'Rx.operators',
+        'rxjs/operators/map': 'Rx.operators',
+        // TS
         'tslib': 'tslib'
     },
     external: [
         // List of dependencies
         // See https://github.com/rollup/rollup/wiki/JavaScript-API#external for more.
+        // Angular
         '@angular/core',
         '@angular/common/http',
         'angular',
-        'rxjs/add/operator/filter',
-        'rxjs/add/operator/map',
-        'rxjs/add/operator/toPromise',
+        // RxJs
+        'rxjs/operators/filter',
+        'rxjs/operators/map',
+        // TS
         'tslib'
     ]
 }

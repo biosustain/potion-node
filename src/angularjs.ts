@@ -7,7 +7,7 @@ import {
     PotionResponse,
     RequestOptions
 } from './core/potion';
-import {setPotionPromise} from './core/metadata';
+import {setPotionPromiseCtor} from './core/metadata';
 import {Item} from './core/item';
 import {isJsObject} from './core/utils';
 
@@ -70,7 +70,7 @@ function potionProvider(this: any): any {
 
         // Make sure Potion uses $q as the Promise implementation.
         // NOTE: This is necessary due to the nature of AngularJS change detection system.
-        setPotionPromise(Potion, $q);
+        setPotionPromiseCtor(Potion, $q);
 
         // Use the $cacheFactory and allow user to override cache.
         /* tslint:disable: align */

@@ -14,10 +14,8 @@ import {
     HttpResponse
 } from '@angular/common/http';
 
-// TODO: Let's not polute the global rxjs, so we should import the operator fns and apply properly
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/toPromise';
+import {filter} from 'rxjs/operators/filter';
+import {map} from 'rxjs/operators/map';
 
 import {Item, ItemOptions} from '../core/item';
 import {PotionBase, PotionOptions, RequestOptions} from '../core/potion';
@@ -64,7 +62,7 @@ export class Potion extends PotionBase {
                         const [resource, config] = type;
                         this.register(uri, resource, config);
                     } else {
-                        this.register(uri, type);
+                        this.register(uri, type as any);
                     }
                 }
             }
@@ -97,21 +95,18 @@ export class Potion extends PotionBase {
         const request = method === 'POST' || method === 'PUT' || method === 'PATCH' ? new HttpRequest(method as any, uri, toJson(body), init) : new HttpRequest(method as any, uri, init);
 
         return this.http.request(request)
-            .filter(event => event instanceof HttpResponse)
-            .map((response: HttpResponse<any>) => {
+            .pipe<any, any>(filter(event => event instanceof HttpResponse), map((response: HttpResponse<any>) => {
                 const body = response.body;
-
                 // Set headers
                 const headers: {[key: string]: any} = {};
                 for (const key of response.headers.keys()) {
                     headers[key] = response.headers.get(key);
                 }
-
                 return {
                     headers,
                     body
                 };
-            })
+            }))
             .toPromise();
     }
 }

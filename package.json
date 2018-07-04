@@ -21,7 +21,7 @@
   "typings": "./ng.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/biosustain/potion-node"
+    "url": "https://github.com/infarm/potion-node"
   },
   "scripts": {
     "clean": "rm -rf out-tsc dist/*",

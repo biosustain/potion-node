@@ -1,8 +1,5 @@
 # Potion
 
-[![Build Status](https://img.shields.io/travis/biosustain/potion-node.svg?style=flat-square)](https://travis-ci.org/biosustain/potion-node)
-[![Dependency Status](https://david-dm.org/biosustain/potion-node.svg?style=flat-square)](https://github.com/biosustain/potion-node)
-
 > A TypeScript client for APIs written in Flask-Potion.
 
 
@@ -60,7 +57,7 @@ class Foo extends Item {
 ### Contribute
 --------------
 If you'd like to contribute:
-1. Clone the repository `git clone https://github.com/biosustain/potion-node`;
+1. Clone the repository `git clone https://github.com/infarm/potion-node`;
 2. Install all the deps `yarn install`/`npm install`. 
 
 Now you can start hacking :)

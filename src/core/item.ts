@@ -72,9 +72,10 @@ export abstract class Item {
      * @param [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
      * @param [options.cache=true] - Cache the HTTP request.
      */
-    static query<T extends Item>(queryParams?: QueryParams | null, {paginate = false, cache = true, skip}: ItemQueryOptions = {}): Promise<T[] | Pagination<T>> {
+    static query<T extends Item, R = T[]>(queryParams?: QueryParams | null, {paginate = false, cache = true, skip}: ItemQueryOptions = {}): Promise<R> {
         const uri: string = getPotionURI(this);
-        return getPotionInstance(this).fetch(uri, {
+        const potion = getPotionInstance(this);
+        return potion.fetch(uri, {
             method: 'GET',
             params: queryParams,
             paginate,

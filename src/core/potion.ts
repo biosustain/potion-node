@@ -42,6 +42,18 @@ function skipProperty(object: any, skipProperties: string[]): void {
     }
 }
 
+function skipProperties(body: any, skip: string[]) {
+    if (Array.isArray(body)) {
+        for (const item of body) {
+            skipProperty(item, skip);
+        }
+    } else if (typeof(body) === 'object' && body !== null && body !== undefined) {
+        skipProperty(body, skip);
+    } else {
+        console.warn('missing coverage for object: ', body); // tslint:disable-line: no-console
+    }
+}
+
 /**
  * Item cache.
  * Dictates the implementation of the item cache.
@@ -281,15 +293,7 @@ export abstract class PotionBase {
         // identify $refs to be skipped
         const {skip} = options;
         if (skip) {
-            if (Array.isArray(body)) {
-                for (const item of body) {
-                    skipProperty(item, skip);
-                }
-            } else if (typeof(body) === 'object' && body !== null && body !== undefined) {
-                skipProperty(body, skip);
-            } else {
-                console.warn('missing coverage for type: ', typeof(body)); // tslint:disable-line: no-console
-            }
+            skipProperties(body, skip);
         }
 
         return this.fromPotionJSON(body, options.origin as string[])

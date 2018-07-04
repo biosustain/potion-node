@@ -14,7 +14,7 @@ export interface ItemOptions {
 }
 
 export type ItemFetchOptions = Pick<RequestOptions, 'cache' | 'skip'>;
-export type ItemQueryOptions = Pick<RequestOptions, 'cache' | 'paginate'>;
+export type ItemQueryOptions = Pick<RequestOptions, 'cache' | 'paginate' | 'skip'>;
 
 export interface ItemInitArgs {
     [key: string]: any;
@@ -72,14 +72,14 @@ export abstract class Item {
      * @param [options.paginate=false] - Setting {paginate: true} will result in the return value to be a Pagination object.
      * @param [options.cache=true] - Cache the HTTP request.
      */
-    static query<T extends Item, R = T[]>(queryParams?: QueryParams | null, {paginate = false, cache = true}: ItemQueryOptions = {}): Promise<R> {
+    static query<T extends Item>(queryParams?: QueryParams | null, {paginate = false, cache = true, skip}: ItemQueryOptions = {}): Promise<T[] | Pagination<T>> {
         const uri: string = getPotionURI(this);
-        const potion = getPotionInstance(this);
-        return potion.fetch(uri, {
+        return getPotionInstance(this).fetch(uri, {
             method: 'GET',
             params: queryParams,
             paginate,
-            cache
+            cache,
+            skip
         });
     }
 

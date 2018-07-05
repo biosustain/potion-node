@@ -1,4 +1,4 @@
-import {potionInstance, potionURI} from './metadata';
+import {getPotionInstance, getPotionURI} from './metadata';
 import {RequestOptions} from './potion';
 import {isFunction} from './utils';
 
@@ -11,7 +11,7 @@ export function route<T>(path: string, {method}: RequestOptions = {}): RouteType
     // tslint:disable-next-line:only-arrow-functions
     return function(this: any, params?: any, {paginate = false, cache = true}: RequestOptions = {}): Promise<T> {
         const isCtor = isFunction(this);
-        const uri = `${isCtor ? potionURI(this) : this.uri}${path}`;
+        const uri = `${isCtor ? getPotionURI(this) : this.uri}${path}`;
 
         const options: RequestOptions = {method, paginate, cache};
         if (method === 'GET') {
@@ -20,7 +20,7 @@ export function route<T>(path: string, {method}: RequestOptions = {}): RouteType
             options.body = params;
         }
 
-        return potionInstance(isCtor ? this : this.constructor)
+        return getPotionInstance(isCtor ? this : this.constructor)
             .fetch(uri, options);
     };
 }

@@ -47,6 +47,7 @@ node_modules
 ## Dist
 
 ## Dist
+.coverage
 build
 out-tsc
 dist

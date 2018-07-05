@@ -1,4 +1,9 @@
-import {getGlobal, isFunction} from './utils';
+import {
+    getGlobal,
+    isFunction,
+    isJsObject,
+    isString
+} from './utils';
 import {PotionBase} from './potion';
 import {Item} from './item';
 
@@ -17,21 +22,44 @@ const Reflect = global.Reflect; // tslint:disable-line: variable-name
 })();
 
 
-const POTION_METADATA_KEY = Symbol('potion');
-export function potionInstance(ctor: typeof Item): PotionBase {
-    return Reflect.getOwnMetadata(POTION_METADATA_KEY, ctor);
+const potionInstanceMetadataKey = Symbol('potion:instance');
+const potionURIMetadataKey = Symbol('potion:uri');
+const potionPromiseCtorMetadataKey = Symbol('potion:promise');
+const potionReadonlyMetadataKey = Symbol('potion:readonly');
+const potionAsyncMetadataKey = Symbol('potion:async');
+
+
+/**
+ * Get the Potion instance from an Item constructor
+ * @param ctor
+ */
+export function getPotionInstance(ctor: typeof Item): PotionBase {
+    return Reflect.getOwnMetadata(potionInstanceMetadataKey, ctor);
 }
-export function decorateCtorWithPotionInstance(ctor: typeof Item, instance: any): void {
-    Reflect.defineMetadata(POTION_METADATA_KEY, instance, ctor);
+/**
+ * Set the Potion instance on an Item constructor
+ * @param ctor
+ * @param instance
+ */
+export function setPotionInstance(ctor: typeof Item, instance: PotionBase): void {
+    Reflect.defineMetadata(potionInstanceMetadataKey, instance, ctor);
 }
 
 
-const POTION_URI_METADATA_KEY = Symbol('potion:uri');
-export function potionURI(ctor: typeof Item): string {
-    return Reflect.getOwnMetadata(POTION_URI_METADATA_KEY, ctor);
+/**
+ * Get the Item uri from the Item constructor
+ * @param ctor
+ */
+export function getPotionURI(ctor: typeof Item): string {
+    return Reflect.getOwnMetadata(potionURIMetadataKey, ctor);
 }
-export function decorateCtorWithPotionURI(ctor: typeof Item, uri: string): void {
-    Reflect.defineMetadata(POTION_URI_METADATA_KEY, uri, ctor);
+/**
+ * Set the Item uri
+ * @param ctor
+ * @param uri
+ */
+export function setPotionURI(ctor: typeof Item, uri: string): void {
+    Reflect.defineMetadata(potionURIMetadataKey, uri, ctor);
 }
 
 
@@ -39,55 +67,89 @@ export function decorateCtorWithPotionURI(ctor: typeof Item, uri: string): void 
  * Get/Set the Promise implementation that should be used by Potion.
  * NOTE: If it is never set, it will fallback to using the native implementation of Promise.
  * @example
+ * @PotionConfig({
+ *     promiseCtor: Promise
+ * })
  * class Potion extends PotionBase {
  *     ...
  * }
- * setPotionPromise(Potion, ... some impl. of a Promise);
  */
-const POTION_PROMISE_METADATA_KEY = Symbol('potion:promise');
-export function potionPromise(potion: PotionBase): typeof Promise {
-    return Reflect.getOwnMetadata(POTION_PROMISE_METADATA_KEY, potion.constructor) || Promise;
+
+export function getPotionPromiseCtor(potion: PotionBase): typeof Promise {
+    return Reflect.getOwnMetadata(potionPromiseCtorMetadataKey, potion.constructor) || Promise;
 }
-export function setPotionPromise(ctor: typeof PotionBase, promise: any): void {
-    Reflect.defineMetadata(POTION_PROMISE_METADATA_KEY, promise, ctor);
+
+export function setPotionPromiseCtor(target: typeof PotionBase, promiseCtor: any): void {
+    Reflect.defineMetadata(potionPromiseCtorMetadataKey, promiseCtor, target);
 }
 
 
-const READONLY_METADATA_KEY = Symbol('potion:readonly');
-export function isReadonly(ctor: any, key: string): boolean {
-    const metadata = Reflect.getOwnMetadata(READONLY_METADATA_KEY, ctor);
+/**
+ * Check if a resource property is readonly
+ */
+export function isReadonly<T extends Item>(item: T, key: keyof T): boolean {
+    const metadata = Reflect.getOwnMetadata(potionReadonlyMetadataKey, item.constructor);
     return metadata && metadata[key];
 }
 
 /**
  * Mark a resource property as readonly and omit when saved.
- *
  * @example
  * class User extends Item {
  *     @readonly
  *     age;
  * }
  */
-export function readonly(target: any, property: string): void {
+export function readonly(target: object, property: string): void {
     const constructor = isFunction(target)
         ? target
         : isFunction(target.constructor)
             ? target.constructor
             : null;
-
-    if (constructor === null) {
-        // TODO: maybe throw an error here
-        return;
+    if (constructor) {
+        const metadata = Reflect.getOwnMetadata(potionReadonlyMetadataKey, constructor);
+        Reflect.defineMetadata(potionReadonlyMetadataKey, {
+            ...metadata,
+            [property]: true
+        }, constructor);
     }
+}
 
-    Reflect.defineMetadata(
-        READONLY_METADATA_KEY,
-        Object.assign(
-            Reflect.getOwnMetadata(READONLY_METADATA_KEY, constructor) || {},
-            {
-                [property]: true
-            }
-        ),
-        constructor
-    );
+
+/**
+ * Check if a resource property is async
+ */
+export function isAsync(ctor: typeof Item, keyOrUri: string): boolean {
+    const metadata = Reflect.getOwnMetadata(potionAsyncMetadataKey, ctor);
+    if (isJsObject(metadata) && isString(keyOrUri)) {
+        const key = Object.keys(metadata)
+            .find(key => key === keyOrUri || keyOrUri.includes(key));
+        if (key) {
+            return metadata[key];
+        }
+    }
+    return false;
+}
+
+/**
+ * Mark a resource property as async.
+ * @example
+ * class User extends Item {
+ *     @async
+ *     age: Promise<Foo>;
+ * }
+ */
+export function async(target: object, property: string): void {
+    const constructor = isFunction(target)
+        ? target
+        : isFunction(target.constructor)
+            ? target.constructor
+            : null;
+    if (constructor) {
+        const metadata = Reflect.getOwnMetadata(potionAsyncMetadataKey, constructor);
+        Reflect.defineMetadata(potionAsyncMetadataKey, {
+            ...metadata,
+            [property]: true
+        }, constructor);
+    }
 }

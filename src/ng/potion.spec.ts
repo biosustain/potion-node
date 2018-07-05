@@ -1,7 +1,10 @@
 /* tslint:disable: max-classes-per-file no-magic-numbers */
-import {async, inject, TestBed} from '@angular/core/testing';
+import {Component, ElementRef, ViewChild} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {async as ngAsync, inject, TestBed} from '@angular/core/testing';
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 
+import {async} from '../core/metadata';
 import {Item} from '../core/item';
 import {
     Potion,
@@ -15,7 +18,7 @@ describe('potion/ng', () => {
         const POTION_HOST = 'https://localhost';
         const POTION_PREFIX = '/test';
 
-        beforeEach(async(() => {
+        beforeEach(ngAsync(() => {
             TestBed.configureTestingModule({
                 imports: [
                     // Angular Http mock factories are here
@@ -41,7 +44,7 @@ describe('potion/ng', () => {
     });
 
     describe('Potion()', () => {
-        beforeEach(async(() => {
+        beforeEach(ngAsync(() => {
             TestBed.configureTestingModule({
                 imports: [
                     // Angular Http mock factories are here
@@ -173,7 +176,7 @@ describe('potion/ng', () => {
     });
 
     describe('Item()', () => {
-        beforeEach(async(() => {
+        beforeEach(ngAsync(() => {
             TestBed.configureTestingModule({
                 imports: [
                     // Angular Http mock factories are here
@@ -239,7 +242,7 @@ describe('potion/ng', () => {
                 }
 
 
-                M1.query().then((m1s: M1[]) => {
+                M1.query<M1>().then((m1s: M1[]) => {
                     expect(m1s.length).toEqual(3);
                     m1s.forEach(m1 => expect(m1 instanceof M1).toBeTruthy());
 
@@ -273,5 +276,107 @@ describe('potion/ng', () => {
                 }
             });
         });
+
+    });
+
+    describe('Async Properties', () => {
+        let testBed: typeof TestBed;
+
+        beforeEach(ngAsync(() => {
+            testBed = TestBed.configureTestingModule({
+                imports: [
+                    CommonModule,
+                    // Angular Http mock factories are here
+                    HttpClientTestingModule
+                ],
+                declarations: [TestComponent],
+                providers: [
+                    POTION_PROVIDER
+                ]
+            });
+            testBed.compileComponents();
+        }));
+
+        afterEach(() => inject([HttpTestingController], (controller: HttpTestingController) => {
+            controller.verify();
+        }));
+
+        it('should work with the async pipe (e.g. {{ foo.bar | async }})', done => {
+            const controller: HttpTestingController = testBed.get(HttpTestingController);
+            const potion: Potion = testBed.get(Potion);
+
+            const fixture = testBed.createComponent(TestComponent);
+            const testComponent: TestComponent = fixture.debugElement.componentInstance;
+            // Render component
+            fixture.detectChanges();
+
+            // Register resources
+            @potion.registerAs('/bar')
+            class Bar extends Item {}
+            @potion.registerAs('/foo')
+            class Foo extends Item {
+                @async
+                bar: Promise<Bar>;
+            }
+
+            Foo.fetch(1).then(foo => {
+                // Set Foo instance on component
+                testComponent.foo = foo;
+
+                // Trigger change detection and render foo
+                fixture.detectChanges();
+
+                // Rendering foo will access the {bar} prop and try to resolve the Bar instance
+                controller.expectOne('/bar/1')
+                    .flush({
+                        $uri: '/bar/1',
+                        name: 'John Doe'
+                    });
+
+                // Once the Bar instance is resolved,
+                // trigger another route of change detection
+                fixture.detectChanges();
+
+                foo.bar.then((bar: Bar) => {
+                    fixture.detectChanges();
+                    return fixture.whenRenderingDone()
+                        .then(() => bar);
+                }).then((bar: Bar) => {
+                    const barNode: HTMLSpanElement = testComponent.bar.nativeElement;
+                    expect(barNode).toBeDefined();
+                    const name: any = barNode.textContent;
+                    expect(name.length).toBeGreaterThan(0);
+                    expect(name).toEqual(bar.name);
+
+                    fixture.destroy();
+                    done();
+                });
+            });
+
+            controller.expectOne('/foo/1')
+                .flush({
+                    $uri: '/foo/1',
+                    bar: {$ref: '/bar/1'}
+                });
+        });
     });
 });
+
+@Component({
+    selector: 'test-component',
+    template: `
+        <ng-container *ngIf="foo">
+            <span #bar>{{ (foo.bar | async)?.name }}</span>
+        </ng-container>
+    `
+})
+export class TestComponent {
+    @ViewChild('bar') bar: ElementRef;
+    set foo(foo: any) {
+        this.$foo = foo;
+    }
+    get foo() {
+        return this.$foo;
+    }
+    private $foo: any;
+}

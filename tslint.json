@@ -3,6 +3,7 @@
     "rules": {
         "arrow-parens": {"options": ["ban-single-arg-parens"]},
         "no-consecutive-blank-lines": {"options": 2},
+        "no-implicit-dependencies": {"options": ["dev"]},
         "no-submodule-imports": {
             "options": [
                 "@angular",
